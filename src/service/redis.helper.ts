@@ -131,7 +131,6 @@ class RedisService {
 		}[],
 	) {
 		try {
-			console.log('data: ', data);
 
 			const formattedData = data.map(({ score, value }) => [
 				score,
