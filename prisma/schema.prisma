@@ -1,0 +1,216 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id        Int      @id @default(autoincrement())
+  address   String   @unique @db.VarChar(255)
+  balance   String   @default("0")
+  txn       BigInt   @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Blocks {
+  id                       Int      @id @default(autoincrement())
+  blocknumber              BigInt   @unique
+  blockhash                String   @unique @db.VarChar(255)
+  timestamp                String
+  transactionCount         BigInt   @default(0)
+  validatorOperatorAddress String
+  miner                    String
+  createdAt                DateTime @default(now())
+
+  @@unique([blocknumber, blockhash], name: "BlockNumberAndHashUnique")
+  @@index([miner, blockhash, blocknumber])
+}
+
+model Transactions {
+  id              Int           @id @default(autoincrement())
+  type            String        @default("")
+  status          String        @default("")
+  txString        String        @default("")
+  blocknumber     BigInt
+  txhash          String        @unique
+  timestamp       String
+  contractAddress String        @default("N/A")
+  fromAddress     String        @db.VarChar(255)
+  toAddress       String        @db.VarChar(255)
+  gasWanted       BigInt        @default(0)
+  txFee           String        @default("")
+  value           String        @default("0")
+  createdAt       DateTime      @default(now())
+  ContractLogs    ContractLogs?
+
+  @@index([blocknumber, txhash])
+}
+
+model Contracts {
+  id           Int            @id @default(autoincrement())
+  creator      String         @default("")
+  address      String         @unique
+  blockNumber  BigInt
+  txHash       String
+  timestamp    String
+  contractName String
+  contractType String         @default("UNKNOWN")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  Tokens       Tokens?
+  Holders      Holders[]
+  ContractLogs ContractLogs[]
+}
+
+model Tokens {
+  id              Int        @id @default(autoincrement())
+  creator         String
+  decimal         String
+  totalSupply     String
+  type            String
+  tokenName       String
+  tokenSymbol     String
+  contractAddress String     @unique
+  blockNumber     BigInt
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  contract        Contracts? @relation(fields: [contractAddress], references: [address])
+}
+
+model CoinmarketInfo {
+  id               Int      @id @default(autoincrement())
+  price            String
+  volume24h        String
+  volumeChange24h  String
+  percentChange1h  String
+  percentChange24h String
+  percentChange7d  String
+  percentChange30d String
+  symbol           String   @default("") @db.VarChar(255)
+  currency         String   @default("") @db.VarChar(255)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Validator {
+  id                      Int      @id @default(autoincrement())
+  operatorAddress         String   @unique
+  validatorAddress        String   @unique
+  jailed                  Boolean  @default(false)
+  tokens                  String   @default("")
+  unbondingHeight         BigInt
+  unbondingAmount         Float    @default(0)
+  unbondingTime           String   @default("")
+  totalRewards            Float    @default(0)
+  name                    String   @default("")
+  identity                String   @default("")
+  website                 String   @default("")
+  SecurityContact         String   @default("")
+  details                 String   @default("")
+  status                  String   @default("")
+  totalStake              String   @default("")
+  selfStake               String   @default("")
+  commissionRate          String   @default("")
+  commissionMaxRate       String   @default("")
+  commissionUpdateTime    String   @default("")
+  commissionMaxChangeRate String   @default("")
+  minSelfDelegation       String   @default("")
+  unbondingOnHoldRefCount String   @default("")
+  unbondingIds            String[] @default([])
+  delegatorCount          Int
+  votingPower             Float    @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([selfStake, createdAt, updatedAt, validatorAddress])
+}
+
+model ContractLogs {
+  id              Int      @id @default(autoincrement())
+  txHash          String   @unique
+  contractAddress String
+  blockNumber     BigInt
+  txFee           String
+  logs            String   @default("")
+  method          String   @default("N/A")
+  status          String
+  timestamp       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  contract     Contracts?    @relation(fields: [contractAddress], references: [address])
+  transactions Transactions? @relation(fields: [txHash], references: [txhash])
+}
+
+model Delegator {
+  id         Int      @id @default(autoincrement())
+  totalStake Decimal
+  address    String   @unique
+  createdAt  DateTime @default(now())
+
+  validatorStakes ValidatorStake[]
+
+  @@index([totalStake], name: "TotalStakeIndex")
+}
+
+model ValidatorStake {
+  id                       Int     @id @default(autoincrement())
+  stake                    Decimal
+  validatorOperatorAddress String  @default("")
+  delegatorAddress         String
+  balanceAmount            Decimal
+  denom                    String
+
+  delegator Delegator @relation(fields: [delegatorAddress], references: [address])
+
+  @@index([validatorOperatorAddress], name: "validatorOperatorAddress")
+}
+
+model Holders {
+  id              Int    @id @default(autoincrement())
+  address         String
+  contractAddress String
+  tokenBalance    String
+
+  contract Contracts? @relation(fields: [contractAddress], references: [address])
+}
+
+model ValidatedBlocksCount {
+  operatorAddress String @unique
+  address         String @unique
+  count           BigInt @default(0)
+
+  @@index([operatorAddress])
+}
+
+model Proposals {
+  id              Int     @id @default(autoincrement())
+  proposalId      String  @unique
+  status          String
+  totalDeposit    String
+  metaData        String
+  title           String
+  summary         String
+  proposer        String
+  proposerType    String
+  tally           String?
+  votingStartTime String
+  votingEndTime   String
+
+  @@index([proposalId, proposerType, status])
+}
+
+model Voters {
+  id          Int    @id @default(autoincrement())
+  proposalId  String
+  txHash      String @unique
+  answer      String
+  blockNumber BigInt
+  voter       String
+
+  @@unique([proposalId, voter])
+  @@index([proposalId, answer, voter])
+}
