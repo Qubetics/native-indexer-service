@@ -11,6 +11,7 @@ class ProcessHelper {
 		console.log('blocks:::: ', blockCount);
 
 		const txCount = await prisma.transactions.count();
+		console.log('tx:::: ', txCount);
 		if (txCount) {
 			RedisService.setString(
 				REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
