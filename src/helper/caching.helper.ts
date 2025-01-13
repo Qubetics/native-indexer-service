@@ -1,25 +1,22 @@
-import { REDIS_KEY } from '../constant/index';
-import { prisma } from '../lib/db';
-import { RedisService } from '../service';
+import { REDIS_KEY } from "../constant/index";
+import { prisma } from "../lib/db";
+import { RedisService } from "../service";
 
 class ProcessHelper {
-	async initializeCount() {
-		const blockCount = await prisma.blocks.count();
-		if (blockCount) {
-			RedisService.setString(REDIS_KEY.NATIVE_BLOCKS_COUNT, blockCount);
-		}
-		console.log('blocks:::: ', blockCount);
+  async initializeCount() {
+    const blockCount = await prisma.blocks.count();
+    if (blockCount) {
+      RedisService.setString(REDIS_KEY.NATIVE_BLOCKS_COUNT, blockCount);
+    }
+    console.log("blocks:::: ", blockCount);
 
-		const txCount = await prisma.transactions.count();
-		console.log('tx:::: ', txCount);
-		if (txCount) {
-			RedisService.setString(
-				REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
-				txCount,
-			);
-		}
+    const txCount = await prisma.transactions.count();
+    console.log("tx:::: ", txCount);
+    if (txCount) {
+      RedisService.setString(REDIS_KEY.NATIVE_TRANSACTIONS_COUNT, txCount);
+    }
 
-		console.log('tx:::: ', txCount);
-	}
+    console.log("tx:::: ", txCount);
+  }
 }
 export default new ProcessHelper();
