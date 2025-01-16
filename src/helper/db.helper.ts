@@ -1,4 +1,10 @@
-import { RES_MSG, REDIS_KEY, CONST_NAME } from "../constant";
+import {
+  RES_MSG,
+  REDIS_KEY,
+  CONST_NAME,
+  FETCH_METHODS,
+  HEADERS,
+} from "../constant";
 import {
   IBlock,
   IContractLogs,
@@ -39,7 +45,7 @@ class ExlorerHelper {
 
       console.log(
         "error.code === 'P2002' unique check fail : ",
-        error.code === "P2002",
+        error.code === "P2002"
       );
 
       if (error.code === "P2002") {
@@ -61,7 +67,7 @@ class ExlorerHelper {
    */
   upsertValidatorsCount = async (
     operatorAddress: string,
-    validatorAddress: string,
+    validatorAddress: string
   ): Promise<IESResponse> => {
     try {
       const dataTosave = {
@@ -166,7 +172,7 @@ class ExlorerHelper {
   };
 
   userSave = async (
-    userData: Array<{ address: string }>,
+    userData: Array<{ address: string }>
   ): Promise<IESResponse> => {
     try {
       await Promise.all(userData.map(this.processUserData));
@@ -188,11 +194,9 @@ class ExlorerHelper {
   };
 
   saveValidators = async (
-    validatorData: IValidatorToSave[],
+    validatorData: IValidatorToSave[]
   ): Promise<IESResponse> => {
     try {
-      console.log("validators : ", validatorData);
-
       await prisma.validator.deleteMany();
       const saveRes = await prisma.validator.createMany({
         data: validatorData,
@@ -280,19 +284,19 @@ class ExlorerHelper {
 
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP,
-        JSON.stringify(coinResult.marketCap),
+        JSON.stringify(coinResult.marketCap)
       );
       await RedisService.setString(
         REDIS_KEY.CIRCULATING_SUPPLY,
-        JSON.stringify(coinResult.circulatingSupply),
+        JSON.stringify(coinResult.circulatingSupply)
       );
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP_PRICE,
-        JSON.stringify(coinMarketResult),
+        JSON.stringify(coinMarketResult)
       );
       await RedisService.setString(
         REDIS_KEY.TOKEN_PRICE,
-        JSON.stringify(coinResult.price),
+        JSON.stringify(coinResult.price)
       );
       return {
         error: false,
@@ -384,7 +388,7 @@ class ExlorerHelper {
   // }
 
   saveContractDeployTx = async (
-    contactData: IContracts,
+    contactData: IContracts
   ): Promise<IESResponse> => {
     try {
       await prisma.contracts.createMany({
@@ -476,7 +480,7 @@ class ExlorerHelper {
               },
             });
             console.log("Updated holder:", updatedHolder);
-          }),
+          })
         );
       } else {
         const newHolder = await prisma.holders.create({
@@ -571,6 +575,82 @@ class ExlorerHelper {
       };
     }
   };
+
+  // checkNullTimeStamp = async () => {
+  //   try {
+  //     const getNullTimeStamp: any = await prisma.$queryRaw`
+  //         SELECT "blocknumber" FROM "Blocks" WHERE "timestamp" = null ORDER BY "createdAt" DESC LIMIT 100`;
+  //     if (getNullTimeStamp && getNullTimeStamp.length > 0) {
+  //       return getNullTimeStamp;
+  //       // return txRes;
+  //     }
+  //   } catch (err) {
+  //     console.log('error while saving saveLogs detail', (err as Error).message);
+  //     return null;
+  //   }
+  // };
+
+  // updateNullTimestamp = async (blockNumber: number): Promise<any> => {
+  //   try {
+  //     if (blockNumber) {
+  //       const url2 = `${environment.httpHost}/block?height=${blockNumber}`;
+  //       const fetchRes2: any = await generalAxiosCall(
+  //         url2,
+  //         FETCH_METHODS.GET,
+  //         HEADERS.DEFAULT,
+  //         null
+  //       );
+
+  //       const timestamp = fetchRes2?.data.result.block?.header?.time ?? "";
+  //       await prisma.blocks.update({
+  //         data: {
+  //           timestamp,
+  //         },
+  //         where: {
+  //           blocknumber: blockNumber,
+  //         },
+  //       });
+
+  //       await prisma.contractLogs.update({
+  //         where: {
+  //           blockNumber: blockNumber,
+  //         },
+  //         data: {
+  //           timestamp,
+  //         },
+  //       });
+
+  //       await prisma.contracts.update({
+  //         where: {
+  //           blockNumber: blockNumber,
+  //         },
+  //         data: {
+  //           timestamp,
+  //         },
+  //       });
+  //     }
+
+  //     return {
+  //       error: false,
+  //     };
+  //   } catch (err) {
+  //     const error = JSON.parse(JSON.stringify(err));
+  //     console.log(
+  //       "error.code === 'P2002' unique check fail : ",
+  //       error.code === "P2002"
+  //     );
+
+  //     if (error.code === "P2002") {
+  //       return {
+  //         error: false,
+  //       };
+  //     }
+  //     console.log("block db error : ", err);
+  //     return {
+  //       error: true,
+  //     };
+  //   }
+  // };
 }
 
 export default new ExlorerHelper();

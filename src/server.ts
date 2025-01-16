@@ -37,7 +37,7 @@ function serverListening(): void {
     `Listening on `,
     COLORS.yellow,
     `${addressInfo.address}${env.port}`,
-    COLORS.green,
+    COLORS.green
   );
   connectToDatabase();
 }
@@ -52,6 +52,7 @@ app
     processHelper.downTimeBlocks();
     processHelper.subscribeLatestBlocks();
     processHelper.subscribeLatestTxs();
+    // cronService.checkNullTimeStamp();
 
     app.express.set("port", env.port);
     server = app.httpServer;
