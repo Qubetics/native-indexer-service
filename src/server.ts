@@ -37,7 +37,7 @@ function serverListening(): void {
     `Listening on `,
     COLORS.yellow,
     `${addressInfo.address}${env.port}`,
-    COLORS.green
+    COLORS.green,
   );
   connectToDatabase();
 }
