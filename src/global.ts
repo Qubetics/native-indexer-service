@@ -1,8 +1,8 @@
-import Environment from './environments/environment';
+import Environment from "./environments/environment";
 declare global {
-	var environment: Environment;
+  var environment: Environment;
 }
 
 export const setGlobalEnvironment = (environment: Environment): void => {
-	global.environment = environment;
+  global.environment = environment;
 };

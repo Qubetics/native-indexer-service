@@ -19,7 +19,7 @@ model Blocks {
   id                       Int      @id @default(autoincrement())
   blocknumber              BigInt   @unique
   blockhash                String   @unique @db.VarChar(255)
-  timestamp                String
+  timestamp                DateTime
   transactionCount         BigInt   @default(0)
   validatorOperatorAddress String
   miner                    String
@@ -36,7 +36,7 @@ model Transactions {
   txString        String        @default("")
   blocknumber     BigInt
   txhash          String        @unique
-  timestamp       String
+  timestamp       DateTime
   contractAddress String        @default("N/A")
   fromAddress     String        @db.VarChar(255)
   toAddress       String        @db.VarChar(255)
@@ -55,7 +55,7 @@ model Contracts {
   address      String         @unique
   blockNumber  BigInt
   txHash       String
-  timestamp    String
+  timestamp    DateTime
   contractName String
   contractType String         @default("UNKNOWN")
   createdAt    DateTime       @default(now())
@@ -137,7 +137,7 @@ model ContractLogs {
   logs            String   @default("")
   method          String   @default("N/A")
   status          String
-  timestamp       String
+  timestamp       DateTime
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
