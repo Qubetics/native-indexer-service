@@ -46,7 +46,7 @@ class RedisService {
 				),
 			);
 		} catch (error) {
-			console.log('error while connecting to redis .. ', error);
+			logger.error('error while connecting to redis .. ', error);
 		}
 	}
 
@@ -80,22 +80,12 @@ class RedisService {
 					await this.client.zRange(REDIS_KEY.VALIDATOR_DETAILS, 0, -1)
 				).map((item) => JSON.parse(item)) || [];
 
-			console.log('existingData : : ', existingData);
-
 			if (existingData.length > 0) {
 				const valExistingData = existingData.find(
 					(i: any) =>
 						// const extData = JSON.parse(i);
 						i.validatorAddress === data.validatorAddress,
 				);
-				console.log('data.validatorAddress : ', data.validatorAddress);
-				console.log(
-					'valExistingData?.validatorAddress : ',
-					valExistingData?.validatorAddress,
-				);
-
-				// console.log("valExistingData : ", valExistingData);
-				console.log('valExistingData : ', !!valExistingData);
 
 				if (!valExistingData) {
 					datatoSave.score = id;
@@ -118,7 +108,7 @@ class RedisService {
 
 			return true;
 		} catch (err) {
-			// console.log('error while setting the SET data into redis: ', err);
+			// logger.error('error while setting the SET data into redis: ', err);
 			return false;
 		}
 	}
@@ -136,11 +126,8 @@ class RedisService {
 				score,
 				value,
 			]);
-			console.log('formattedData   ', formattedData);
-
-			// console.log("validator save res : ", saveRes);
 		} catch (error) {
-			console.log('error while saving : ', error);
+			logger.error('error while saving : ', error);
 		}
 	}
 
@@ -166,15 +153,6 @@ class RedisService {
 			if (existingData.length > 0) {
 				const valExistingData = existingData.find((i: any) => {
 					const extData = JSON.parse(i);
-					// console.log(
-					// 	extData.validatorAddress,
-					// 	data.validatorAddress,
-					// );
-					// console.log(
-					// 	extData.delegatorAddress,
-					// 	data.delegatorAddress,
-					// );
-
 					return (
 						extData.validatorAddress === data.validatorAddress &&
 						extData.delegatorAddress === data.delegatorAddress
@@ -201,7 +179,6 @@ class RedisService {
 
 			// return res
 		} catch (err) {
-			// console.log('error while setting the SET data into redis: ', err);
 		}
 	}
 

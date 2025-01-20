@@ -8,18 +8,13 @@ class ProcessHelper {
 		if (blockCount) {
 			RedisService.setString(REDIS_KEY.NATIVE_BLOCKS_COUNT, blockCount);
 		}
-		console.log('blocks:::: ', blockCount);
-
 		const txCount = await prisma.transactions.count();
-		console.log('tx:::: ', txCount);
 		if (txCount) {
 			RedisService.setString(
 				REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
 				txCount,
 			);
 		}
-
-		console.log('tx:::: ', txCount);
 	}
 }
 export default new ProcessHelper();

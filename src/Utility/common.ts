@@ -70,7 +70,6 @@ export const noExponent = function (num: number | string) {
 		}
 		mag -= str.length;
 		while (mag--) z += '0';
-		console.log('str + z : ', str + z);
 
 		return str + z;
 	} catch (error) {

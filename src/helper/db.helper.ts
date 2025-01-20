@@ -36,18 +36,11 @@ class ExlorerHelper {
 			};
 		} catch (err) {
 			const error = JSON.parse(JSON.stringify(err));
-
-			console.log(
-				"error.code === 'P2002' unique check fail : ",
-				error.code === 'P2002',
-			);
-
 			if (error.code === 'P2002') {
 				return {
 					error: false,
 				};
 			}
-			console.log('block db error : ', err);
 			return {
 				error: true,
 			};
@@ -192,14 +185,11 @@ class ExlorerHelper {
 		validatorData: IValidatorToSave[],
 	): Promise<IESResponse> => {
 		try {
-			console.log('validators : ', validatorData);
-
 			await prisma.validator.deleteMany();
 			const saveRes = await prisma.validator.createMany({
 				data: validatorData,
 				skipDuplicates: true,
 			});
-			console.log('validator saveRes', saveRes);
 			return {
 				error: false,
 			};
@@ -218,7 +208,6 @@ class ExlorerHelper {
 				data: delegatorData,
 				skipDuplicates: true,
 			});
-			console.log('delegator saveRes', saveRes);
 		} catch (error) {
 			console.log('Error while saving validator stake data : ', error);
 		}
@@ -487,14 +476,12 @@ class ExlorerHelper {
 								tokenBalance: holderData.tokenBalance,
 							},
 						});
-						console.log('Updated holder:', updatedHolder);
 					}),
 				);
 			} else {
 				const newHolder = await prisma.holders.create({
 					data: holderData,
 				});
-				console.log('Created new holder:', newHolder);
 			}
 
 			return {
@@ -514,8 +501,6 @@ class ExlorerHelper {
 
 	saveContractLogs = async (contractData: IContractLogs) => {
 		try {
-			console.log('contractData : ', contractData);
-
 			await prisma.contractLogs.create({
 				data: contractData,
 			});
@@ -538,12 +523,11 @@ class ExlorerHelper {
 		proposalData: IProposalData,
 	): Promise<IESResponse> => {
 		try {
-			const updateRes = await prisma.proposals.upsert({
+			await prisma.proposals.upsert({
 				where: { proposalId: proposalData.proposalId },
 				update: proposalData, // Update the data with the new values
 				create: proposalData, // If no matching proposal found, create a new one
 			});
-			// console.log('proposal saveRes', updateRes);
 			return {
 				error: false,
 			};
@@ -557,7 +541,7 @@ class ExlorerHelper {
 
 	saveVoters = async (voters: IVoters): Promise<IESResponse> => {
 		try {
-			const updateRes = await prisma.voters.upsert({
+			await prisma.voters.upsert({
 				where: {
 					proposalId_voter: {
 						proposalId: voters.proposalId,

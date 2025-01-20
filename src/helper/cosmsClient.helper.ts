@@ -77,10 +77,6 @@ export class CosmJsRpcMethods {
 			);
 			return valoperAddress;
 		} catch (err) {
-			// console.log(
-			// 	'error while tendermintValAddressToValoperAddress  : ',
-			// 	err,
-			// );
 			return '';
 		}
 	}
@@ -91,7 +87,6 @@ export class CosmJsRpcMethods {
 			const delegatorAddress = bech32.encode(this.prefix, address.words);
 			return delegatorAddress;
 		} catch (err) {
-			// console.log('error while getDelegatorAddress  : ', err);
 			return '';
 		}
 	}

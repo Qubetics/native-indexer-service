@@ -92,7 +92,7 @@ class RabbitMq {
 			this.channel?.sendToQueue(queue, Buffer.from(data));
 			return true;
 		} catch (error) {
-			console.log('error inside inQueueData : ', error);
+			logger.error('error inside inQueueData : ', error);
 			return false;
 		}
 	}
@@ -111,10 +111,6 @@ class RabbitMq {
 						if (!txRes) {
 							if (txData?.result?.events) {
 								const tx = JSON.stringify(txData);
-								console.log(
-									'txHash data inside not saved case in queue : ',
-									tx,
-								);
 								this.inQueueData(QUEUE_NAME.MISSED_TXS, tx);
 							}
 						}
@@ -124,7 +120,7 @@ class RabbitMq {
 				{ noAck: false },
 			);
 		} catch (error) {
-			console.log(
+			logger.error(
 				'error while consuming all transactions inside rabbitmq : ',
 				error,
 			);
@@ -143,7 +139,6 @@ class RabbitMq {
 
 					const issaved =
 						await processHelper.processLatestBlock(blockData);
-					// console.log('issaved : ', issaved);
 
 					if (!issaved) {
 						if (blockData?.result?.data) {
@@ -222,8 +217,6 @@ class RabbitMq {
 			async (message: amqp.Message | null) => {
 				if (message) {
 					const blockData = JSON.parse(message.content.toString());
-					console.log('inside missed blockData: ', blockData);
-
 					const isSaved =
 						processHelper.processMissedBlocks(blockData);
 
@@ -273,7 +266,6 @@ class RabbitMq {
 								REDIS_KEY.NATIVE_BLOCKS_COUNT,
 								blockCount,
 							);
-							console.log('DOWNblockCount', blockCount);
 						}
 					}
 

@@ -221,11 +221,6 @@ class ProcessHelper {
 			const data = message?.result?.data;
 			if (data && events) {
 				const code = data?.value?.TxResult?.result?.code;
-				console.log(
-					'tx Data inside process tx -----: ',
-					JSON.stringify(message),
-				);
-
 				const status = !code
 					? TRANSACTION_STATUS.SUCCESS
 					: TRANSACTION_STATUS.FAILED;
@@ -549,7 +544,6 @@ class ProcessHelper {
 				);
 
 				const saveRes = await dbHelper.saveTransactions(txData);
-				console.log('txData: ', saveRes, txData);
 
 				if (txData.type === TRANSACTION_TYPE.VOTING) {
 					let answer = events['proposal_vote.option']
@@ -714,11 +708,6 @@ class ProcessHelper {
 				null,
 			);
 			if (fetchRes?.data?.result && !fetchRes.error) {
-				console.log(
-					'tx Data inside missedTx : ',
-					JSON.stringify(fetchRes?.data),
-				);
-
 				const result = fetchRes?.data?.result;
 				const events = result?.tx_result?.events;
 				const code = result?.tx_result?.code;
@@ -900,8 +889,6 @@ class ProcessHelper {
 	 */
 	public async processMissedBlocks(blockData: IBlock) {
 		try {
-			// console.log('dataToSave:  missed block :  ', blockData);
-
 			if (blockData?.blocknumber && blockData?.blocknumber) {
 				const saveRes = await dbHelper.saveBlockData(blockData);
 				return !saveRes.error;
@@ -928,9 +915,6 @@ class ProcessHelper {
 				null,
 			);
 			const newBlock = blockRes?.data?.result?.block?.header?.height;
-			console.log('newBlock: ', newBlock);
-			console.log('lastBlockSaved: ', lastBlockSaved);
-
 			if (newBlock && lastBlockSaved) {
 				const diff = Number(newBlock) - Number(lastBlockSaved);
 				console.log('diff : ', diff);
