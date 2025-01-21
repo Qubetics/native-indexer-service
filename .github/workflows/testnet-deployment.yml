@@ -16,7 +16,7 @@ jobs:
       DEPLOYMENT_PATH: Native-indexer/native-indexer.yaml
       HUAWEI_IMAGE: testnet-native-indexer
       DOCKER_USERNAME: ap-southeast-3@BQG9INQF0BKVHSNQOLJG
-      ENV: ${{ vars.TEST_ENV }}
+      ENV: ${{ vars.TESTNET_INDEXER_ENV }}
     secrets:
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       GIT_SSH_KEY: ${{ secrets.ARGOCD_SSH_KEY }}
