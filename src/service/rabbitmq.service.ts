@@ -73,6 +73,53 @@ class RabbitMq {
     });
   }
 
+<<<<<<< HEAD
+	/**
+	 * Save Data in queue
+	 * @param queue
+	 * @param data
+	 * @returns
+	 */
+	public inQueueData(queue: string, data: string) {
+		try {
+			this.channel?.sendToQueue(queue, Buffer.from(data));
+			return true;
+		} catch (error) {
+			logger.error('error inside inQueueData : ', error);
+			return false;
+		}
+	}
+
+	/**
+	 * For consuming all type of transactions
+	 */
+	public consumeLatestTransaction() {
+		try {
+			this.channel?.consume(
+				QUEUE_NAME.LATEST_TXS,
+				async (message: amqp.Message | null) => {
+					if (message) {
+						const txData = JSON.parse(message.content.toString());
+						const txRes = await processHelper.processTxs(txData);
+						if (!txRes) {
+							if (txData?.result?.events) {
+								const tx = JSON.stringify(txData);
+								this.inQueueData(QUEUE_NAME.MISSED_TXS, tx);
+							}
+						}
+						this.channel?.ack(message);
+					}
+				},
+				{ noAck: false },
+			);
+		} catch (error) {
+			logger.error(
+				'error while consuming all transactions inside rabbitmq : ',
+				error,
+			);
+		}
+	}
+=======
   /**
    * Save Data in queue
    * @param queue
@@ -122,6 +169,7 @@ class RabbitMq {
       );
     }
   }
+>>>>>>> a138f267e79d0663b8245686fc369476f5e94d05
 
   /**
    * For consuming all type of transactions
@@ -133,8 +181,13 @@ class RabbitMq {
         if (message) {
           const blockData = JSON.parse(message.content.toString());
 
+<<<<<<< HEAD
+					const issaved =
+						await processHelper.processLatestBlock(blockData);
+=======
           const issaved = await processHelper.processLatestBlock(blockData);
           // console.log('issaved : ', issaved);
+>>>>>>> a138f267e79d0663b8245686fc369476f5e94d05
 
           if (!issaved) {
             if (blockData?.result?.data) {
@@ -200,6 +253,19 @@ class RabbitMq {
     );
   }
 
+<<<<<<< HEAD
+	/**
+	 * For consuming the Missed blocks
+	 */
+	public consumeMissedBlocks(): void {
+		this.channel?.consume(
+			QUEUE_NAME.MISSED_BLOCK,
+			async (message: amqp.Message | null) => {
+				if (message) {
+					const blockData = JSON.parse(message.content.toString());
+					const isSaved =
+						processHelper.processMissedBlocks(blockData);
+=======
   /**
    * For consuming the Missed blocks
    */
@@ -212,6 +278,7 @@ class RabbitMq {
           console.log("inside missed blockData: ", blockData);
 
           const isSaved = processHelper.processMissedBlocks(blockData);
+>>>>>>> a138f267e79d0663b8245686fc369476f5e94d05
 
           if (!isSaved) {
             if (blockData?.blocknumber) {
@@ -244,6 +311,24 @@ class RabbitMq {
               REDIS_KEY.NATIVE_BLOCKS_COUNT,
             );
 
+<<<<<<< HEAD
+						if (!blockCount) {
+							// First time, get the count from the database
+							blockCount = await prisma.blocks.count();
+							await RedisService.setString(
+								REDIS_KEY.NATIVE_BLOCKS_COUNT,
+								blockCount,
+							);
+						} else {
+							// Increment the block count
+							blockCount = Number(blockCount) + 1;
+							await RedisService.setString(
+								REDIS_KEY.NATIVE_BLOCKS_COUNT,
+								blockCount,
+							);
+						}
+					}
+=======
             if (!blockCount) {
               // First time, get the count from the database
               blockCount = await prisma.blocks.count();
@@ -261,6 +346,7 @@ class RabbitMq {
               console.log("DOWNblockCount", blockCount);
             }
           }
+>>>>>>> a138f267e79d0663b8245686fc369476f5e94d05
 
           log(
             "downtime block : ",
