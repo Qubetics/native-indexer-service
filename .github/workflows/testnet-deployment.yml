@@ -7,14 +7,14 @@ on:
 
 jobs:
   testnet_deploy_explorer_frontend:
-    uses: ./.github/workflows/testnet-frontend.yaml
+    uses: ./.github/workflows/testnet-native-indexer.yml
     with:
       SWR_ORGANIZATION: testnet-qubetics
       ARGOCD_BRANCH: testnet
       HUAWEI_REGION: 'ap-southeast-3'
       ARGOCD_REPOSITORY: Qubetics/argocd-qubetics
-      DEPLOYMENT_PATH: Frontend/deployment.yaml
-      HUAWEI_IMAGE: testnet-explorer-frontend
+      DEPLOYMENT_PATH: Native-indexer/native-indexer.yaml
+      HUAWEI_IMAGE: testnet-native-indexer
       DOCKER_USERNAME: ap-southeast-3@BQG9INQF0BKVHSNQOLJG
       ENV: ${{ vars.TEST_ENV }}
     secrets:
