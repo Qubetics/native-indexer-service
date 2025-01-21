@@ -1,4 +1,4 @@
-name: Explorer Frontend K8s
+name: native-indexer
 on:
   workflow_call:
     inputs:
