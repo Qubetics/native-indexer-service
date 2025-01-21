@@ -1,4 +1,4 @@
-name: '[testnet] Deploy explorer frontend'
+name: '[testnet] Deploy native indexer'
 
 on: 
   push:
@@ -6,7 +6,7 @@ on:
       - testnet
 
 jobs:
-  testnet_deploy_explorer_frontend:
+  testnet_deploy_native_indexer:
     uses: ./.github/workflows/testnet-native-indexer.yml
     with:
       SWR_ORGANIZATION: testnet-qubetics
