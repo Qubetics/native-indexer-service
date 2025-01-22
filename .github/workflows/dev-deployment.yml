@@ -3,7 +3,7 @@ on:
   workflow_call:
     inputs:
       SWR_ORGANIZATION:
-        description: 'The Huawei SWR reposiory name used for pushing images to the Dev or production SWR'
+        description: 'The Huawei SW reposiory name used for pushing images to the Dev or production SWR'
         required: true
         type: string
       HUAWEI_REGION:
