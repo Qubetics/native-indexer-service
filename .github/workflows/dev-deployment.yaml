@@ -7,7 +7,7 @@ on:
 
 jobs:
   dev_deploy_native_indexer:
-    uses: ./.github/workflows/dev-deployment.yaml
+    uses: ./.github/workflows/testnet-native-indexer.yaml
     with:
       SWR_ORGANIZATION: dev-qubetics
       ARGOCD_BRANCH: dev
