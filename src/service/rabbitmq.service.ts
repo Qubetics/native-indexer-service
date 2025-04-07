@@ -1,12 +1,12 @@
-import * as amqp from "amqplib/callback_api";
-import { log } from "../Utility/common";
-import { COLORS, QUEUE_NAME, REDIS_KEY } from "../constant";
-import dbHelper from "../helper/db.helper";
-import processHelper from "../helper/process.helper";
-import { IValidator } from "../interface";
-import { prisma } from "../lib/db";
-import logger from "../lib/logger";
-import { RedisService } from ".";
+import * as amqp from 'amqplib/callback_api';
+import { log } from '../Utility/common';
+import { COLORS, QUEUE_NAME, REDIS_KEY } from '../constant';
+import dbHelper from '../helper/db.helper';
+import processHelper from '../helper/process.helper';
+import { IValidator } from '../interface';
+import { prisma } from '../lib/db';
+import logger from '../lib/logger';
+import { RedisService } from '.';
 
 class RabbitMq {
   public channel: amqp.Channel;
@@ -36,7 +36,7 @@ class RabbitMq {
 
       return true;
     } catch (error) {
-      logger.error("Error while connecting to RabbitMQ: ", error);
+      logger.error('Error while connecting to RabbitMQ: ', error);
       return false;
     }
   }
@@ -47,23 +47,23 @@ class RabbitMq {
       const attemptConnection = () => {
         amqp.connect(environment.rabbitMq, (err, connection) => {
           if (err) {
-            logger.error("Error connecting to RabbitMQ:", err);
+            logger.error('Error connecting to RabbitMQ:', err);
             reject(err);
             return;
           }
 
-          connection.on("error", (error) => {
-            logger.error("RabbitMQ connection error:", error.message);
+          connection.on('error', (error) => {
+            logger.error('RabbitMQ connection error:', error.message);
             setTimeout(attemptConnection, RECONNECT_DELAY);
           });
 
           connection.createChannel((error: Error, channel) => {
             if (error) {
-              logger.error("Error creating channel:", error);
+              logger.error('Error creating channel:', error);
               reject(error);
               return;
             }
-            log("RabbitMQ Conneted ", COLORS.yellow, "true", COLORS.green);
+            log('RabbitMQ Conneted ', COLORS.yellow, 'true', COLORS.green);
             resolve(channel);
           });
         });
@@ -73,53 +73,6 @@ class RabbitMq {
     });
   }
 
-<<<<<<< HEAD
-	/**
-	 * Save Data in queue
-	 * @param queue
-	 * @param data
-	 * @returns
-	 */
-	public inQueueData(queue: string, data: string) {
-		try {
-			this.channel?.sendToQueue(queue, Buffer.from(data));
-			return true;
-		} catch (error) {
-			logger.error('error inside inQueueData : ', error);
-			return false;
-		}
-	}
-
-	/**
-	 * For consuming all type of transactions
-	 */
-	public consumeLatestTransaction() {
-		try {
-			this.channel?.consume(
-				QUEUE_NAME.LATEST_TXS,
-				async (message: amqp.Message | null) => {
-					if (message) {
-						const txData = JSON.parse(message.content.toString());
-						const txRes = await processHelper.processTxs(txData);
-						if (!txRes) {
-							if (txData?.result?.events) {
-								const tx = JSON.stringify(txData);
-								this.inQueueData(QUEUE_NAME.MISSED_TXS, tx);
-							}
-						}
-						this.channel?.ack(message);
-					}
-				},
-				{ noAck: false },
-			);
-		} catch (error) {
-			logger.error(
-				'error while consuming all transactions inside rabbitmq : ',
-				error,
-			);
-		}
-	}
-=======
   /**
    * Save Data in queue
    * @param queue
@@ -131,7 +84,7 @@ class RabbitMq {
       this.channel?.sendToQueue(queue, Buffer.from(data));
       return true;
     } catch (error) {
-      console.log("error inside inQueueData : ", error);
+      console.log('error inside inQueueData : ', error);
       return false;
     }
   }
@@ -151,8 +104,8 @@ class RabbitMq {
               if (txData?.result?.events) {
                 const tx = JSON.stringify(txData);
                 console.log(
-                  "txHash data inside not saved case in queue : ",
-                  tx,
+                  'txHash data inside not saved case in queue : ',
+                  tx
                 );
                 this.inQueueData(QUEUE_NAME.MISSED_TXS, tx);
               }
@@ -160,16 +113,15 @@ class RabbitMq {
             this.channel?.ack(message);
           }
         },
-        { noAck: false },
+        { noAck: false }
       );
     } catch (error) {
       console.log(
-        "error while consuming all transactions inside rabbitmq : ",
-        error,
+        'error while consuming all transactions inside rabbitmq : ',
+        error
       );
     }
   }
->>>>>>> a138f267e79d0663b8245686fc369476f5e94d05
 
   /**
    * For consuming all type of transactions
@@ -181,13 +133,8 @@ class RabbitMq {
         if (message) {
           const blockData = JSON.parse(message.content.toString());
 
-<<<<<<< HEAD
-					const issaved =
-						await processHelper.processLatestBlock(blockData);
-=======
           const issaved = await processHelper.processLatestBlock(blockData);
           // console.log('issaved : ', issaved);
->>>>>>> a138f267e79d0663b8245686fc369476f5e94d05
 
           if (!issaved) {
             if (blockData?.result?.data) {
@@ -196,7 +143,7 @@ class RabbitMq {
               if (blockNumber) {
                 this.inQueueData(
                   QUEUE_NAME.ERROR_BLOCK,
-                  blockNumber.toString(),
+                  blockNumber.toString()
                 );
               }
             }
@@ -204,7 +151,7 @@ class RabbitMq {
           this.channel?.ack(message);
         }
       },
-      { noAck: false },
+      { noAck: false }
     );
   }
 
@@ -226,7 +173,7 @@ class RabbitMq {
           this.channel?.ack(message);
         }
       },
-      { noAck: false },
+      { noAck: false }
     );
   }
 
@@ -249,23 +196,10 @@ class RabbitMq {
           this.channel?.ack(message);
         }
       },
-      { noAck: false },
+      { noAck: false }
     );
   }
 
-<<<<<<< HEAD
-	/**
-	 * For consuming the Missed blocks
-	 */
-	public consumeMissedBlocks(): void {
-		this.channel?.consume(
-			QUEUE_NAME.MISSED_BLOCK,
-			async (message: amqp.Message | null) => {
-				if (message) {
-					const blockData = JSON.parse(message.content.toString());
-					const isSaved =
-						processHelper.processMissedBlocks(blockData);
-=======
   /**
    * For consuming the Missed blocks
    */
@@ -275,23 +209,22 @@ class RabbitMq {
       async (message: amqp.Message | null) => {
         if (message) {
           const blockData = JSON.parse(message.content.toString());
-          console.log("inside missed blockData: ", blockData);
+          console.log('inside missed blockData: ', blockData);
 
           const isSaved = processHelper.processMissedBlocks(blockData);
->>>>>>> a138f267e79d0663b8245686fc369476f5e94d05
 
           if (!isSaved) {
             if (blockData?.blocknumber) {
               this.inQueueData(
                 QUEUE_NAME.ERROR_BLOCK,
-                blockData.blocknumber.toString(),
+                blockData.blocknumber.toString()
               );
             }
           }
           this.channel?.ack(message);
         }
       },
-      { noAck: false },
+      { noAck: false }
     );
   }
 
@@ -308,51 +241,32 @@ class RabbitMq {
           if (isSuccess) {
             // Retrieve the block count from Redis or the database
             let blockCount = await RedisService.getString(
-              REDIS_KEY.NATIVE_BLOCKS_COUNT,
+              REDIS_KEY.NATIVE_BLOCKS_COUNT
             );
 
-<<<<<<< HEAD
-						if (!blockCount) {
-							// First time, get the count from the database
-							blockCount = await prisma.blocks.count();
-							await RedisService.setString(
-								REDIS_KEY.NATIVE_BLOCKS_COUNT,
-								blockCount,
-							);
-						} else {
-							// Increment the block count
-							blockCount = Number(blockCount) + 1;
-							await RedisService.setString(
-								REDIS_KEY.NATIVE_BLOCKS_COUNT,
-								blockCount,
-							);
-						}
-					}
-=======
             if (!blockCount) {
               // First time, get the count from the database
               blockCount = await prisma.blocks.count();
               await RedisService.setString(
                 REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                blockCount,
+                blockCount
               );
             } else {
               // Increment the block count
               blockCount = Number(blockCount) + 1;
               await RedisService.setString(
                 REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                blockCount,
+                blockCount
               );
-              console.log("DOWNblockCount", blockCount);
+              console.log('DOWNblockCount', blockCount);
             }
           }
->>>>>>> a138f267e79d0663b8245686fc369476f5e94d05
 
           log(
-            "downtime block : ",
+            'downtime block : ',
             COLORS.cyan,
             `${block} ${isSuccess}`,
-            COLORS.yellow,
+            COLORS.yellow
           );
           if (!isSuccess) {
             this.inQueueData(QUEUE_NAME.ERROR_BLOCK, block.toString());
@@ -360,7 +274,7 @@ class RabbitMq {
           this.channel?.ack(message);
         }
       },
-      { noAck: false },
+      { noAck: false }
     );
   }
 
@@ -375,7 +289,7 @@ class RabbitMq {
           this.channel?.ack(message);
         }
       },
-      { noAck: false },
+      { noAck: false }
     );
   }
 }
