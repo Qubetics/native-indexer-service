@@ -29,7 +29,7 @@ class SocketHelper {
   async emitSocket(key: string) {
     if (key === REDIS_KEY.CONTRACT_DEPLOY_GRAPH) {
       await this.handleContractDeployGraphData(
-        SOCKET_EVENT.CONTRACT_DEPLOYED_TX,
+        SOCKET_EVENT.CONTRACT_DEPLOYED_TX
       );
     } else if (key === REDIS_KEY.ACCOUNT_GRAPH) {
       await this.handleAccountData(SOCKET_EVENT.ACCOUNT_TX);
@@ -60,7 +60,7 @@ class SocketHelper {
 
       graphData = (await getMinTxQuery(
         new Date(startDateByMinute),
-        currentDateByMinute,
+        currentDateByMinute
       )) as Array<{
         hour: Date;
         count: number;
@@ -68,7 +68,7 @@ class SocketHelper {
       finalData = (await fillMissingMinutes(
         graphData,
         new Date(startDateByMinute),
-        new Date(currentDateModiOfMinute),
+        new Date(currentDateModiOfMinute)
       )) as Array<{ createdAt: string; count: number }>;
 
       allGraphData.thirtyMinute.push(...finalData);
@@ -76,16 +76,16 @@ class SocketHelper {
       const currentDateByHour = new Date();
 
       const oneHourAgo = new Date();
-      oneHourAgo.setHours(oneHourAgo.getHours() - 7);
+      oneHourAgo.setHours(oneHourAgo.getHours() - 6);
       const startDateByHour = formatDate(oneHourAgo);
 
       graphData = (await getHourlyTxQuery(
         startDateByHour,
-        currentDateByHour,
+        currentDateByHour
       )) as Array<{ hour: Date; count: number }>;
       finalData = (await fillMissingDatesWithZeroByhr(
         graphData,
-        new Date(startDateByHour),
+        new Date(startDateByHour)
       )) as Array<{ createdAt: string; count: number }>;
       allGraphData.sixHour.push(...finalData);
 
@@ -97,7 +97,7 @@ class SocketHelper {
 
       graphData = (await getSecTxQuery(
         new Date(startDate),
-        currentDateBySecond,
+        currentDateBySecond
       )) as Array<{
         second: Date;
         count: number;
@@ -105,7 +105,7 @@ class SocketHelper {
       finalData = (await fillMissingSeconds(
         graphData,
         new Date(startDate),
-        new Date(currentDateModi),
+        new Date(currentDateModi)
       )) as Array<{ createdAt: string; count: number }>;
       allGraphData.tenSecond.push(...finalData);
 
@@ -149,12 +149,12 @@ class SocketHelper {
       startDate = formatDate(oneDayAgo);
       graphData = (await getAccountHourlyQuery(
         startDate,
-        currentDate,
+        currentDate
       )) as Array<{ hour: Date; count: number }>;
 
       const finalDataByOneDay = (await fillMissingDatesWithZeroByhr(
         graphData,
-        new Date(startDate),
+        new Date(startDate)
       )) as Array<{ createdAt: string; count: number }>;
       allGraphData.oneDay.push(...finalDataByOneDay);
 
@@ -178,13 +178,13 @@ class SocketHelper {
       startDate = formatDateByMin(oneHourAgo);
       graphData = (await getAccountHourlyMinuteQuery(
         new Date(startDate),
-        currentDate,
+        currentDate
       )) as Array<{ hour: Date; count: number }>;
 
       const finalDataOneHour = (await fillMissingMinutes(
         graphData,
         new Date(startDate),
-        new Date(currentDateModi),
+        new Date(currentDateModi)
       )) as Array<{ createdAt: string; count: number }>;
       allGraphData.oneHour.push(...finalDataOneHour);
 
@@ -206,7 +206,7 @@ class SocketHelper {
       return true;
     } catch (err) {
       logger.error(
-        "error occured while handle Account Data , coin and contract deployed tx",
+        "error occured while handle Account Data , coin and contract deployed tx"
       );
       return false;
     }
@@ -221,12 +221,12 @@ class SocketHelper {
     if (type === "account") {
       graphData = (await getAccountDailyQuery(
         startDate,
-        currentDate,
+        currentDate
       )) as Array<{ day: Date; count: number }>;
     } else if (type === "contract") {
       graphData = (await getContractTxDailyQuery(
         startDate,
-        currentDate,
+        currentDate
       )) as Array<{ day: Date; count: number }>;
     } else if (type === "TPS") {
       graphData = (await getTxDailyQuery(startDate, currentDate)) as Array<{
@@ -237,7 +237,7 @@ class SocketHelper {
     const finalDataBySevenDay = await fillMissingDatesWithZeroByDay(
       graphData,
       new Date(startDate),
-      currentDate,
+      currentDate
     );
 
     return finalDataBySevenDay;
@@ -268,12 +268,12 @@ class SocketHelper {
       startDate = formatDate(oneDayAgo);
       graphData = (await getContractTxHourlyQuery(
         new Date(startDate),
-        currentDate,
+        currentDate
       )) as Array<{ hour: Date; count: number }>;
 
       const finalDataByOneDay = (await fillMissingDatesWithZeroByhr(
         graphData,
-        new Date(startDate),
+        new Date(startDate)
       )) as Array<{ createdAt: string; count: number }>;
 
       allGraphData.oneDay.push(...finalDataByOneDay);
@@ -300,12 +300,12 @@ class SocketHelper {
 
       graphData = (await getContractTxHourlyMinuteQuery(
         new Date(startDate),
-        currentDate,
+        currentDate
       )) as Array<{ hour: Date; count: number }>;
       const finalDataOneHour = (await fillMissingMinutes(
         graphData,
         new Date(startDate),
-        new Date(currentDateModi),
+        new Date(currentDateModi)
       )) as Array<{ createdAt: string; count: number }>;
       allGraphData.oneHour.push(...finalDataOneHour);
       // const txCount = await RedisService.getString(
@@ -324,7 +324,7 @@ class SocketHelper {
       return true;
     } catch (err) {
       logger.error(
-        "Error occured while handle Graph Data, coin and contract deployed tx",
+        "Error occured while handle Graph Data, coin and contract deployed tx"
       );
       return false;
     }
