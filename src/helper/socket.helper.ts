@@ -27,13 +27,14 @@ import {
 
 class SocketHelper {
   async emitSocket(key: string) {
-    if (key === REDIS_KEY.CONTRACT_DEPLOY_GRAPH) {
-      await this.handleContractDeployGraphData(
-        SOCKET_EVENT.CONTRACT_DEPLOYED_TX
-      );
-    } else if (key === REDIS_KEY.ACCOUNT_GRAPH) {
-      await this.handleAccountData(SOCKET_EVENT.ACCOUNT_TX);
-    } else if (key === REDIS_KEY.TPS_GRAPH) {
+    // if (key === REDIS_KEY.CONTRACT_DEPLOY_GRAPH) {
+    //   await this.handleContractDeployGraphData(
+    //     SOCKET_EVENT.CONTRACT_DEPLOYED_TX,
+    //   );
+    // } else if (key === REDIS_KEY.ACCOUNT_GRAPH) {
+    //   await this.handleAccountData(SOCKET_EVENT.ACCOUNT_TX);
+    // } else
+    if (key === REDIS_KEY.TPS_GRAPH) {
       await this.handleAllTxData(SOCKET_EVENT.ALL_TRANSACTIONS);
     }
   }
