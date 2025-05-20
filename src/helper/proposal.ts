@@ -1,8 +1,8 @@
-import { AxiosInstance, AxiosResponse } from "axios";
-import { fetchRequest } from "../Utility/common";
-import { FETCH_METHODS, HEADERS, RES_MSG } from "../constant";
-import { IProposalData } from "../interface";
-import dbHelper from "./db.helper";
+import { AxiosInstance, AxiosResponse } from 'axios';
+import { fetchRequest } from '../Utility/common';
+import { FETCH_METHODS, HEADERS, RES_MSG } from '../constant';
+import { IProposalData } from '../interface';
+import dbHelper from './db.helper';
 
 /**
  *  Process and update information for each proposal
@@ -12,7 +12,7 @@ import dbHelper from "./db.helper";
 async function getProposalsInfo(apiRes: AxiosInstance) {
   try {
     const response: AxiosResponse = await apiRes.get(
-      "/cosmos/gov/v1/proposals?proposal_status=PROPOSAL_STATUS_UNSPECIFIED",
+      '/cosmos/gov/v1/proposals?proposal_status=PROPOSAL_STATUS_UNSPECIFIED',
     );
 
     const proposals: IProposalData[] = [];
@@ -43,10 +43,10 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
       }
 
       const qubeticsAmount = proposal.total_deposit.find(
-        (item: any) => item?.denom === "qubetics",
+        (item: any) => item?.denom === 'qubetics',
       );
 
-      const messageType = proposal?.messages[0]?.["@type"];
+      const messageType = proposal?.messages[0]?.['@type'];
 
       const proposalId = proposal?.id;
 
@@ -66,7 +66,7 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
         title: proposal?.title,
         summary: proposal?.summary,
         proposer: proposal?.proposer,
-        proposerType: messageType || "",
+        proposerType: messageType || '',
         tally: JSON.stringify(tallyData?.data?.tally), // Convert tally object to string
         votingStartTime: proposal?.voting_start_time,
         votingEndTime: proposal?.voting_end_time,
