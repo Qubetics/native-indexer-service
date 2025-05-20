@@ -1,6 +1,6 @@
-import { REDIS_KEY } from '../constant/index';
-import { prisma } from '../lib/db';
-import { RedisService } from '../service';
+import { REDIS_KEY } from "../constant/index";
+import { prisma } from "../lib/db";
+import { RedisService } from "../service";
 
 class ProcessHelper {
   async initializeCount() {
