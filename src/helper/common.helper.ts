@@ -40,7 +40,7 @@ const fetchRequest = async (
             "Error in catch of coin http : ",
             err.response.data.status.error_message,
           );
-          console.error("Error in catch of coin http : ", err);
+        //   console.error("Error in catch of coin http : ", err);
         });
     } catch (err) {
       logger.error(`\x1b[31mError in http request helper: ${err}\x1b[31m`);

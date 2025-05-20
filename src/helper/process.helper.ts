@@ -75,7 +75,6 @@ class ProcessHelper {
       QUEUE_NAME.LATEST_TXS,
       txWsQuery
     );
-    // console.log('txScoket++++++++++++++++++++ ', txSocket);
     txSocket.connect();
   }
 
@@ -230,6 +229,7 @@ class ProcessHelper {
           : "";
         let toAddress = "";
         let method = "";
+
         switch (txEvent) {
           case "/cosmos.bank.v1beta1.MsgSend":
             type = TRANSACTION_TYPE.COIN_TRANSFER;
@@ -425,7 +425,7 @@ class ProcessHelper {
         } else {
           amount = val;
         }
-
+        
         const hash = events["tx.hash"] ? `${events["tx.hash"][0]}` : "";
 
         const txData = {
@@ -442,19 +442,21 @@ class ProcessHelper {
           gasWanted: Number(
             message.result.data?.value?.TxResult?.result?.gas_wanted ?? ""
           ),
+          gasUsed: Number(
+            message.result.data?.value?.TxResult?.result?.gas_used ?? ""
+          ),
           contractAddress,
-        };
+        };        
 
-        console.log("--ABC---txData--ABC--", txData);
         const response = await fetchRequest(
           `${environment.evmHost}/cosmos/tx/v1beta1/txs/${hash}`,
           FETCH_METHODS.GET,
           HEADERS.DEFAULT
         );
 
-        if (!response.error) {
+        if (!response.error) {          
           const feeAmount = response.data?.tx?.auth_info?.fee?.amount.find(
-            (fee: any) => fee.denom === "qubetics"
+            (fee: any) => fee.denom === "tics"
           );
 
           const txFee = feeAmount ? Number(feeAmount.amount) / 10 ** 18 : "";
@@ -651,6 +653,7 @@ class ProcessHelper {
           blocknumber: Number(fetchRes.data?.result?.height ?? 0),
           txFee: fetchRes.data.result?.tx_result?.gas_used ?? "",
           gasWanted: fetchRes.data.result?.tx_result?.gas_wanted ?? "",
+          gasUsed: fetchRes.data.result?.tx_result?.gas_used ?? "",
           type: "",
           toAddress: "",
           fromAddress: "",

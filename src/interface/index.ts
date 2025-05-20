@@ -33,18 +33,19 @@ export interface IBlock {
 }
 
 export interface ITransaction {
-  type: string;
-  status: string;
-  txhash: string;
-  value: string;
-  txFee: string;
-  txString: string;
-  timestamp: string;
-  toAddress: string;
-  gasWanted: number;
-  blocknumber: number;
-  fromAddress: string;
-  contractAddress: string;
+	type: string;
+	status: string;
+	txhash: string;
+	value: string;
+	txFee: string;
+	gasUsed: number;
+	txString: string;
+	timestamp: string;
+	toAddress: string;
+	gasWanted: number;
+	blocknumber: number;
+	fromAddress: string;
+	contractAddress: string;
 }
 
 export interface ICOINTX {

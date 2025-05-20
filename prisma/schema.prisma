@@ -41,6 +41,7 @@ model Transactions {
   fromAddress     String        @db.VarChar(255)
   toAddress       String        @db.VarChar(255)
   gasWanted       BigInt        @default(0)
+  gasUsed         BigInt        @default(0)
   txFee           String        @default("")
   value           String        @default("0")
   createdAt       DateTime      @default(now())
