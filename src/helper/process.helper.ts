@@ -428,6 +428,9 @@ class ProcessHelper {
 
         const hash = events["tx.hash"] ? `${events["tx.hash"][0]}` : "";
 
+        console.log("message.result.data?.value?.TxResult?.result?.gas_used : ", message.result.data?.value?.TxResult?.result?.gas_used);
+        
+
         const txData = {
           type,
           status,
@@ -454,9 +457,12 @@ class ProcessHelper {
           HEADERS.DEFAULT,
         );
 
+        
+        
         if (!response.error) {
+          console.log("response from fetch tx by hash : ", response.data?.tx?.auth_info?.fee?.amount);
           const feeAmount = response.data?.tx?.auth_info?.fee?.amount.find(
-            (fee: any) => fee.denom === "tics",
+            (fee: any) => fee.denom === "tics" || fee.denom === "qubetics",
           );
 
           const txFee = feeAmount ? Number(feeAmount.amount) / 10 ** 18 : "";
