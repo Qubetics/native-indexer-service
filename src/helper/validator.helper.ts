@@ -26,7 +26,7 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
     ] = await Promise.all([
       apiRes.get("/cosmos/staking/v1beta1/validators"),
       apiRes.get(
-        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol}`
+        `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol}`,
       ),
       apiRes.get("/cosmos/mint/v1beta1/inflation"),
       apiRes.get("/cosmos/staking/v1beta1/pool"),
@@ -37,7 +37,7 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
 
     // Filter active validators
     const activeValidator = validatorResponse?.data?.validators.filter(
-      (item: any) => item.status === CONST_NAME.BOND_STATUS
+      (item: any) => item.status === CONST_NAME.BOND_STATUS,
     );
     if (activeValidator?.length === 0) {
       return false;
@@ -89,10 +89,10 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
 function calculateAPY(
   inflation: number,
   bondedRate: number,
-  communityTax: number
+  communityTax: number,
 ): number {
   const apy = Number(
-    ((inflation / bondedRate) * (1 - communityTax) * 100).toFixed(2)
+    ((inflation / bondedRate) * (1 - communityTax) * 100).toFixed(2),
   );
 
   return apy;
@@ -127,7 +127,7 @@ const calculateData = async (): Promise<
     const apyValue = calculateAPY(
       Number(params.inflation),
       Number(params.bondedRate / 100),
-      params.communityTax
+      params.communityTax,
     );
 
     const validatorData = {
@@ -142,17 +142,17 @@ const calculateData = async (): Promise<
 
     await RedisService.setString(
       REDIS_KEY.INFLATION_APY,
-      JSON.stringify(validatorData)
+      JSON.stringify(validatorData),
     );
 
     await RedisService.setString(
       REDIS_KEY.CIRCULATING_SUPPLY,
-      JSON.stringify(params?.circulation_supply)
+      JSON.stringify(params?.circulation_supply),
     );
 
     await RedisService.setString(
       REDIS_KEY.VALIDATOR_DATA,
-      JSON.stringify(validatorData)
+      JSON.stringify(validatorData),
     );
     return validatorData;
   } catch (err) {
@@ -172,10 +172,10 @@ const calculateData = async (): Promise<
  */
 async function getValidatorStakeDetails(
   apiRes: AxiosInstance,
-  address: string
+  address: string,
 ): Promise<ValidatorDelegations> {
   const response: AxiosResponse = await apiRes.get(
-    `/cosmos/staking/v1beta1/validators/${address}/delegations`
+    `/cosmos/staking/v1beta1/validators/${address}/delegations`,
   );
   return response.data;
 }
@@ -188,7 +188,7 @@ async function getValidatorStakeDetails(
  */
 async function validatorUnbondAmount(apiRes: AxiosInstance, address: string) {
   const response: AxiosResponse = await apiRes.get(
-    `/cosmos/staking/v1beta1/validators/${address}/unbonding_delegations`
+    `/cosmos/staking/v1beta1/validators/${address}/unbonding_delegations`,
   );
   const resData = response?.data?.unbonding_responses || [];
 
@@ -211,7 +211,7 @@ async function validatorUnbondAmount(apiRes: AxiosInstance, address: string) {
 async function validatortotalRewards(apiRes: AxiosInstance, address: string) {
   try {
     const response: AxiosResponse = await apiRes.get(
-      `cosmos/distribution/v1beta1/validators/${address}/outstanding_rewards`
+      `cosmos/distribution/v1beta1/validators/${address}/outstanding_rewards`,
     );
 
     return response.data;
@@ -230,7 +230,7 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
   // : Promise<IValidator[] | { error: boolean; message: string }>
   try {
     const response: AxiosResponse = await apiRes.get(
-      "/cosmos/staking/v1beta1/validators"
+      "/cosmos/staking/v1beta1/validators",
     );
     const validators: IValidatorToSave[] = [];
     const delegators: IValidatorStake[] = [];
@@ -241,31 +241,31 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
       const address = bech32.decode(validatorOperatorAddress);
       const validatorAddress = bech32.encode(
         environment.address_prefix,
-        address.words
+        address.words,
       );
 
       const stakeDetails: any = await getValidatorStakeDetails(
         apiRes,
-        validator.operator_address
+        validator.operator_address,
       );
 
       const rewardsRes = await validatortotalRewards(
         apiRes,
-        validator.operator_address
+        validator.operator_address,
       );
 
       const validatorReward = Number(
-        rewardsRes?.rewards?.rewards[0]?.amount || 0
+        rewardsRes?.rewards?.rewards[0]?.amount || 0,
       );
 
       const unbondAmount = await validatorUnbondAmount(
         apiRes,
-        validatorOperatorAddress
+        validatorOperatorAddress,
       );
       const valIndex: number = stakeDetails?.delegation_responses.findIndex(
         (e: any) =>
           e.delegation.delegator_address === validatorAddress &&
-          e.delegation.validator_address === validatorOperatorAddress
+          e.delegation.validator_address === validatorOperatorAddress,
       );
 
       const deleShares =
