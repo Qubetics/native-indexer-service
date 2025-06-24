@@ -13,7 +13,7 @@ jobs:
       ARGOCD_BRANCH: prod
       HUAWEI_REGION: 'ap-southeast-1'
       ARGOCD_REPOSITORY: Qubetics/argocd-qubetics
-      DEPLOYMENT_PATH: Indexer/native-indexer-deployment.yaml
+      DEPLOYMENT_PATH: Native-indexer/native-indexer.yaml
       HUAWEI_IMAGE: prod-qubetics-native-indexer
       DOCKER_USERNAME: ap-southeast-1@BQG9INQF0BKVHSNQOLJG
       ENV: ${{ vars.PROD_NATIVE_INDEXER_SECRET_ENV }}
