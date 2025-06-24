@@ -3,7 +3,7 @@ name: '[prod] Deploy qubetics indexer'
 on: 
   push:
     branches: 
-      - prod
+      - master
 
 jobs:
   deploy_qubetics_indexer:
