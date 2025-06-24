@@ -1,8 +1,8 @@
-import { prisma } from '../lib/db';
+import { prisma } from "../lib/db";
 
 export const getTxHourlyQuery = async (
-	startDate: string,
-	currentDate: Date,
+  startDate: string,
+  currentDate: Date,
 ) => prisma.$queryRaw`
     SELECT DATE_TRUNC('hour', "createdAt") AS "hour", COUNT(*)::int AS "count"
     FROM "Transactions"
@@ -14,8 +14,8 @@ export const getTxHourlyQuery = async (
   `;
 
 export const getContractTxHourlyQuery = async (
-	startDate: Date,
-	currentDate: Date,
+  startDate: Date,
+  currentDate: Date,
 ) => prisma.$queryRaw`
     SELECT DATE_TRUNC('hour', "createdAt") AS "hour", COUNT(*)::int AS "count"
     FROM "Transactions"
@@ -27,8 +27,8 @@ export const getContractTxHourlyQuery = async (
   `;
 
 export const getTxDailyQuery = async (
-	startDate: string,
-	currentDate: Date,
+  startDate: string,
+  currentDate: Date,
 ) => prisma.$queryRaw`
     SELECT DATE_TRUNC('day', "createdAt") AS "day", COUNT(*)::int AS "count"
     FROM "Transactions"
@@ -40,8 +40,8 @@ export const getTxDailyQuery = async (
   `;
 
 export const getContractTxDailyQuery = async (
-	startDate: string,
-	currentDate: Date,
+  startDate: string,
+  currentDate: Date,
 ) => prisma.$queryRaw`
     SELECT DATE_TRUNC('day', "createdAt") AS "day", COUNT(*)::int AS "count"
     FROM "Transactions"
@@ -53,8 +53,8 @@ export const getContractTxDailyQuery = async (
   `;
 
 export const getTxHourlyMinuteQuery = async (
-	startDate: Date,
-	currentDate: Date,
+  startDate: Date,
+  currentDate: Date,
 ) => prisma.$queryRaw`
       SELECT DATE_TRUNC('minute', "createdAt") AS "hour", COUNT(*)::int AS "count"
       FROM "Transactions"
@@ -66,8 +66,8 @@ export const getTxHourlyMinuteQuery = async (
     `;
 
 export const getContractTxHourlyMinuteQuery = async (
-	startDate: Date,
-	currentDate: Date,
+  startDate: Date,
+  currentDate: Date,
 ) => prisma.$queryRaw`
       SELECT DATE_TRUNC('minute', "createdAt") AS "hour", COUNT(*)::int AS "count"
       FROM "Transactions"
@@ -78,8 +78,8 @@ export const getContractTxHourlyMinuteQuery = async (
       ORDER BY "hour";
     `;
 export const getAccountHourlyQuery = async (
-	startDate: string,
-	currentDate: Date,
+  startDate: string,
+  currentDate: Date,
 ) => prisma.$queryRaw`
     SELECT DATE_TRUNC('hour', "createdAt") AS "hour", COUNT(*)::int AS "count"
     FROM "Users"
@@ -91,8 +91,8 @@ export const getAccountHourlyQuery = async (
   `;
 
 export const getAccountDailyQuery = async (
-	startDate: string,
-	currentDate: Date,
+  startDate: string,
+  currentDate: Date,
 ) => prisma.$queryRaw`
     SELECT DATE_TRUNC('day', "createdAt") AS "day", COUNT(*)::int AS "count"
     FROM "Users"
@@ -104,8 +104,8 @@ export const getAccountDailyQuery = async (
   `;
 
 export const getAccountHourlyMinuteQuery = async (
-	startDate: Date,
-	currentDate: Date,
+  startDate: Date,
+  currentDate: Date,
 ) => prisma.$queryRaw`
       SELECT DATE_TRUNC('minute', "createdAt") AS "hour", COUNT(*)::int AS "count"
       FROM "Users"
@@ -117,28 +117,28 @@ export const getAccountHourlyMinuteQuery = async (
     `;
 
 export const getTokenHourlyPriceQuery = async (
-	startDate: string,
-	currentDate: string,
+  startDate: string,
+  currentDate: string,
 ) =>
-	prisma.coinmarketInfo.findMany({
-		where: {
-			createdAt: {
-				gte: new Date(startDate),
-				lte: new Date(currentDate),
-			},
-		},
-		orderBy: {
-			createdAt: 'asc',
-		},
-		select: {
-			createdAt: true,
-			price: true,
-		},
-	});
+  prisma.coinmarketInfo.findMany({
+    where: {
+      createdAt: {
+        gte: new Date(startDate),
+        lte: new Date(currentDate),
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+    select: {
+      createdAt: true,
+      price: true,
+    },
+  });
 
 export const getMinTxQuery = async (
-	startDate: Date,
-	currentDate: Date,
+  startDate: Date,
+  currentDate: Date,
 ) => prisma.$queryRaw`
     SELECT DATE_TRUNC('minute', "createdAt") AS "hour", COUNT(*)::int AS "count"
 				FROM "Transactions"
@@ -149,8 +149,8 @@ export const getMinTxQuery = async (
   `;
 
 export const getSecTxQuery = async (
-	startDate: Date,
-	currentDate: Date,
+  startDate: Date,
+  currentDate: Date,
 ) => prisma.$queryRaw`
     	SELECT DATE_TRUNC('second', "createdAt") AS "second", COUNT(*)::int AS "count"
 				FROM "Transactions"
@@ -161,8 +161,8 @@ export const getSecTxQuery = async (
   `;
 
 export const getHourlyTxQuery = async (
-	startDate: string,
-	currentDate: Date,
+  startDate: string,
+  currentDate: Date,
 ) => prisma.$queryRaw`
    SELECT DATE_TRUNC('hour', "createdAt") AS "hour", COUNT(*)::int AS "count"
 			FROM "Transactions"
@@ -173,32 +173,32 @@ export const getHourlyTxQuery = async (
   `;
 
 export const getTokenPriceGraph = async (startDate: Date, endDate: Date) =>
-	prisma.coinmarketInfo.findMany({
-		where: {
-			createdAt: {
-				gte: new Date(startDate),
-				lte: new Date(endDate),
-			},
-		},
-		orderBy: {
-			createdAt: 'asc',
-		},
-		select: {
-			createdAt: true,
-			price: true,
-		},
-	});
+  prisma.coinmarketInfo.findMany({
+    where: {
+      createdAt: {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+    select: {
+      createdAt: true,
+      price: true,
+    },
+  });
 
 export const getRowCount = async (tableName: string) => {
-	try {
-		const result: { row_count: string }[] =
-			await prisma.$queryRaw`SELECT n_live_tup::bigint AS row_count FROM pg_stat_all_tables WHERE relname = ${tableName}`;
+  try {
+    const result: { row_count: string }[] =
+      await prisma.$queryRaw`SELECT n_live_tup::bigint AS row_count FROM pg_stat_all_tables WHERE relname = ${tableName}`;
 
-		const rowCount = result[0].row_count;
-		return rowCount === '-1' ? 0 : Number(rowCount);
-	} catch (error) {
-		return 0;
-	} finally {
-		await prisma.$disconnect();
-	}
+    const rowCount = result[0].row_count;
+    return rowCount === "-1" ? 0 : Number(rowCount);
+  } catch (error) {
+    return 0;
+  } finally {
+    await prisma.$disconnect();
+  }
 };
