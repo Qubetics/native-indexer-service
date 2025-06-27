@@ -99,6 +99,8 @@ class RabbitMq {
         async (message: amqp.Message | null) => {
           if (message) {
             const txData = JSON.parse(message.content.toString());
+            console.log("txData : ", txData);
+            
             const txRes = await processHelper.processTxs(txData);
             if (!txRes) {
               if (txData?.result?.events) {
