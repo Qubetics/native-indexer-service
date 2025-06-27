@@ -74,6 +74,9 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
         votingEndTime: proposal?.voting_end_time,
       };
 
+      console.log("proposalData : ", proposalData);
+      
+
       await dbHelper.saveProposals(proposalData);
 
       proposals.push(proposalData);
