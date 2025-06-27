@@ -202,7 +202,11 @@ class ProcessHelper {
    */
   public async processTxs(message: any) {
     try {
+
+      console.log("message inside processTxs : ", message);
+      
       const events = message?.result?.events;
+      console.log("events : ", events);
       const data = message?.result?.data;
       if (data && events) {
         const code = data?.value?.TxResult?.result?.code;
