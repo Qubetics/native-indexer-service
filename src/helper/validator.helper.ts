@@ -80,7 +80,11 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       totalSupply,
     };
   } catch (error) {
-    console.log("error occurred while calculating stake APR", error);
+    if (error instanceof Error) {
+      console.log("error occurred while calculating stake APR", error.message);
+    } else {
+      console.log("error occurred while calculating stake APR", error);
+    }
     return false;
   }
 }
@@ -362,9 +366,11 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
     await dbHelper.saveDelegatorStakeData(delegators);
     return validators;
   } catch (err) {
-    console.log("Error occurred while saving validator details", err);
     if (err instanceof Error) {
+      console.log("Error occurred while saving validator details", err.message);
       return { error: true, message: err.message };
+    } else {
+      console.log("Error occurred while saving validator details", err);
     }
     return {
       error: true,
