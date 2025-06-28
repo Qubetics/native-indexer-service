@@ -370,9 +370,9 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
     if (err instanceof Error) {
       console.log("Error occurred while saving validator details", err.message);
       return { error: true, message: err.message };
-    } else {
-      console.log("Error occurred while saving validator details", err);
     }
+    console.log("Error occurred while saving validator details", err);
+
     return {
       error: true,
       message: RES_MSG.VALIDATOR_ERROR,

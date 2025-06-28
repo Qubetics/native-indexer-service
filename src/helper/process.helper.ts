@@ -175,7 +175,7 @@ class ProcessHelper {
             blockDataToSave.miner,
           );
 
-          if (saveRes.error) throw new Error('Error while save block data');
+          if (saveRes.error) throw new Error("Error while save block data");
 
           await RedisService.setString(
             REDIS_KEY.LATEST_BLOCK,
@@ -202,9 +202,8 @@ class ProcessHelper {
    */
   public async processTxs(message: any) {
     try {
-
       console.log("message inside processTxs : ", message);
-      
+
       const events = message?.result?.events;
       console.log("events : ", events);
       const data = message?.result?.data;
@@ -230,7 +229,7 @@ class ProcessHelper {
         let toAddress = "";
         let method = "";
 
-         console.log('txEvent : ', txEvent);
+        console.log("txEvent : ", txEvent);
 
         switch (txEvent) {
           case "/cosmos.bank.v1beta1.MsgSend":
@@ -279,17 +278,17 @@ class ProcessHelper {
 
             break;
 
-          case '/cosmos.gov.v1beta1.MsgSubmitProposal':
+          case "/cosmos.gov.v1beta1.MsgSubmitProposal":
             type = TRANSACTION_TYPE.SUBMIT_PROPOSAL;
-            val = events['transfer.amount'] ? events['transfer.amount'][0] : 0;
-            toAddress = '/cosmos.gov.v1.MsgSubmitProposal';
+            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+            toAddress = "/cosmos.gov.v1.MsgSubmitProposal";
 
             break;
 
-          case '/cosmos.gov.v1beta1.MsgVote':
+          case "/cosmos.gov.v1beta1.MsgVote":
             type = TRANSACTION_TYPE.VOTING;
-            val = events['transfer.amount'] ? events['transfer.amount'][0] : 0;
-            toAddress = '/cosmos.gov.v1.MsgVote';
+            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+            toAddress = "/cosmos.gov.v1.MsgVote";
 
             break;
 
@@ -375,7 +374,7 @@ class ProcessHelper {
             val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
             break;
 
-          case '/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission':
+          case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission":
             type = TRANSACTION_TYPE.VALIDATOR_COMMISSION;
             toAddress =
               "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission";
@@ -472,8 +471,8 @@ class ProcessHelper {
           txData,
         );
 
-        console.log('txData : ', txData);
-        
+        console.log("txData : ", txData);
+
         // save transation
         const saveRes = await dbHelper.saveTransactions(txData);
 
@@ -513,7 +512,7 @@ class ProcessHelper {
           // save the details of voters
           const voterSaveRes = await dbHelper.saveVoters(voters);
 
-          console.log('voterSaveRes : ', voterSaveRes);
+          console.log("voterSaveRes : ", voterSaveRes);
         }
 
         let contractType = "UNKNOWN";
@@ -645,7 +644,7 @@ class ProcessHelper {
         const txData: ITransaction = {
           status,
           txhash: `0x${txHash}`,
-          txString: fetchRes.data?.result?.tx ?? '',
+          txString: fetchRes.data?.result?.tx ?? "",
           blocknumber: Number(fetchRes.data?.result?.height ?? 0),
           txFee: fetchRes.data.result?.tx_result?.gas_used ?? "",
           gasWanted: fetchRes.data.result?.tx_result?.gas_wanted ?? "",
@@ -673,19 +672,19 @@ class ProcessHelper {
           case "/cosmos.bank.v1beta1.MsgSend":
             txData.type = TRANSACTION_TYPE.COIN_TRANSFER;
             break;
-          case '/cosmos.staking.v1beta1.MsgDelegate':
+          case "/cosmos.staking.v1beta1.MsgDelegate":
             txData.type = TRANSACTION_TYPE.BOND_MORE;
             break;
 
-          case '/cosmos.staking.v1beta1.MsgUndelegate':
+          case "/cosmos.staking.v1beta1.MsgUndelegate":
             txData.type = TRANSACTION_TYPE.UNBOND_FUNDS;
             break;
 
-          case '/cosmwasm.wasm.v1.MsgInstantiateContract':
+          case "/cosmwasm.wasm.v1.MsgInstantiateContract":
             txData.type = TRANSACTION_TYPE.CONTRACT_CREATION;
             break;
 
-          case '/cosmwasm.wasm.v1.MsgExecuteContract':
+          case "/cosmwasm.wasm.v1.MsgExecuteContract":
             txData.type = TRANSACTION_TYPE.CONTRACT_EXECUTE;
             break;
 
