@@ -175,7 +175,7 @@ class ProcessHelper {
             blockDataToSave.miner,
           );
 
-          if (saveRes.error) throw new Error('Error while save block data');
+          if (saveRes.error) throw new Error("Error while save block data");
 
           await RedisService.setString(
             REDIS_KEY.LATEST_BLOCK,
@@ -202,9 +202,8 @@ class ProcessHelper {
    */
   public async processTxs(message: any) {
     try {
-
       console.log("message inside processTxs : ", message);
-      
+
       const events = message?.result?.events;
       console.log("events : ", events);
       const data = message?.result?.data;
@@ -216,7 +215,7 @@ class ProcessHelper {
           : TRANSACTION_STATUS.FAILED;
 
         let txEvent;
-
+        console.log(txEvent, "Get_txEvent");
         txEvent = events?.["message.action"]
           ? message?.result?.events?.["message.action"][0]
           : "";
@@ -230,7 +229,7 @@ class ProcessHelper {
         let toAddress = "";
         let method = "";
 
-         console.log('txEvent : ', txEvent);
+        console.log("txEvent : ", txEvent);
 
         switch (txEvent) {
           case "/cosmos.bank.v1beta1.MsgSend":
@@ -251,14 +250,12 @@ class ProcessHelper {
               type = TRANSACTION_TYPE.BOND_MORE;
             }
 
-            // coming like 1qubetics
             val = events["delegate.amount"] ? events["delegate.amount"][0] : 0;
             toAddress = "/cosmos.staking.v1beta1.MsgDelegate";
             break;
 
           case "/cosmos.staking.v1beta1.MsgUndelegate":
             type = TRANSACTION_TYPE.UNBOND_FUNDS;
-            // coming like 1qubetics
             val = events["unbond.amount"] ? events["unbond.amount"][0] : 0;
             toAddress = "/cosmos.staking.v1beta1.MsgUndelegate";
             break;
@@ -281,17 +278,17 @@ class ProcessHelper {
 
             break;
 
-          case '/cosmos.gov.v1beta1.MsgSubmitProposal':
+          case "/cosmos.gov.v1beta1.MsgSubmitProposal":
             type = TRANSACTION_TYPE.SUBMIT_PROPOSAL;
-            val = events['transfer.amount'] ? events['transfer.amount'][0] : 0;
-            toAddress = '/cosmos.gov.v1.MsgSubmitProposal';
+            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+            toAddress = "/cosmos.gov.v1.MsgSubmitProposal";
 
             break;
 
-          case '/cosmos.gov.v1beta1.MsgVote':
+          case "/cosmos.gov.v1beta1.MsgVote":
             type = TRANSACTION_TYPE.VOTING;
-            val = events['transfer.amount'] ? events['transfer.amount'][0] : 0;
-            toAddress = '/cosmos.gov.v1.MsgVote';
+            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+            toAddress = "/cosmos.gov.v1.MsgVote";
 
             break;
 
@@ -377,7 +374,7 @@ class ProcessHelper {
             val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
             break;
 
-          case '/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission':
+          case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission":
             type = TRANSACTION_TYPE.VALIDATOR_COMMISSION;
             toAddress =
               "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission";
@@ -458,26 +455,6 @@ class ProcessHelper {
           contractAddress,
         };
 
-        // const response = await fetchRequest(
-        //   `${environment.evmHost}/cosmos/tx/v1beta1/txs/${hash}`,
-        //   FETCH_METHODS.GET,
-        //   HEADERS.DEFAULT
-        // );
-
-        // if (!response.error) {
-        //   console.log(
-        //     "response from fetch tx by hash : ",
-        //     response.data?.tx?.auth_info?.fee?.amount
-        //   );
-        //   const feeAmount = response.data?.tx?.auth_info?.fee?.amount.find(
-        //     (fee: any) => fee.denom === "tics" || fee.denom === "qubetics"
-        //   );
-
-        //   const txFee = feeAmount ? Number(feeAmount.amount) / 10 ** 18 : "";
-
-        //   txData.txFee = txFee.toString();
-        // }
-
         const url = `${environment.httpHost}/block?height=${txData.blocknumber}`;
         const fetchRes = await fetchRequest(
           url,
@@ -494,8 +471,8 @@ class ProcessHelper {
           txData,
         );
 
-        console.log('txData : ', txData);
-        
+        console.log("txData : ", txData);
+
         // save transation
         const saveRes = await dbHelper.saveTransactions(txData);
 
@@ -535,7 +512,7 @@ class ProcessHelper {
           // save the details of voters
           const voterSaveRes = await dbHelper.saveVoters(voters);
 
-          console.log('voterSaveRes : ', voterSaveRes);
+          console.log("voterSaveRes : ", voterSaveRes);
         }
 
         let contractType = "UNKNOWN";
@@ -667,7 +644,7 @@ class ProcessHelper {
         const txData: ITransaction = {
           status,
           txhash: `0x${txHash}`,
-          txString: fetchRes.data?.result?.tx ?? '',
+          txString: fetchRes.data?.result?.tx ?? "",
           blocknumber: Number(fetchRes.data?.result?.height ?? 0),
           txFee: fetchRes.data.result?.tx_result?.gas_used ?? "",
           gasWanted: fetchRes.data.result?.tx_result?.gas_wanted ?? "",
@@ -695,19 +672,19 @@ class ProcessHelper {
           case "/cosmos.bank.v1beta1.MsgSend":
             txData.type = TRANSACTION_TYPE.COIN_TRANSFER;
             break;
-          case '/cosmos.staking.v1beta1.MsgDelegate':
+          case "/cosmos.staking.v1beta1.MsgDelegate":
             txData.type = TRANSACTION_TYPE.BOND_MORE;
             break;
 
-          case '/cosmos.staking.v1beta1.MsgUndelegate':
+          case "/cosmos.staking.v1beta1.MsgUndelegate":
             txData.type = TRANSACTION_TYPE.UNBOND_FUNDS;
             break;
 
-          case '/cosmwasm.wasm.v1.MsgInstantiateContract':
+          case "/cosmwasm.wasm.v1.MsgInstantiateContract":
             txData.type = TRANSACTION_TYPE.CONTRACT_CREATION;
             break;
 
-          case '/cosmwasm.wasm.v1.MsgExecuteContract':
+          case "/cosmwasm.wasm.v1.MsgExecuteContract":
             txData.type = TRANSACTION_TYPE.CONTRACT_EXECUTE;
             break;
 
@@ -772,6 +749,7 @@ class ProcessHelper {
    */
   public async processErrorBlock(blockNumber: string) {
     try {
+      console.log("block Number", blockNumber);
       const url2 = `${environment.httpHost}/block?height=${blockNumber}`;
       const fetchRes2 = await fetchRequest(
         url2,
@@ -779,7 +757,7 @@ class ProcessHelper {
         HEADERS.DEFAULT,
         null,
       );
-
+      console.log("fetchRes2,", fetchRes2);
       if (!fetchRes2?.data?.result) {
         console.log("fetchRes2?.data ", fetchRes2);
       }

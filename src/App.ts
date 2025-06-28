@@ -25,7 +25,7 @@ export default class App {
    */
   private routes(): void {
     this.express.get("/", this.basePathRoute);
-    this.express.use("/qubetics", registerRoutes());
+    this.express.use(`/${environment.projectName}`, registerRoutes());
   }
 
   /**

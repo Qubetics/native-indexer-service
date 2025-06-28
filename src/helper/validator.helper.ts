@@ -122,7 +122,7 @@ const calculateData = async (): Promise<
         "Content-Type": "application/json; charset=utf-8",
         Accept: "application/json",
       },
-      timeout: 1000,
+      timeout: 10000,
     });
 
     const params = await getParams(apiRes);
@@ -235,6 +235,7 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
   try {
     const response: AxiosResponse = await apiRes.get(
       "/cosmos/staking/v1beta1/validators",
+      { timeout: 10000 },
     );
     const validators: IValidatorToSave[] = [];
     const delegators: IValidatorStake[] = [];
@@ -369,9 +370,9 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
     if (err instanceof Error) {
       console.log("Error occurred while saving validator details", err.message);
       return { error: true, message: err.message };
-    } else {
-      console.log("Error occurred while saving validator details", err);
     }
+    console.log("Error occurred while saving validator details", err);
+
     return {
       error: true,
       message: RES_MSG.VALIDATOR_ERROR,

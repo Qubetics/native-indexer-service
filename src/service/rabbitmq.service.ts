@@ -98,28 +98,31 @@ class RabbitMq {
         QUEUE_NAME.LATEST_TXS,
         async (message: amqp.Message | null) => {
           if (message) {
-            const txData = JSON.parse(message.content.toString());
-            console.log("txData : ", txData);
-            
-            const txRes = await processHelper.processTxs(txData);
-            if (!txRes) {
-              if (txData?.result?.events) {
-                const tx = JSON.stringify(txData);
-                console.log(
-                  "txHash data inside not saved case in queue : ",
-                  tx,
-                );
-                this.inQueueData(QUEUE_NAME.MISSED_TXS, tx);
+            try {
+              const txData = JSON.parse(message.content.toString());
+              const txRes = await processHelper.processTxs(txData);
+              if (!txRes) {
+                if (txData?.result?.events) {
+                  const tx = JSON.stringify(txData);
+                  console.log(
+                    "txHash data inside not saved case in queue : ",
+                    tx,
+                  );
+                  this.inQueueData(QUEUE_NAME.MISSED_TXS, tx);
+                }
               }
+              this.channel?.ack(message);
+            } catch (error) {
+              console.log("*** consumeLatestTransaction Error", error);
+              this.channel?.ack(message);
             }
-            this.channel?.ack(message);
           }
         },
         { noAck: false },
       );
     } catch (error) {
       console.log(
-        "error while consuming all transactions inside rabbitmq : ",
+        "error while consuming all consumeLatestTransaction : ",
         error,
       );
     }
@@ -129,170 +132,212 @@ class RabbitMq {
    * For consuming all type of transactions
    */
   public consumeLatestBlocks() {
-    this.channel?.consume(
-      QUEUE_NAME.LATEST_BLOCKS,
-      async (message: amqp.Message | null) => {
-        if (message) {
-          const blockData = JSON.parse(message.content.toString());
+    try {
+      this.channel?.consume(
+        QUEUE_NAME.LATEST_BLOCKS,
+        async (message: amqp.Message | null) => {
+          if (message) {
+            try {
+              const blockData = JSON.parse(message.content.toString());
 
-          const issaved = await processHelper.processLatestBlock(blockData);
-          // console.log('issaved : ', issaved);
+              const issaved = await processHelper.processLatestBlock(blockData);
 
-          if (!issaved) {
-            if (blockData?.result?.data) {
-              const blockNumber =
-                blockData?.result?.data?.value?.block?.header?.height;
-              if (blockNumber) {
-                this.inQueueData(
-                  QUEUE_NAME.ERROR_BLOCK,
-                  blockNumber.toString(),
-                );
+              if (!issaved) {
+                if (blockData?.result?.data) {
+                  const blockNumber =
+                    blockData?.result?.data?.value?.block?.header?.height;
+                  if (blockNumber) {
+                    this.inQueueData(
+                      QUEUE_NAME.ERROR_BLOCK,
+                      blockNumber.toString(),
+                    );
+                  }
+                }
               }
+              this.channel?.ack(message);
+            } catch (error) {
+              console.log("*** #error consumeLatestBlocks", error);
+              this.channel?.ack(message);
             }
           }
-          this.channel?.ack(message);
-        }
-      },
-      { noAck: false },
-    );
+        },
+        { noAck: false },
+      );
+    } catch (error) {
+      console.log("### Error consumeLatestBlocks ", error);
+    }
   }
 
   /**
    * For consuming all type of transactions
    */
   public consumeMissedTxs() {
-    this.channel?.consume(
-      QUEUE_NAME.MISSED_TXS,
-      async (message: amqp.Message | null) => {
-        if (message) {
-          const txData = JSON.parse(message.content.toString());
-          const txRes = await processHelper.processTxs(txData);
-          // const txHash = message.content.toString();
-          // const saved = await processHelper.processMissedTxs(txHash);
-          if (!txRes) {
-            this.inQueueData(QUEUE_NAME.MISSED_TXS, JSON.stringify(txData));
+    try {
+      this.channel?.consume(
+        QUEUE_NAME.MISSED_TXS,
+        async (message: amqp.Message | null) => {
+          if (message) {
+            try {
+              const txData = JSON.parse(message.content.toString());
+              const txRes = await processHelper.processTxs(txData);
+              if (!txRes) {
+                this.inQueueData(QUEUE_NAME.MISSED_TXS, JSON.stringify(txData));
+              }
+              this.channel?.ack(message);
+            } catch (error) {
+              console.log("*** Error consumeMissedTxs", error);
+              this.channel?.ack(message);
+            }
           }
-          this.channel?.ack(message);
-        }
-      },
-      { noAck: false },
-    );
+        },
+        { noAck: false },
+      );
+    } catch (error) {
+      console.log("### Error consumeMissedTxs", error);
+    }
   }
 
   /**
    * For consuming the error blocks
    */
   public consumeErrorBlocks(): void {
-    this.channel?.consume(
-      QUEUE_NAME.ERROR_BLOCK,
-      async (message: amqp.Message | null) => {
-        if (message) {
-          const blockNo = message.content.toString();
-          const isSaved = processHelper.processErrorBlock(blockNo);
-          // if (!isSaved) {
-          // 	this.inQueueData(
-          // 		QUEUE_NAME.ERROR_BLOCK,
-          // 		message.content.toString(),
-          // 	);
-          // }
-          this.channel?.ack(message);
-        }
-      },
-      { noAck: false },
-    );
+    try {
+      this.channel?.consume(
+        QUEUE_NAME.ERROR_BLOCK,
+        async (message: amqp.Message | null) => {
+          if (message) {
+            try {
+              const blockNo = message.content.toString();
+              await processHelper.processErrorBlock(blockNo);
+              this.channel?.ack(message);
+            } catch (error) {
+              console.log("*** error consumeErrorBlocks", error);
+              this.channel?.ack(message);
+            }
+          }
+        },
+        { noAck: false },
+      );
+    } catch (error) {
+      console.log("### error consumeErrorBlocks", error);
+    }
   }
 
   /**
    * For consuming the Missed blocks
    */
   public consumeMissedBlocks(): void {
-    this.channel?.consume(
-      QUEUE_NAME.MISSED_BLOCK,
-      async (message: amqp.Message | null) => {
-        if (message) {
-          const blockData = JSON.parse(message.content.toString());
-          console.log("inside missed blockData: ", blockData);
+    try {
+      this.channel?.consume(
+        QUEUE_NAME.MISSED_BLOCK,
+        async (message: amqp.Message | null) => {
+          if (message) {
+            try {
+              const blockData = JSON.parse(message.content.toString());
+              console.log("inside missed blockData: ", blockData);
 
-          const isSaved = processHelper.processMissedBlocks(blockData);
+              const isSaved =
+                await processHelper.processMissedBlocks(blockData);
 
-          if (!isSaved) {
-            if (blockData?.blocknumber) {
-              this.inQueueData(
-                QUEUE_NAME.ERROR_BLOCK,
-                blockData.blocknumber.toString(),
-              );
+              if (!isSaved) {
+                if (blockData?.blocknumber) {
+                  this.inQueueData(
+                    QUEUE_NAME.ERROR_BLOCK,
+                    blockData.blocknumber.toString(),
+                  );
+                }
+              }
+              this.channel?.ack(message);
+            } catch (error) {
+              console.log("*** #consumeMissedBlocks: ", error);
             }
           }
-          this.channel?.ack(message);
-        }
-      },
-      { noAck: false },
-    );
+        },
+        { noAck: false },
+      );
+    } catch (error) {
+      console.log("Error consumeMissedBlocks", error);
+    }
   }
 
   /**
    * Handle blocks one by one when server is down
    */
   consumeDownTimeBlocks(): void {
-    this.channel?.consume(
-      QUEUE_NAME.DOWNTIME_BLOCK,
-      async (message: amqp.Message | null) => {
-        if (message) {
-          const block = message.content.toString();
-          const isSuccess = await processHelper.processErrorBlock(block);
-          if (isSuccess) {
-            // Retrieve the block count from Redis or the database
-            let blockCount = await RedisService.getString(
-              REDIS_KEY.NATIVE_BLOCKS_COUNT,
-            );
+    try {
+      this.channel?.consume(
+        QUEUE_NAME.DOWNTIME_BLOCK,
+        async (message: amqp.Message | null) => {
+          if (message) {
+            try {
+              const block = message.content.toString();
+              const isSuccess = await processHelper.processErrorBlock(block);
+              if (isSuccess) {
+                // Retrieve the block count from Redis or the database
+                let blockCount = await RedisService.getString(
+                  REDIS_KEY.NATIVE_BLOCKS_COUNT,
+                );
 
-            if (!blockCount) {
-              // First time, get the count from the database
-              blockCount = await prisma.blocks.count();
-              await RedisService.setString(
-                REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                blockCount,
+                if (!blockCount) {
+                  // First time, get the count from the database
+                  blockCount = await prisma.blocks.count();
+                  await RedisService.setString(
+                    REDIS_KEY.NATIVE_BLOCKS_COUNT,
+                    blockCount,
+                  );
+                } else {
+                  // Increment the block count
+                  blockCount = Number(blockCount) + 1;
+                  await RedisService.setString(
+                    REDIS_KEY.NATIVE_BLOCKS_COUNT,
+                    blockCount,
+                  );
+                }
+              }
+
+              log(
+                "downtime block : ",
+                COLORS.cyan,
+                `${block} ${isSuccess}`,
+                COLORS.yellow,
               );
-            } else {
-              // Increment the block count
-              blockCount = Number(blockCount) + 1;
-              await RedisService.setString(
-                REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                blockCount,
-              );
-              console.log("DOWNblockCount", blockCount);
+              if (!isSuccess) {
+                this.inQueueData(QUEUE_NAME.ERROR_BLOCK, block.toString());
+              }
+              this.channel?.ack(message);
+            } catch (error) {
+              console.log("*** Error consumeDownTimeBlocks", error);
             }
           }
-
-          log(
-            "downtime block : ",
-            COLORS.cyan,
-            `${block} ${isSuccess}`,
-            COLORS.yellow,
-          );
-          if (!isSuccess) {
-            this.inQueueData(QUEUE_NAME.ERROR_BLOCK, block.toString());
-          }
-          this.channel?.ack(message);
-        }
-      },
-      { noAck: false },
-    );
+        },
+        { noAck: false },
+      );
+    } catch (error) {
+      console.log("### Error consumeDownTimeBlocks", error);
+    }
   }
 
   public consumeNullTimestamp() {
-    this.channel?.consume(
-      QUEUE_NAME.NULL_TIMESTAMP,
-      async (message: amqp.Message | null) => {
-        if (message) {
-          const blockData = JSON.parse(message.content.toString());
-
-          const issaved = await processHelper.processLatestBlock(blockData);
-          this.channel?.ack(message);
-        }
-      },
-      { noAck: false },
-    );
+    try {
+      this.channel?.consume(
+        QUEUE_NAME.NULL_TIMESTAMP,
+        async (message: amqp.Message | null) => {
+          if (message) {
+            try {
+              const blockData = JSON.parse(message.content.toString());
+              await processHelper.processLatestBlock(blockData);
+              this.channel?.ack(message);
+            } catch (error) {
+              console.log("*** consumeNullTimestamp", error);
+              this.channel?.ack(message);
+            }
+          }
+        },
+        { noAck: false },
+      );
+    } catch (error) {
+      console.log("### error consumeNullTimestamp", error);
+    }
   }
 }
 
