@@ -25,7 +25,7 @@ export default class App {
    */
   private routes(): void {
     this.express.get("/", this.basePathRoute);
-    this.express.use("/qubetics", registerRoutes());
+    this.express.use(`/${environment.projectName}`, registerRoutes());
   }
 
   /**
@@ -39,7 +39,7 @@ export default class App {
       helmet({
         contentSecurityPolicy: false,
         crossOriginEmbedderPolicy: false,
-      }),
+      })
     );
     this.express.use(express.json({ limit: "100mb" }));
     this.express.use(express.urlencoded({ limit: "100mb", extended: true }));
@@ -52,7 +52,7 @@ export default class App {
 
   private basePathRoute(
     _request: express.Request,
-    response: express.Response,
+    response: express.Response
   ): void {
     response.json({ message: "base path" });
   }

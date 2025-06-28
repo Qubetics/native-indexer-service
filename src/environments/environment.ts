@@ -37,6 +37,7 @@ class Environment implements IEnvironment {
   public evmHost: string;
 
   public wsUrl: string;
+  public projectName: string;
 
   httpHost: string;
 
@@ -63,6 +64,7 @@ class Environment implements IEnvironment {
     this.currency = <string>process.env.TOKEN_CURRENCY;
     this.evmHost = <string>process.env.NATIVE_SWAGGER_HTTP_HOST;
     this.wsUrl = <string>process.env.NATIVE_TENDERMINT_NODE_WS_URL;
+    this.projectName = <string>process.env.PROJECT_NAME;
   }
 
   /**
