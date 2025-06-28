@@ -12,7 +12,7 @@ import dbHelper from "./db.helper";
 async function getProposalsInfo(apiRes: AxiosInstance) {
   try {
     const response: AxiosResponse = await apiRes.get(
-      "/cosmos/gov/v1/proposals?proposal_status=PROPOSAL_STATUS_UNSPECIFIED"
+      "/cosmos/gov/v1/proposals?proposal_status=PROPOSAL_STATUS_UNSPECIFIED",
     );
 
     const proposals: IProposalData[] = [];
@@ -43,7 +43,7 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
       }
 
       const getAmount = proposal.total_deposit.find(
-        (item: any) => item?.denom === `${environment.projectName}`
+        (item: any) => item?.denom === `${environment.projectName}`,
       );
 
       const messageType = proposal?.messages[0]?.["@type"];
@@ -55,7 +55,7 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
         url,
         FETCH_METHODS.GET,
         HEADERS.DEFAULT,
-        null
+        null,
       );
 
       const proposalData: IProposalData = {

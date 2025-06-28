@@ -37,6 +37,7 @@ class Environment implements IEnvironment {
   public evmHost: string;
 
   public wsUrl: string;
+
   public projectName: string;
 
   httpHost: string;
