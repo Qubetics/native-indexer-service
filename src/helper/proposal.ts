@@ -11,8 +11,12 @@ import dbHelper from "./db.helper";
  */
 async function getProposalsInfo(apiRes: AxiosInstance) {
   try {
+    console.log(
+      "Checking for new proposals.............................................."
+    );
+
     const response: AxiosResponse = await apiRes.get(
-      "/cosmos/gov/v1/proposals?proposal_status=PROPOSAL_STATUS_UNSPECIFIED",
+      "/cosmos/gov/v1/proposals?proposal_status=PROPOSAL_STATUS_UNSPECIFIED"
     );
 
     const proposals: IProposalData[] = [];
@@ -42,8 +46,8 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
           break;
       }
 
-      const getAmount = proposal.total_deposit.find(
-        (item: any) => item?.denom === `${environment.projectName}`,
+      const amountObj = proposal.total_deposit.find(
+        (item: any) => item?.denom === (environment?.symbol ?? "").toLowerCase()
       );
 
       const messageType = proposal?.messages[0]?.["@type"];
@@ -55,22 +59,24 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
         url,
         FETCH_METHODS.GET,
         HEADERS.DEFAULT,
-        null,
+        null
       );
 
       const proposalData: IProposalData = {
         proposalId,
         status,
-        totalDeposit: getAmount.amount,
         metaData: proposal?.metadata,
         title: proposal?.title,
         summary: proposal?.summary,
         proposer: proposal?.proposer,
+        totalDeposit: amountObj?.amount,
         proposerType: messageType || "",
-        tally: JSON.stringify(tallyData?.data?.tally), // Convert tally object to string
+        tally: JSON.stringify(tallyData?.data?.tally),
         votingStartTime: proposal?.voting_start_time,
         votingEndTime: proposal?.voting_end_time,
       };
+
+      console.log("proposalData : ", proposalData);
 
       await dbHelper.saveProposals(proposalData);
 
@@ -79,8 +85,11 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
     return proposals;
   } catch (err) {
     if (err instanceof Error) {
+      console.log("Error while saving proposal", err?.message);
       return { error: true, message: err.message };
     }
+    console.log("Error while saving proposal", err);
+
     return {
       error: true,
       message: RES_MSG.PROPOSAL_ERROR,

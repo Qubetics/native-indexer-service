@@ -21,7 +21,7 @@ class CronService {
           "Content-Type": "application/json; charset=utf-8",
           Accept: "application/json",
         },
-        timeout: 1000,
+        timeout: 10000,
       });
     } catch (error) {
       console.log("error while making connection to rpc inside cron : ", error);
