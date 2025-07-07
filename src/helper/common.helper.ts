@@ -5,7 +5,7 @@ const fetchRequest = async (
   url: string,
   data: { symbol: string; convert: string },
   _method: Method,
-  headers: object
+  headers: object,
 ) =>
   new Promise((resolve, reject) => {
     try {
