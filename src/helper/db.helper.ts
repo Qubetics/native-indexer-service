@@ -4,6 +4,7 @@ import {
   CONST_NAME,
   FETCH_METHODS,
   HEADERS,
+  CURRENT_DEFAULT_COIN_PRICE,
 } from "../constant";
 import {
   IBlock,
@@ -45,7 +46,7 @@ class ExlorerHelper {
 
       console.log(
         "error.code === 'P2002' unique check fail : ",
-        error.code === "P2002",
+        error.code === "P2002"
       );
 
       if (error.code === "P2002") {
@@ -67,7 +68,7 @@ class ExlorerHelper {
    */
   upsertValidatorsCount = async (
     operatorAddress: string,
-    validatorAddress: string,
+    validatorAddress: string
   ): Promise<IESResponse> => {
     try {
       const dataTosave = {
@@ -172,7 +173,7 @@ class ExlorerHelper {
   };
 
   userSave = async (
-    userData: Array<{ address: string }>,
+    userData: Array<{ address: string }>
   ): Promise<IESResponse> => {
     try {
       await Promise.all(userData.map(this.processUserData));
@@ -194,7 +195,7 @@ class ExlorerHelper {
   };
 
   saveValidators = async (
-    validatorData: IValidatorToSave[],
+    validatorData: IValidatorToSave[]
   ): Promise<IESResponse> => {
     try {
       await prisma.validator.deleteMany();
@@ -242,7 +243,7 @@ class ExlorerHelper {
   /**
    * save token price by date
    */
-  saveTokenPriceByDate = async () => {
+  saveTokenPriceByDate_1 = async () => {
     try {
       const { symbol, currency, coinMarketApi, coinMarketKey } = environment;
 
@@ -284,19 +285,19 @@ class ExlorerHelper {
 
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP,
-        JSON.stringify(coinResult.marketCap),
+        JSON.stringify(coinResult.marketCap)
       );
       await RedisService.setString(
         REDIS_KEY.CIRCULATING_SUPPLY,
-        JSON.stringify(coinResult.circulatingSupply),
+        JSON.stringify(coinResult.circulatingSupply)
       );
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP_PRICE,
-        JSON.stringify(coinMarketResult),
+        JSON.stringify(coinMarketResult)
       );
       await RedisService.setString(
         REDIS_KEY.TOKEN_PRICE,
-        JSON.stringify(coinResult.price),
+        JSON.stringify(coinResult.price)
       );
       return {
         error: false,
@@ -388,7 +389,7 @@ class ExlorerHelper {
   // }
 
   saveContractDeployTx = async (
-    contactData: IContracts,
+    contactData: IContracts
   ): Promise<IESResponse> => {
     try {
       await prisma.contracts.createMany({
@@ -480,7 +481,7 @@ class ExlorerHelper {
               },
             });
             console.log("Updated holder:", updatedHolder);
-          }),
+          })
         );
       } else {
         const newHolder = await prisma.holders.create({
@@ -573,6 +574,97 @@ class ExlorerHelper {
         message: RES_MSG.VOTER_SAVED_ERROR,
         data: { isAdded: false },
       };
+    }
+  };
+
+  saveTokenPriceByDate = async () => {
+    try {
+      const { symbol, currency, coinMarketApi, coinMarketKey } = environment;
+      const params = {
+        symbol,
+        convert: currency.toLowerCase(),
+      };
+
+      console.log("params", params);
+      const coinResult = (await fetchRequest(coinMarketApi, params, "get", {
+        accept: "application/json",
+        "X-CMC_PRO_API_KEY": coinMarketKey,
+      })) as {
+        price: number;
+        volume24h: number;
+        marketCap: number;
+        circulatingSupply: number;
+        volumeChange24h: number;
+        percentChange1h: number;
+        percentChange24h: number;
+        percentChange7d: number;
+        percentChange30d: number;
+        self_reported_circulating_supply: number;
+        self_reported_market_cap: number;
+      };
+      console.log("coinResult", coinResult);
+
+      // For this example, let (C) = 10,000 USD / 1 BTC and let (S) = 17,000,000 BTC.
+
+      // D = C * S
+      // D = 10,000 USD / 1 BTC * 17,000,000 BTC = 170,000,000,000 USD
+
+      /**
+       * checks to get the market cap values
+       * if value is 0 for market cap from CMC : display self-reported market cap
+       * if self-reported market cap is 0 : D = C * S where C is the last known price in USD and the S is the current supply
+       */
+
+      const coinMarketResult = {
+        price: coinResult.price.toString(),
+        volume24h: coinResult.volume24h.toString(),
+        volumeChange24h: coinResult.volumeChange24h.toString(),
+        percentChange1h: coinResult.percentChange1h.toString(),
+        percentChange24h: coinResult.percentChange24h.toString(),
+        percentChange7d: coinResult.percentChange7d.toString(),
+        percentChange30d: coinResult.percentChange30d.toString(),
+        symbol,
+        currency,
+      };
+
+      const coinPrice = coinResult?.price ?? CURRENT_DEFAULT_COIN_PRICE;
+      const circulating_supply =
+        coinResult?.circulatingSupply !== 0
+          ? coinResult?.circulatingSupply
+          : coinResult?.self_reported_circulating_supply;
+      const marketCapital: number =
+        coinResult?.marketCap !== 0
+          ? coinResult?.marketCap
+          : (coinResult?.self_reported_market_cap ??
+            coinPrice * circulating_supply);
+
+      await prisma.coinmarketInfo.create({
+        data: coinMarketResult,
+      });
+
+      await RedisService.setString(
+        REDIS_KEY.MARKET_CAP,
+        JSON.stringify(marketCapital)
+      );
+      await RedisService.setString(
+        REDIS_KEY.CIRCULATING_SUPPLY,
+        JSON.stringify(circulating_supply)
+      );
+      await RedisService.setString(
+        REDIS_KEY.MARKET_CAP_PRICE,
+        JSON.stringify(coinMarketResult)
+      );
+
+      await RedisService.setString(
+        REDIS_KEY.COIN_PRICE,
+        JSON.stringify(coinPrice)
+      );
+      await SocketHelper.emitSocket(REDIS_KEY.TOKEN_GRAPH);
+
+      return true;
+    } catch (err) {
+      logger.error("unable to save token price", err);
+      return false;
     }
   };
 
