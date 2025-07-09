@@ -47,7 +47,7 @@ class ExlorerHelper {
 
       console.log(
         "error.code === 'P2002' unique check fail : ",
-        error.code === "P2002"
+        error.code === "P2002",
       );
 
       if (error.code === "P2002") {
@@ -69,7 +69,7 @@ class ExlorerHelper {
    */
   upsertValidatorsCount = async (
     operatorAddress: string,
-    validatorAddress: string
+    validatorAddress: string,
   ): Promise<IESResponse> => {
     try {
       const dataTosave = {
@@ -174,7 +174,7 @@ class ExlorerHelper {
   };
 
   userSave = async (
-    userData: Array<{ address: string }>
+    userData: Array<{ address: string }>,
   ): Promise<IESResponse> => {
     try {
       await Promise.all(userData.map(this.processUserData));
@@ -196,7 +196,7 @@ class ExlorerHelper {
   };
 
   saveValidators = async (
-    validatorData: IValidatorToSave[]
+    validatorData: IValidatorToSave[],
   ): Promise<IESResponse> => {
     try {
       await prisma.validator.deleteMany();
@@ -286,19 +286,19 @@ class ExlorerHelper {
 
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP,
-        JSON.stringify(coinResult.marketCap)
+        JSON.stringify(coinResult.marketCap),
       );
       await RedisService.setString(
         REDIS_KEY.CIRCULATING_SUPPLY,
-        JSON.stringify(coinResult.circulatingSupply)
+        JSON.stringify(coinResult.circulatingSupply),
       );
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP_PRICE,
-        JSON.stringify(coinMarketResult)
+        JSON.stringify(coinMarketResult),
       );
       await RedisService.setString(
         REDIS_KEY.TOKEN_PRICE,
-        JSON.stringify(coinResult.price)
+        JSON.stringify(coinResult.price),
       );
       return {
         error: false,
@@ -390,7 +390,7 @@ class ExlorerHelper {
   // }
 
   saveContractDeployTx = async (
-    contactData: IContracts
+    contactData: IContracts,
   ): Promise<IESResponse> => {
     try {
       await prisma.contracts.createMany({
@@ -482,7 +482,7 @@ class ExlorerHelper {
               },
             });
             console.log("Updated holder:", updatedHolder);
-          })
+          }),
         );
       } else {
         const newHolder = await prisma.holders.create({
@@ -666,11 +666,11 @@ class ExlorerHelper {
       await RedisService.setString(REDIS_KEY.MARKET_CAP, marketCapital);
       await RedisService.setString(
         REDIS_KEY.CIRCULATING_SUPPLY,
-        circulating_supply
+        circulating_supply,
       );
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP_PRICE,
-        coinMarketResult
+        coinMarketResult,
       );
 
       await RedisService.setString(REDIS_KEY.COIN_PRICE, coinPrice);

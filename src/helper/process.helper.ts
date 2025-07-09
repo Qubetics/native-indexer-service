@@ -233,9 +233,10 @@ class ProcessHelper {
         switch (txEvent) {
           case "/cosmos.bank.v1beta1.MsgSend":
             type = TRANSACTION_TYPE.COIN_TRANSFER;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+
+            val = events["transfer.amount"] ? events["transfer.amount"][1] : 0;
             toAddress = events["transfer.recipient"]
-              ? events["transfer.recipient"][0]
+              ? events["transfer.recipient"][1]
               : "";
             break;
 
@@ -402,9 +403,9 @@ class ProcessHelper {
 
           case "/ethermint.evm.v1.MsgEthereumTx":
             type = TRANSACTION_TYPE.COIN_RECEIVE;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+            val = events["transfer.amount"] ? events["transfer.amount"][1] : 0;
             toAddress = events["transfer.recipient"]
-              ? events["transfer.recipient"][0]
+              ? events["transfer.recipient"][1]
               : "";
             break;
 

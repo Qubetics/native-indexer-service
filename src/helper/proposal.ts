@@ -14,7 +14,7 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
     console.log("Checking for new proposals....");
 
     const response: AxiosResponse = await apiRes.get(
-      "/cosmos/gov/v1/proposals?proposal_status=PROPOSAL_STATUS_UNSPECIFIED",
+      "/cosmos/gov/v1/proposals?proposal_status=PROPOSAL_STATUS_UNSPECIFIED"
     );
 
     const proposals: IProposalData[] = [];
@@ -45,8 +45,7 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
       }
 
       const amountObj = proposal.total_deposit.find(
-        (item: any) =>
-          item?.denom === (environment?.symbol ?? "").toLowerCase(),
+        (item: any) => item?.denom === (environment?.symbol ?? "").toLowerCase()
       );
 
       const messageType = proposal?.messages[0]?.["@type"];
@@ -58,7 +57,7 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
         url,
         FETCH_METHODS.GET,
         HEADERS.DEFAULT,
-        null,
+        null
       );
 
       const proposalData: IProposalData = {
@@ -75,7 +74,7 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
         votingEndTime: proposal?.voting_end_time,
       };
 
-      console.log("proposalData : ", proposalData);
+      // console.log("proposalData : ", proposalData);
 
       await dbHelper.saveProposals(proposalData);
 
