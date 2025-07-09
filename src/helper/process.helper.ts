@@ -427,16 +427,16 @@ class ProcessHelper {
 
         const hash = events["tx.hash"] ? `${events["tx.hash"][0]}` : "";
 
-        // const txFeeData = events["tx.fee"][0]
-        //   ? events["tx.fee"][0].match(/[\d.]+/g)[0]
-        //   : "";
+        const txFeeData = events["tx.fee"][0]
+          ? events["tx.fee"][0].match(/[\d.]+/g)[0]
+          : "";
 
-        // const txFee = txFeeData
-        //   ? (Number(txFeeData) / 10 ** 18).toString()
-        //   : txFeeData;
-        const txFee =
-          message.result.data?.value?.TxResult?.result?.gas_used ?? "";
+        console.log("txFeeData", txFeeData);
 
+        const txFee = txFeeData
+          ? (Number(txFeeData) / 10 ** 18).toString()
+          : txFeeData;
+        console.log("txFee", txFee);
         const txData = {
           type,
           status,
