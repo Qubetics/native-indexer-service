@@ -4,6 +4,7 @@ import {
   fetchRequest,
   noExponent,
   retriveNumbers,
+  cleanEscapedString,
 } from "../Utility/common";
 import {
   COLORS,
@@ -227,6 +228,13 @@ class ProcessHelper {
           : "";
         let toAddress = "";
         let method = "";
+        let subscriptionId = "";
+        let planId:any = "";
+        let sessionId = "";
+        let dvpnStatus = "";
+        let accAddress="";
+        let provAddress="";
+        let nodeAddress ="";
 
         console.log("txEvent : ", txEvent);
 
@@ -289,6 +297,81 @@ class ProcessHelper {
             type = TRANSACTION_TYPE.VOTING;
             val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
             toAddress = "/cosmos.gov.v1.MsgVote";
+
+            break;
+
+          //Start Subscription
+          case "/qubetics.subscription.v3.MsgStartSubscriptionRequest":
+            type = TRANSACTION_TYPE.START_SUBSCRIPTION;
+            val =
+              events["qubetics.subscription.v3.EventCreate.price"]?.[0] ?? 0;
+              provAddress =
+              events[
+                "qubetics.subscription.v3.EventCreate.prov_address"
+              ]?.[0] ?? "";
+              accAddress =
+              events["qubetics.subscription.v3.EventCreate.acc_address"]?.[0] ??
+              "";
+            subscriptionId =
+              events["qubetics.subscription.v3.EventCreate.id"]?.[0] ?? "";
+            planId =
+              events["qubetics.subscription.v3.EventCreate.plan_id"]?.[0] ?? "";
+
+            break;
+
+          //Start Session
+          case "/qubetics.subscription.v3.MsgStartSessionRequest":
+            type = TRANSACTION_TYPE.START_REQUEST;
+
+            nodeAddress =
+              events[
+                "qubetics.subscription.v3.EventCreateSession.node_address"
+              ]?.[0] ?? "";
+              accAddress =
+              events[
+                "qubetics.subscription.v3.EventCreateSession.acc_address"
+              ]?.[0] ?? "";
+            subscriptionId =
+              events[
+                "qubetics.subscription.v3.EventCreateSession.subscription_id"
+              ]?.[0] ?? "";
+            sessionId =
+              events["qubetics.subscription.v3.EventCreateSession.id"]?.[0] ??
+              "";
+
+            break;
+
+          //End Session
+          case "/qubetics.session.v3.MsgCancelSessionRequest":
+            type = TRANSACTION_TYPE.END_REQUEST;
+            provAddress =
+              events[
+                "qubetics.session.v3.EventUpdateStatus.prov_address"
+              ]?.[0] ?? "";
+              nodeAddress =
+              events[
+                "qubetics.session.v3.EventUpdateStatus.node_address"
+              ]?.[0] ?? "";
+            sessionId =
+              events["qubetics.session.v3.EventUpdateStatus.id"]?.[0] ?? "";
+              dvpnStatus =
+              events["qubetics.session.v3.EventUpdateStatus.status"]?.[0] ?? "";
+              
+            break;
+
+          //End Subscription
+          case "/qubetics.subscription.v3.MsgCancelSubscriptionRequest":
+            type = TRANSACTION_TYPE.END_SUBSCRIPTION;
+
+            accAddress =
+              events["qubetics.subscription.v3.EventUpdate.acc_address"]?.[0] ??
+              "";
+            subscriptionId =
+              events["qubetics.subscription.v3.EventUpdate.id"]?.[0] ?? "";
+            planId =
+              events["qubetics.subscription.v3.EventUpdate.plan_id"]?.[0] ?? "";
+              dvpnStatus =
+              events["qubetics.subscription.v3.EventUpdate.status"]?.[0] ?? "";
 
             break;
 
@@ -418,6 +501,10 @@ class ProcessHelper {
         if (val) {
           if (type === TRANSACTION_TYPE.IBC_TRANSFER_RECEIVE) {
             amount = noExponent(Number(retriveNumbers(val)) / 10 ** 6);
+          } else if (type === TRANSACTION_TYPE.START_SUBSCRIPTION) {
+            const json = JSON.parse(val?.toString());
+            const value = json.split(";");
+            amount = value[1] ?? "";
           } else {
             amount = noExponent(Number(retriveNumbers(val)) / 10 ** 18);
           }
@@ -427,11 +514,27 @@ class ProcessHelper {
 
         const hash = events["tx.hash"] ? `${events["tx.hash"][0]}` : "";
 
-        const txFeeData = events["tx.fee"][0]
-          ? events["tx.fee"][0].match(/[\d.]+/g)[0]
+        const txFeeData = events["tx.fee"]?.[0]
+          ? events["tx.fee"][0]?.match(/[\d.]+/g)[0]
           : "";
 
         console.log("txFeeData", txFeeData);
+
+        if(planId)
+          {
+            planId = Number(planId.replace(/"/g, ''));
+            const url = `${environment.evmHost}/qubetics/node/v3/plans/${planId}/nodes`;
+            const fetchRes = await fetchRequest(
+              url,
+              FETCH_METHODS.GET,
+              HEADERS.DEFAULT,
+              null
+            );
+            if (!fetchRes.error) {
+              nodeAddress = fetchRes?.data?.nodes[0]?.address ?? "";
+            }
+
+          }
 
         const txFee = txFeeData
           ? (Number(txFeeData) / 10 ** 18).toString()
@@ -440,13 +543,14 @@ class ProcessHelper {
         const txData = {
           type,
           status,
-          value: amount.toString(),
+          value: amount ? amount?.toString() : "",
           timestamp: "",
           txString: message.result.data?.value?.TxResult?.tx ?? "",
           txhash: `0x${hash ?? ""}`,
-          toAddress,
+          toAddress: cleanEscapedString(toAddress),
           blocknumber: Number(message.result.data?.value?.TxResult?.height),
-          fromAddress,
+          fromAddress: cleanEscapedString(fromAddress),
+          nodeAddress: cleanEscapedString(nodeAddress),
           txFee,
           gasWanted: Number(
             message.result.data?.value?.TxResult?.result?.gas_wanted ?? ""
@@ -518,6 +622,29 @@ class ProcessHelper {
         }
 
         let contractType = "UNKNOWN";
+        if (
+          txData.type === TRANSACTION_TYPE.START_SUBSCRIPTION ||
+          txData.type === TRANSACTION_TYPE.START_REQUEST ||
+          txData.type === TRANSACTION_TYPE.END_REQUEST ||
+          txData.type === TRANSACTION_TYPE.END_SUBSCRIPTION
+        ) {
+          const sessionData = {
+            txhash: `0x${hash ?? ""}`,
+            subscriptionId,
+            planId:planId.toString() ?? "",
+            sessionId,
+            status: dvpnStatus ?? "",
+            type: txEvent,
+            provAddress:cleanEscapedString(provAddress),
+            accAddress: cleanEscapedString(accAddress),
+            nodeAddress: cleanEscapedString(nodeAddress),
+            price: amount ? amount?.toString() : "",
+            blocknumber: txData.blocknumber,
+
+          };
+        
+          await dbHelper.saveSessionTransactions(sessionData);
+        }
 
         if (txData.type === TRANSACTION_TYPE.CONTRACT_CREATION) {
           // call the method to get the type of contract
@@ -824,6 +951,7 @@ class ProcessHelper {
    * calculate downtime blocks
    */
   public async downTimeBlocks() {
+    console.log("CalledBlock");
     try {
       const lastBlockSaved = await RedisService.getString(
         REDIS_KEY.LATEST_BLOCK
