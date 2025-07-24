@@ -101,6 +101,7 @@ class RabbitMq {
             try {
               const txData = JSON.parse(message.content.toString());
               const txRes = await processHelper.processTxs(txData);
+              // await new Promise((res) => setTimeout(res, 6 * 60 * 1000));
               if (!txRes) {
                 if (txData?.result?.events) {
                   const tx = JSON.stringify(txData);
@@ -180,6 +181,7 @@ class RabbitMq {
             try {
               const txData = JSON.parse(message.content.toString());
               const txRes = await processHelper.processTxs(txData);
+              // await new Promise((res) => setTimeout(res, 6 * 60 * 1000));
               if (!txRes) {
                 this.inQueueData(QUEUE_NAME.MISSED_TXS, JSON.stringify(txData));
               }

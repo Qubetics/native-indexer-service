@@ -142,6 +142,22 @@ class ExlorerHelper {
     }
   };
 
+  saveSessionTransactions = async (sessionData: any): Promise<IESResponse> => {
+    try {
+      await prisma.dvpnTransaction.create({
+        data: sessionData,
+      });
+      return {
+        error: false,
+      };
+    } catch (err) {
+      console.log(`error while saving tx -${err}`);
+      return {
+        error: true,
+      };
+    }
+  };
+
   processUserData = async (data: { address: string }) => {
     try {
       if (data.address) {

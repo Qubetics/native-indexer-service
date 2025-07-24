@@ -37,6 +37,7 @@ model Transactions {
   blocknumber     BigInt
   txhash          String        @unique
   timestamp       DateTime
+  nodeAddress     String?
   gasUsed         BigInt        @default(0)
   contractAddress String        @default("N/A")
   fromAddress     String        @db.VarChar(255)
@@ -214,4 +215,30 @@ model Voters {
 
   @@unique([proposalId, voter])
   @@index([proposalId, answer, voter])
+}
+
+model DvpnTransaction {
+  id             Int    @id @default(autoincrement())
+  txhash         String   @unique 
+  blocknumber    BigInt
+  planId         String?
+  sessionId      String? 
+  subscriptionId String?  
+  type           String
+  accAddress     String?
+  provAddress    String?
+  nodeAddress    String?
+  downloadBytes  String?
+  uploadBytes    String?
+  maxBytes       String?
+  duration       String?
+  maxDuration    String?
+  status         String?
+  startAt        String?
+  statusAt       String?
+  inactiveAt     String?
+  price          String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
