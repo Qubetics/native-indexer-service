@@ -314,14 +314,13 @@ export function exp(val: string): string {
   return str + z;
 }
 
-export const cleanEscapedString=(input:any)=> {
+export const cleanEscapedString = (input: any) => {
   if (
-    typeof input === 'string' &&
+    typeof input === "string" &&
     input.startsWith('"') &&
     input.endsWith('"')
   ) {
     return JSON.parse(input);
   }
   return input;
-}
-
+};

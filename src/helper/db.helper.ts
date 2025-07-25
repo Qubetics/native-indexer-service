@@ -142,7 +142,7 @@ class ExlorerHelper {
     }
   };
 
-  saveSessionTransactions = async (sessionData:any): Promise<IESResponse> => {
+  saveSessionTransactions = async (sessionData: any): Promise<IESResponse> => {
     try {
       await prisma.dvpnTransaction.create({
         data: sessionData,
