@@ -219,10 +219,10 @@ model Voters {
 
 model DvpnTransaction {
   id             Int    @id @default(autoincrement())
-  txhash         String   @unique 
-  blocknumber    BigInt
+  txhash         String   @unique
   planId         String?
   sessionId      String? 
+  blocknumber    BigInt
   subscriptionId String?  
   type           String
   accAddress     String?
@@ -238,7 +238,7 @@ model DvpnTransaction {
   statusAt       String?
   inactiveAt     String?
   price          String?
-
+  logs           Json?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }

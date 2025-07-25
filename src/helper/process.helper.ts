@@ -229,14 +229,14 @@ class ProcessHelper {
         let toAddress = "";
         let method = "";
         let subscriptionId = "";
-        let planId:any = "";
+        let planId: any = "";
         let sessionId = "";
         let dvpnStatus = "";
-        let accAddress="";
-        let provAddress="";
-        let nodeAddress ="";
+        let accAddress = "";
+        let provAddress = "";
+        let nodeAddress = "";
 
-        console.log("txEvent : ", txEvent);
+        console.log("txEvent ttyycdjcjccdcdcdbcdb : ", txEvent);
 
         switch (txEvent) {
           case "/cosmos.bank.v1beta1.MsgSend":
@@ -305,11 +305,11 @@ class ProcessHelper {
             type = TRANSACTION_TYPE.START_SUBSCRIPTION;
             val =
               events["qubetics.subscription.v3.EventCreate.price"]?.[0] ?? 0;
-              provAddress =
+            provAddress =
               events[
-                "qubetics.subscription.v3.EventCreate.prov_address"
+              "qubetics.subscription.v3.EventCreate.prov_address"
               ]?.[0] ?? "";
-              accAddress =
+            accAddress =
               events["qubetics.subscription.v3.EventCreate.acc_address"]?.[0] ??
               "";
             subscriptionId =
@@ -325,15 +325,15 @@ class ProcessHelper {
 
             nodeAddress =
               events[
-                "qubetics.subscription.v3.EventCreateSession.node_address"
+              "qubetics.subscription.v3.EventCreateSession.node_address"
               ]?.[0] ?? "";
-              accAddress =
+            accAddress =
               events[
-                "qubetics.subscription.v3.EventCreateSession.acc_address"
+              "qubetics.subscription.v3.EventCreateSession.acc_address"
               ]?.[0] ?? "";
             subscriptionId =
               events[
-                "qubetics.subscription.v3.EventCreateSession.subscription_id"
+              "qubetics.subscription.v3.EventCreateSession.subscription_id"
               ]?.[0] ?? "";
             sessionId =
               events["qubetics.subscription.v3.EventCreateSession.id"]?.[0] ??
@@ -346,17 +346,17 @@ class ProcessHelper {
             type = TRANSACTION_TYPE.END_REQUEST;
             provAddress =
               events[
-                "qubetics.session.v3.EventUpdateStatus.prov_address"
+              "qubetics.session.v3.EventUpdateStatus.prov_address"
               ]?.[0] ?? "";
-              nodeAddress =
+            nodeAddress =
               events[
-                "qubetics.session.v3.EventUpdateStatus.node_address"
+              "qubetics.session.v3.EventUpdateStatus.node_address"
               ]?.[0] ?? "";
             sessionId =
               events["qubetics.session.v3.EventUpdateStatus.id"]?.[0] ?? "";
-              dvpnStatus =
+            dvpnStatus =
               events["qubetics.session.v3.EventUpdateStatus.status"]?.[0] ?? "";
-              
+
             break;
 
           //End Subscription
@@ -629,6 +629,7 @@ class ProcessHelper {
           txData.type === TRANSACTION_TYPE.END_SUBSCRIPTION
         ) {
           const sessionData = {
+            logs : logs ? logs : "",
             txhash: `0x${hash ?? ""}`,
             subscriptionId,
             planId:planId.toString() ?? "",
