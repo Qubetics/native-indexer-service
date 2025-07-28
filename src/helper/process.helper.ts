@@ -236,7 +236,7 @@ class ProcessHelper {
         let provAddress = "";
         let nodeAddress = "";
 
-        console.log("txEvent : ", txEvent);
+        console.log("txEvent ttyycdjcjccdcdcdbcdb : ", txEvent);
 
         switch (txEvent) {
           case "/cosmos.bank.v1beta1.MsgSend":
@@ -627,6 +627,7 @@ class ProcessHelper {
           txData.type === TRANSACTION_TYPE.END_SUBSCRIPTION
         ) {
           const sessionData = {
+            logs: logs || "",
             txhash: `0x${hash ?? ""}`,
             subscriptionId,
             planId: planId.toString() ?? "",
