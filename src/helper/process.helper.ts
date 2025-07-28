@@ -214,7 +214,6 @@ class ProcessHelper {
           : TRANSACTION_STATUS.FAILED;
 
         let txEvent;
-        console.log(txEvent, "Get_txEvent");
         txEvent = events?.["message.action"]
           ? message?.result?.events?.["message.action"][0]
           : "";
@@ -233,7 +232,6 @@ class ProcessHelper {
         switch (txEvent) {
           case "/cosmos.bank.v1beta1.MsgSend":
             type = TRANSACTION_TYPE.COIN_TRANSFER;
-
             val = events["transfer.amount"] ? events["transfer.amount"][1] : 0;
             toAddress = events["transfer.recipient"]
               ? events["transfer.recipient"][1]
@@ -403,7 +401,9 @@ class ProcessHelper {
 
           case "/ethermint.evm.v1.MsgEthereumTx":
             type = TRANSACTION_TYPE.COIN_RECEIVE;
-            val = events["transfer.amount"] ? events["transfer.amount"][1] : 0;
+            val = events["coin_received.amount"]
+              ? events["coin_received.amount"][0]
+              : 0;
             toAddress = events["transfer.recipient"]
               ? events["transfer.recipient"][1]
               : "";
@@ -414,6 +414,7 @@ class ProcessHelper {
             break;
         }
         let amount;
+        console.log("val==---", val);
 
         if (val) {
           if (type === TRANSACTION_TYPE.IBC_TRANSFER_RECEIVE) {
@@ -424,7 +425,7 @@ class ProcessHelper {
         } else {
           amount = val;
         }
-
+        console.log("amount---", amount);
         const hash = events["tx.hash"] ? `${events["tx.hash"][0]}` : "";
 
         const txFeeData = events["tx.fee"][0]
@@ -476,7 +477,7 @@ class ProcessHelper {
         console.log("txData : ", txData);
 
         // save transation
-        const saveRes = await dbHelper.saveTransactions(txData);
+        await dbHelper.saveTransactions(txData);
 
         if (txData.type === TRANSACTION_TYPE.VOTING) {
           let answer = events["proposal_vote.option"]
@@ -552,8 +553,8 @@ class ProcessHelper {
             contractDetails.contractName = contractName;
           }
           // save the details of contract
-          const contractSaveRes =
-            await dbHelper.saveContractDeployTx(contractDetails);
+
+          await dbHelper.saveContractDeployTx(contractDetails);
 
           const tokenInfo = await this.cosmjsInstace.getTokenInfo(
             contractDetails.address
@@ -579,7 +580,7 @@ class ProcessHelper {
             };
 
             // save the details of token
-            const tokenSaveRes = await dbHelper.saveToken(tokens);
+            await dbHelper.saveToken(tokens);
           }
         } else if (txData.type === TRANSACTION_TYPE.CONTRACT_EXECUTE) {
           const contractLogData: IContractLogs = {
@@ -593,17 +594,15 @@ class ProcessHelper {
             blockNumber: Number(txData.blocknumber),
           };
 
-          const logsRes = await dbHelper.saveContractLogs(contractLogData);
+          await dbHelper.saveContractLogs(contractLogData);
 
-          const updateExecutionC = await dbHelper.updateContractExec(
-            txData.contractAddress
-          );
+          await dbHelper.updateContractExec(txData.contractAddress);
 
           const account = await this.cosmjsInstace.getAccountInfo(
             txData.contractAddress
           );
 
-          const tokenBal = await this.cosmjsInstace.getTokenBalances(
+          await this.cosmjsInstace.getTokenBalances(
             txData.contractAddress,
             account
           );
