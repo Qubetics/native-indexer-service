@@ -174,7 +174,7 @@ const calculateData = async (): Promise<
  * @param address
  * @returns
  */
-async function getValidatorStakeDetails(
+async function getValidatorStakeDetails_old(
   apiRes: AxiosInstance,
   address: string
 ): Promise<ValidatorDelegations> {
@@ -414,6 +414,40 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
       `/cosmos/staking/v1beta1/delegations/${address}`
     );
     return response.data;
+  }
+
+  async function getValidatorStakeDetails(
+    api: AxiosInstance,
+    operatorAddress: string
+  ): Promise<any> {
+    let allDelegations: any[] = [];
+    let nextKey: string | null = null;
+
+    do {
+      const res: AxiosResponse = await api.get(
+        `/cosmos/staking/v1beta1/validators/${operatorAddress}/delegations`,
+        {
+          params: {
+            "pagination.key": nextKey,
+            "pagination.limit": 100, // you can set limit
+          },
+        }
+      );
+
+      const data = res.data;
+      if (data?.delegation_responses?.length) {
+        allDelegations = allDelegations.concat(data.delegation_responses);
+      }
+
+      nextKey = data?.pagination?.next_key || null;
+    } while (nextKey);
+
+    return {
+      delegation_responses: allDelegations,
+      pagination: {
+        total: allDelegations.length, // ab total actual hai
+      },
+    };
   }
 }
 export { calculateData, getValidatorsInfo };
