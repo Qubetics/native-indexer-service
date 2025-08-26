@@ -1,4 +1,4 @@
-import { TRANSACTION_STATUS, TRANSACTION_TYPE } from "../constant";
+import { TRANSACTION_STATUS, TRANSACTION_TYPE } from '../constant';
 
 export interface IEnvironment {
   port: number;
