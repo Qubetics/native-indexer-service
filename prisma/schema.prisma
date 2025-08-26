@@ -163,6 +163,7 @@ model ValidatorStake {
   validatorOperatorAddress String  @default("")
   delegatorAddress         String
   balanceAmount            Decimal
+  delegatorRewards         Decimal @default(0)
   denom                    String
 
   delegator Delegator @relation(fields: [delegatorAddress], references: [address])

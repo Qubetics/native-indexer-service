@@ -91,6 +91,7 @@ export interface IValidatorStake {
   denom: string;
   // delegatorCount : number;
   // validatorAddress:string;
+  delegatorRewards: number;
   delegatorAddress: string;
   balanceAmount: number;
   validatorOperatorAddress: string;

@@ -89,6 +89,27 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
   }
 }
 
+/**
+ * retrive delegator reward amount
+ * @param apiRes
+ * @param address
+ * @returns
+ */
+async function getDelegatorReward(
+  apiRes: AxiosInstance,
+  delegator: string,
+  validator: string,
+) {
+  const response: AxiosResponse = await apiRes.get(
+    `/cosmos/distribution/v1beta1/delegators/${delegator}/rewards/${validator}`,
+  );
+  const resData = response?.data;
+
+  // console.log("Res Data : ", resData?.rewards[0]?.amount);
+
+  return resData?.rewards[0]?.amount || 0;
+}
+
 // Calculate Annual Percentage Yield (APY) based on parameters
 function calculateAPY(
   inflation: number,
@@ -282,10 +303,18 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
       for (let j = 0; j < delegatorCount; j++) {
         // if (j !== valIndex) {
         const val = stakeDetails?.delegation_responses[j];
+
+        const delegatorRewards: number = await getDelegatorReward(
+          apiRes,
+          val?.delegation.delegator_address,
+          validatorOperatorAddress,
+        );
+
         if (val?.delegation?.delegator_address) {
           const data: IValidatorStake = {
             validatorOperatorAddress,
             denom: val?.balance?.denom,
+            delegatorRewards,
             stake: Number(val?.delegation?.shares),
             balanceAmount: val?.balance?.amount,
             delegatorAddress: val?.delegation.delegator_address,
@@ -362,7 +391,6 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
     }
 
     await dbHelper.saveValidators(validators);
-    // console.log('delegators delegators', validators);
 
     await dbHelper.saveDelegatorStakeData(delegators);
     return validators;
@@ -371,7 +399,7 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
       console.log("Error occurred while saving validator details", err.message);
       return { error: true, message: err.message };
     }
-    console.log("Error occurred while saving validator details", err);
+    console.log("Error occurred while saving validator details ::: ", err);
 
     return {
       error: true,
