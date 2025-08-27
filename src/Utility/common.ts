@@ -1,4 +1,5 @@
 import axios from "axios";
+import { CONST_NAME } from "../constant";
 import { ITimeStamp } from "../interface";
 
 /**
@@ -312,4 +313,27 @@ export function exp(val: string): string {
     value += 1;
   }
   return str + z;
+}
+
+export async function calculateBurnedAmount() {
+  // initialSupply: number = environment.initialSupply,
+  // CurrentSupply: number,
+
+  try {
+    const apiUrl = environment.evmHost;
+
+    const getSupply: any = await axios.get(
+      `${apiUrl}/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`,
+    );
+
+    const { initialSupply } = environment;
+    const circulation_supply: number =
+      Number(getSupply.data.amount.amount) / CONST_NAME.ETH_EXP;
+
+    const returnValue = initialSupply - circulation_supply;
+    return returnValue;
+  } catch (error) {
+    console.log(error, "error in calculateBurnedAmount");
+    return false;
+  }
 }
