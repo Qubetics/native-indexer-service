@@ -1,8 +1,8 @@
-name: '[prod] Deploy qubetics indexer'
+name: "[prod] Deploy qubetics indexer"
 
-on: 
+on:
   push:
-    branches: 
+    branches:
       - prod
 
 jobs:
@@ -11,7 +11,7 @@ jobs:
     with:
       SWR_ORGANIZATION: prod-qubetics
       ARGOCD_BRANCH: prod
-      HUAWEI_REGION: 'ap-southeast-1'
+      HUAWEI_REGION: "ap-southeast-1"
       ARGOCD_REPOSITORY: Qubetics/argocd-qubetics
       DEPLOYMENT_PATH: Native-indexer/native-indexer.yaml
       HUAWEI_IMAGE: prod-qubetics-native-indexer
