@@ -208,7 +208,7 @@ class ProcessHelper {
       const element = rewardEvent[i];
       let amountArr: any[] = [];
 
-      if (typeof element === 'string' && element.includes('tics')) {
+      if (typeof element === 'string' && element.includes(environment.symbol.toLowerCase())) {
         amountArr = element.split('t');
       }
       rewardAmount = rewardAmount.plus(amountArr[0] || 0);
