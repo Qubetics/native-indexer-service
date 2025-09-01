@@ -216,3 +216,12 @@ model Voters {
   @@unique([proposalId, voter])
   @@index([proposalId, answer, voter])
 }
+
+model Rewards {
+  id           Int      @id @default(autoincrement())
+  address      String   @unique
+  timeStamp    DateTime
+  rewardAmount String
+
+  @@index([address, timeStamp])
+}
