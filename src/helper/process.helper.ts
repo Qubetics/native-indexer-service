@@ -1,4 +1,5 @@
-import { v4 } from "uuid";
+import { BigNumber } from 'bignumber.js';
+import { v4 } from 'uuid';
 import {
   log,
   fetchRequest,
@@ -24,14 +25,14 @@ import {
   ITokens,
   ITransaction,
   IVoters,
-} from "../interface";
-import { prisma } from "../lib/db";
-import { RabbitMqService, RedisService, SocketEventEmitter } from "../service";
-import redisHelper from "../service/redis.helper";
-import socketEventsHelper from "../service/socketEvents.helper";
-import { CosmJsRpcMethods } from "./cosmsClient.helper";
-import dbHelper from "./db.helper";
-import { CustomWebSocket } from "./ws.helper";
+} from '../interface';
+import { prisma } from '../lib/db';
+import { RabbitMqService, RedisService, SocketEventEmitter } from '../service';
+import redisHelper from '../service/redis.helper';
+import socketEventsHelper from '../service/socketEvents.helper';
+import { CosmJsRpcMethods } from './cosmsClient.helper';
+import dbHelper from './db.helper';
+import { CustomWebSocket } from './ws.helper';
 
 class ProcessHelper {
   cosmjsInstace: CosmJsRpcMethods;
@@ -55,7 +56,7 @@ class ProcessHelper {
     const blockSocket = new CustomWebSocket(
       `${environment.wsUrl}/websocket`,
       QUEUE_NAME.LATEST_BLOCKS,
-      blockWsQuery,
+      blockWsQuery
     );
     blockSocket.connect();
   }
@@ -75,7 +76,7 @@ class ProcessHelper {
     const txSocket = new CustomWebSocket(
       `${environment.wsUrl}/websocket`,
       QUEUE_NAME.LATEST_TXS,
-      txWsQuery,
+      txWsQuery
     );
     txSocket.connect();
   }
@@ -109,7 +110,7 @@ class ProcessHelper {
           "blockNumber : ",
           COLORS.cyan,
           blockDetails.blocknumber,
-          COLORS.yellow,
+          COLORS.yellow
         );
         /* emit the latest block data */
         // socketEventsHelper.emitMessage(
@@ -132,7 +133,7 @@ class ProcessHelper {
           url,
           FETCH_METHODS.GET,
           HEADERS.DEFAULT,
-          null,
+          null
         );
         if (!fetchRes.error) {
           const blockDataToSave: IBlock = {
@@ -142,7 +143,7 @@ class ProcessHelper {
 
           socketEventsHelper.emitMessage(
             SOCKET_EVENT.NATIVE_LATEST_BLOCK,
-            blockDataToSave,
+            blockDataToSave
           );
 
           const saveRes = await dbHelper.saveBlockData(blockDataToSave);
@@ -150,7 +151,7 @@ class ProcessHelper {
           if (saveRes) {
             // Retrieve the block count from Redis or the database
             let blockCount = await RedisService.getString(
-              REDIS_KEY.NATIVE_BLOCKS_COUNT,
+              REDIS_KEY.NATIVE_BLOCKS_COUNT
             );
 
             if (!blockCount) {
@@ -158,14 +159,14 @@ class ProcessHelper {
               blockCount = await prisma.blocks.count();
               await RedisService.setString(
                 REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                blockCount,
+                blockCount
               );
             } else {
               // Increment the block count
               blockCount = Number(blockCount) + 1;
               await RedisService.setString(
                 REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                blockCount,
+                blockCount
               );
               console.log("blockCount", blockCount);
             }
@@ -180,19 +181,19 @@ class ProcessHelper {
 
           await dbHelper.upsertValidatorsCount(
             blockDataToSave.validatorOperatorAddress,
-            blockDataToSave.miner,
+            blockDataToSave.miner
           );
 
           if (saveRes.error) throw new Error("Error while save block data");
 
           await RedisService.setString(
             REDIS_KEY.LATEST_BLOCK,
-            Number(blockDetails.blocknumber),
+            Number(blockDetails.blocknumber)
           );
         } else {
           console.log(
-            "\x1b[32mSomething went wrong:\n\x1b[0m",
-            fetchRes?.errorStack,
+            '\x1b[32mSomething went wrong:\n\x1b[0m',
+            fetchRes?.errorStack
           );
         }
       }
@@ -203,6 +204,90 @@ class ProcessHelper {
     }
   }
 
+  async processDelegatorRewards(
+    address: string,
+    rewardEvent: string[],
+    timeStamp: string
+  ) {
+    let rewardAmount = BigNumber(0);
+
+    for (let i = 0; i < rewardEvent?.length; i++) {
+      const element = rewardEvent[i];
+      let amountArr: any[] = [];
+
+      if (
+        typeof element === 'string' &&
+        element.includes(environment.symbol.toLowerCase())
+      ) {
+        amountArr = element.split('t');
+      }
+      rewardAmount = rewardAmount.plus(amountArr[0] || 0);
+    }
+    console.log('rewardAmount:  ', rewardAmount.toString());
+
+    const rewardData = await prisma.rewards.findFirst({
+      where: {
+        address,
+      },
+    });
+
+    if (!rewardData) {
+      console.log(
+        'Reward not Found in DataBase, so saving....... in db and redis',
+        {
+          address,
+          timeStamp,
+          rewardAmount: rewardAmount.toString(),
+        }
+      );
+
+      await prisma.rewards.create({
+        data: {
+          address,
+          timeStamp,
+          rewardAmount: rewardAmount.toString(),
+        },
+      });
+
+      await redisHelper.setHset(REDIS_KEY.REWARDS, address, {
+        timeStamp,
+        rewardAmount: rewardAmount.toString(),
+      });
+    } else {
+      const timeCondition =
+        new Date(timeStamp).getTime() >
+        new Date(rewardData?.timeStamp).getTime();
+
+      console.log(
+        'Reward Found in DataBase..... and time not Matched ',
+        new Date(timeStamp).getTime(),
+        new Date(rewardData?.timeStamp).getTime(),
+        timeCondition
+      );
+
+      if (timeCondition) {
+        const newRewardToSet = rewardAmount
+          .plus(rewardData.rewardAmount)
+          .toString();
+
+        console.log('Updating new Reward in table and redis ', newRewardToSet);
+
+        await redisHelper.setHset(REDIS_KEY.REWARDS, address, {
+          timeStamp,
+          rewardAmount: newRewardToSet,
+        });
+
+        await prisma.rewards.update({
+          where: { address },
+          data: {
+            timeStamp,
+            rewardAmount: rewardAmount.toString(),
+          },
+        });
+      }
+    }
+  }
+
   /**
    * process latest transactions
    * @param message
@@ -210,7 +295,6 @@ class ProcessHelper {
    */
   public async processTxs(message: any) {
     try {
-      console.log("message inside processTxs : ", message);
 
       const events = message?.result?.events;
       console.log("events : ", events);
@@ -227,14 +311,32 @@ class ProcessHelper {
           ? message?.result?.events?.["message.action"][0]
           : "";
         const logs: string = data?.value?.TxResult?.result?.log;
+        const hash = events['tx.hash'] ? `${events['tx.hash'][0]}` : '';
         let type: string;
         let val: string | number = 0;
-        let contractAddress = "";
-        let fromAddress: string = events["message.sender"]
-          ? `${events["message.sender"][0]}`
-          : "";
-        let toAddress = "";
-        let method = "";
+        let contractAddress = '';
+        let fromAddress: string = events['message.sender']
+          ? `${events['message.sender'][0]}`
+          : '';
+        let toAddress = '';
+        let method = '';
+        let timeStamp = '';
+        const blocknumber = Number(message.result.data?.value?.TxResult?.height);
+
+        const url = `${environment.httpHost}/block?height=${blocknumber}`;
+        const fetchRes = await fetchRequest(
+          url,
+          FETCH_METHODS.GET,
+          HEADERS.DEFAULT,
+          null
+        );
+        if (!fetchRes.error) {
+          console.log(
+            'timestamp fromRPC : ',
+            fetchRes?.data.result.block?.header?.time
+          );
+          timeStamp = fetchRes?.data.result.block?.header?.time ?? '';
+        }
 
         console.log("txEvent : ", txEvent);
 
@@ -258,14 +360,26 @@ class ProcessHelper {
               type = TRANSACTION_TYPE.BOND_MORE;
             }
 
-            val = events["delegate.amount"] ? events["delegate.amount"][0] : 0;
-            toAddress = "/cosmos.staking.v1beta1.MsgDelegate";
+            val = events['delegate.amount'] ? events['delegate.amount'][0] : 0;
+            toAddress = '/cosmos.staking.v1beta1.MsgDelegate';
+
+            this.processDelegatorRewards(
+              fromAddress,
+              events['withdraw_rewards.amount'],
+              timeStamp
+            );
             break;
 
           case "/cosmos.staking.v1beta1.MsgUndelegate":
             type = TRANSACTION_TYPE.UNBOND_FUNDS;
-            val = events["unbond.amount"] ? events["unbond.amount"][0] : 0;
-            toAddress = "/cosmos.staking.v1beta1.MsgUndelegate";
+            val = events['unbond.amount'] ? events['unbond.amount'][0] : 0;
+            toAddress = '/cosmos.staking.v1beta1.MsgUndelegate';
+
+            this.processDelegatorRewards(
+              fromAddress,
+              events['withdraw_rewards.amount'],
+              timeStamp
+            );
             break;
 
           case "/cosmos.staking.v1beta1.MsgCreateValidator":
@@ -356,10 +470,16 @@ class ProcessHelper {
 
           case "/cosmos.staking.v1beta1.MsgBeginRedelegate":
             type = TRANSACTION_TYPE.BEGIN_REDELEGATE;
-            val = events["redelegate.amount"]
-              ? events["redelegate.amount"][0]
+            toAddress = '/cosmos.staking.v1beta1.MsgBeginRedelegate';
+            val = events['redelegate.amount']
+              ? events['redelegate.amount'][0]
               : 0;
-            toAddress = "/cosmos.staking.v1beta1.MsgBeginRedelegate";
+
+            this.processDelegatorRewards(
+              fromAddress,
+              events['withdraw_rewards.amount'],
+              timeStamp
+            );
             break;
 
           case "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation":
@@ -424,7 +544,7 @@ class ProcessHelper {
             break;
         }
         let amount;
-        console.log("val==---", val);
+        // console.log('val==---', val);
 
         if (val) {
           if (type === TRANSACTION_TYPE.IBC_TRANSFER_RECEIVE) {
@@ -436,7 +556,6 @@ class ProcessHelper {
           amount = val;
         }
         console.log("amount---", amount);
-        const hash = events["tx.hash"] ? `${events["tx.hash"][0]}` : "";
 
         const txFeeData = events["tx.fee"][0]
           ? events["tx.fee"][0].match(/[\d.]+/g)[0]
@@ -452,37 +571,26 @@ class ProcessHelper {
           type,
           status,
           value: amount.toString(),
-          timestamp: "",
-          txString: message.result.data?.value?.TxResult?.tx ?? "",
-          txhash: `0x${hash ?? ""}`,
+          timestamp: timeStamp,
+          txString: message.result.data?.value?.TxResult?.tx ?? '',
+          txhash: `0x${hash}`,
           toAddress,
           blocknumber: Number(message.result.data?.value?.TxResult?.height),
           fromAddress,
           txFee,
           gasWanted: Number(
-            message.result.data?.value?.TxResult?.result?.gas_wanted ?? "",
+            message.result.data?.value?.TxResult?.result?.gas_wanted ?? ''
           ),
           gasUsed: Number(
-            message.result.data?.value?.TxResult?.result?.gas_used ?? "",
+            message.result.data?.value?.TxResult?.result?.gas_used ?? ''
           ),
           contractAddress,
         };
         console.log("txData-created", txData);
 
-        const url = `${environment.httpHost}/block?height=${txData.blocknumber}`;
-        const fetchRes = await fetchRequest(
-          url,
-          FETCH_METHODS.GET,
-          HEADERS.DEFAULT,
-          null,
-        );
-        if (!fetchRes.error) {
-          txData.timestamp = fetchRes?.data.result.block?.header?.time ?? "";
-        }
-
         socketEventsHelper.emitMessage(
           SOCKET_EVENT.NATIVE_LATEST_TRANSACTIONS,
-          txData,
+          txData
         );
 
         console.log("txData : ", txData);
@@ -516,11 +624,11 @@ class ProcessHelper {
               ? events["proposal_vote.proposal_id"][0]
               : "",
             answer,
-            txHash: events["tx.hash"] ? `0x${events["tx.hash"][0]}` : "",
-            blockNumber: events["tx.height"] ? events["tx.height"][0] : "",
-            voter: events["message.sender"]
-              ? `${events["message.sender"][0]}`
-              : "",
+            txHash: txData.txhash,
+            blockNumber: events['tx.height'] ? events['tx.height'][0] : '',
+            voter: events['message.sender']
+              ? `${events['message.sender'][0]}`
+              : '',
           };
 
           // save the details of voters
@@ -535,7 +643,7 @@ class ProcessHelper {
           // call the method to get the type of contract
           if (txData.contractAddress) {
             contractType = await this.cosmjsInstace.getContractType(
-              txData.contractAddress,
+              txData.contractAddress
             );
             if (contractType === null) {
               contractType = "UNKNOWN";
@@ -543,12 +651,12 @@ class ProcessHelper {
           }
 
           const contractDetails: IContracts = {
-            contractName: "",
-            txHash: events["tx.hash"] ? `0x${events["tx.hash"][0]}` : "",
-            blockNumber: events["tx.height"] ? events["tx.height"][0] : "",
-            address: events["instantiate._contract_address"]
-              ? events["instantiate._contract_address"][0]
-              : "",
+            contractName: '',
+            txHash: txData.txhash,
+            blockNumber: events['tx.height'] ? events['tx.height'][0] : '',
+            address: events['instantiate._contract_address']
+              ? events['instantiate._contract_address'][0]
+              : '',
             contractType,
             timestamp: txData.timestamp,
             creator: events["message.sender"]
@@ -557,7 +665,7 @@ class ProcessHelper {
           };
 
           const contractName = await this.cosmjsInstace.getContractName(
-            contractDetails.address,
+            contractDetails.address
           );
 
           if (contractName !== null) {
@@ -568,7 +676,7 @@ class ProcessHelper {
           await dbHelper.saveContractDeployTx(contractDetails);
 
           const tokenInfo = await this.cosmjsInstace.getTokenInfo(
-            contractDetails.address,
+            contractDetails.address
           );
 
           if (tokenInfo !== null) {
@@ -610,12 +718,12 @@ class ProcessHelper {
           await dbHelper.updateContractExec(txData.contractAddress);
 
           const account = await this.cosmjsInstace.getAccountInfo(
-            txData.contractAddress,
+            txData.contractAddress
           );
 
           await this.cosmjsInstace.getTokenBalances(
             txData.contractAddress,
-            account,
+            account
           );
         }
       }
@@ -638,12 +746,12 @@ class ProcessHelper {
         url,
         FETCH_METHODS.GET,
         HEADERS.DEFAULT,
-        null,
+        null
       );
       if (fetchRes?.data?.result && !fetchRes.error) {
         console.log(
-          "tx Data inside missedTx : ",
-          JSON.stringify(fetchRes?.data),
+          'tx Data inside missedTx : ',
+          JSON.stringify(fetchRes?.data)
         );
 
         const result = fetchRes?.data?.result;
@@ -671,12 +779,12 @@ class ProcessHelper {
 
         const filteredEvents = events.filter(
           (event: any) =>
-            event.type === "message" &&
-            event?.attributes.some((attr: any) => attr.key === "action"),
+            event.type === 'message' &&
+            event?.attributes.some((attr: any) => attr.key === 'action')
         );
 
         const eventObj = filteredEvents[0]?.attributes.find(
-          (i: any) => i.key === "action",
+          (i: any) => i.key === 'action'
         );
         const txEvent = eventObj?.value || "";
 
@@ -735,7 +843,7 @@ class ProcessHelper {
           url2,
           FETCH_METHODS.GET,
           HEADERS.DEFAULT,
-          null,
+          null
         );
         if (!fetchRes2.error) {
           txData.timestamp = fetchRes2?.data.result.block?.header?.time ?? "";
@@ -767,7 +875,7 @@ class ProcessHelper {
         url2,
         FETCH_METHODS.GET,
         HEADERS.DEFAULT,
-        null,
+        null
       );
       console.log("fetchRes2,", fetchRes2);
       if (!fetchRes2?.data?.result) {
@@ -777,7 +885,7 @@ class ProcessHelper {
       const validatorOperatorAddress: string =
         <string>(
           await this.cosmjsInstace.tendermintValAddressToValoperAddress(
-            fetchRes2?.data.result.block?.header?.proposer_address,
+            fetchRes2?.data.result.block?.header?.proposer_address
           )
         ) ?? "";
 
@@ -836,13 +944,13 @@ class ProcessHelper {
   public async downTimeBlocks() {
     try {
       const lastBlockSaved = await RedisService.getString(
-        REDIS_KEY.LATEST_BLOCK,
+        REDIS_KEY.LATEST_BLOCK
       );
       const blockRes = await fetchRequest(
         `${environment.httpHost}/block`,
         FETCH_METHODS.GET,
         HEADERS.DEFAULT,
-        null,
+        null
       );
       const newBlock = blockRes?.data?.result?.block?.header?.height;
       console.log("newBlock: ", newBlock);
@@ -861,7 +969,7 @@ class ProcessHelper {
               `${environment.httpHost}/block`,
               FETCH_METHODS.GET,
               HEADERS.DEFAULT,
-              null,
+              null
             );
             const currentBlock =
               currentBlockRes?.data?.result?.block?.header?.height;
@@ -869,7 +977,7 @@ class ProcessHelper {
             if (i <= currentBlock) {
               RabbitMqService.inQueueData(
                 QUEUE_NAME.DOWNTIME_BLOCK,
-                i.toString(),
+                i.toString()
               );
             }
             // saving missed block to downtime block Queue

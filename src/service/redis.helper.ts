@@ -40,10 +40,10 @@ class RedisService {
       });
       this.client.on("error", (err: Error) =>
         logger.error(
-          "\x1b[31m%s\x1b[0m",
-          "error while connecting redis server: ",
-          err.message,
-        ),
+          '\x1b[31m%s\x1b[0m',
+          'error while connecting redis server: ',
+          err.message
+        )
       );
     } catch (error) {
       console.log("error while connecting to redis .. ", error);
@@ -77,7 +77,7 @@ class RedisService {
 
       const existingData =
         (await this.client.zRange(REDIS_KEY.VALIDATOR_DETAILS, 0, -1)).map(
-          (item) => JSON.parse(item),
+          (item) => JSON.parse(item)
         ) || [];
 
       console.log("existingData : : ", existingData);
@@ -86,16 +86,16 @@ class RedisService {
         const valExistingData = existingData.find(
           (i: any) =>
             // const extData = JSON.parse(i);
-            i.validatorAddress === data.validatorAddress,
+            i.validatorAddress === data.validatorAddress
         );
         console.log("data.validatorAddress : ", data.validatorAddress);
         console.log(
-          "valExistingData?.validatorAddress : ",
-          valExistingData?.validatorAddress,
+          'valExistingData?.validatorAddress : ',
+          valExistingData?.validatorAddress
         );
 
-        // console.log("valExistingData : ", valExistingData);
-        console.log("valExistingData : ", !!valExistingData);
+        // console.log('valExistingData : ', valExistingData);
+        console.log('valExistingData : ', !!valExistingData);
 
         if (!valExistingData) {
           datatoSave.score = id;
@@ -125,13 +125,13 @@ class RedisService {
     data: {
       score: string;
       value: string;
-    }[],
+    }[]
   ) {
     try {
       const formattedData = data.map(({ score, value }) => [score, value]);
       console.log("formattedData   ", formattedData);
 
-      // console.log("validator save res : ", saveRes);
+      // console.log('validator save res : ', saveRes);
     } catch (error) {
       console.log("error while saving : ", error);
     }
@@ -203,6 +203,28 @@ class RedisService {
     } catch (err) {
       logger.error("error while getting the data from redis: ", err);
       return [];
+    }
+  }
+
+  public async setHset(redisKey: string, dataKey: string, dataValue: object) {
+    try {
+      await this.client.hSet(redisKey, dataKey, JSON.stringify(dataValue));
+      await this.client.expire(redisKey, environment.ttlTimeRewards * 60 * 60);
+      console.log('ttlTimeRewards :',  environment.ttlTimeRewards);      
+      return true;
+    } catch (err) {
+      logger.error('error while saving in redis: ', err);
+      return null;
+    }
+  }
+
+  public async getHset(redisKey: string, dataKey: string) {
+    try {
+      const res = (await this.client.hGet(redisKey, dataKey)) as string;
+      return JSON.parse(res);
+    } catch (err) {
+      logger.error('error while saving in redis: ', err);
+      return null;
     }
   }
 }

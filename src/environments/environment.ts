@@ -39,6 +39,8 @@ class Environment implements IEnvironment {
   public wsUrl: string;
 
   public projectName: string;
+  
+  public ttlTimeRewards: number;
 
   httpHost: string;
 
@@ -63,12 +65,13 @@ class Environment implements IEnvironment {
     this.rabbitMq = <string>process.env.RABITMQ_URL;
     this.coinMarketApi = <string>process.env.COIN_MARKET_API_PATH;
     this.coinMarketKey = <string>process.env.COIN_MARKET_API_KEY;
-    this.symbol = <string>process.env.TOKEN_SYMBOL;
+    this.symbol = <string>process.env.TOKEN_SYMBOL || 'TICS';
     this.currency = <string>process.env.TOKEN_CURRENCY;
     this.evmHost = <string>process.env.NATIVE_SWAGGER_HTTP_HOST;
     this.wsUrl = <string>process.env.NATIVE_TENDERMINT_NODE_WS_URL;
-    this.projectName = <string>process.env.PROJECT_NAME || "qubetics";
     this.initialSupply = Number(process.env.INITIAL_SUPPLY);
+    this.projectName = <string>process.env.PROJECT_NAME || 'qubetics';
+    this.ttlTimeRewards = <number>Number(process.env.TTL_TIME_FOR_REWARDS || 1);
   }
 
   /**

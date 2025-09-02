@@ -11,9 +11,6 @@ import dbHelper from "./db.helper";
  */
 async function getProposalsInfo(apiRes: AxiosInstance) {
   try {
-    console.log(
-      "Checking for new proposals..............................................",
-    );
 
     const response: AxiosResponse = await apiRes.get(
       "/cosmos/gov/v1/proposals?proposal_status=PROPOSAL_STATUS_UNSPECIFIED",

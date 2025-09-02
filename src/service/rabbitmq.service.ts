@@ -105,10 +105,10 @@ class RabbitMq {
               if (!txRes) {
                 if (txData?.result?.events) {
                   const tx = JSON.stringify(txData);
-                  console.log(
-                    "txHash data inside not saved case in queue : ",
-                    tx,
-                  );
+                  // console.log(
+                  //   'txHash data inside not saved case in queue : ',
+                  //   tx,
+                  // );
                   this.inQueueData(QUEUE_NAME.MISSED_TXS, tx);
                 }
               }
