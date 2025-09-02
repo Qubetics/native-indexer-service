@@ -208,7 +208,10 @@ class ProcessHelper {
       const element = rewardEvent[i];
       let amountArr: any[] = [];
 
-      if (typeof element === 'string' && element.includes(environment.symbol.toLowerCase())) {
+      if (
+        typeof element === 'string' &&
+        element.includes(environment.symbol.toLowerCase())
+      ) {
         amountArr = element.split('t');
       }
       rewardAmount = rewardAmount.plus(amountArr[0] || 0);
@@ -311,17 +314,21 @@ class ProcessHelper {
         let toAddress = '';
         let method = '';
         let timeStamp = '';
+        const blocknumber = Number(message.result.data?.value?.TxResult?.height);
 
-        const url = `${environment.evmHost}/cosmos/tx/v1beta1/txs/${hash}`;
+        const url = `${environment.httpHost}/block?height=${blocknumber}`;
         const fetchRes = await fetchRequest(
           url,
           FETCH_METHODS.GET,
           HEADERS.DEFAULT,
           null
         );
-
         if (!fetchRes.error) {
-          timeStamp = fetchRes?.data.tx_response.timestamp ?? '';
+          console.log(
+            'timestamp fromRPC : ',
+            fetchRes?.data.result.block?.header?.time
+          );
+          timeStamp = fetchRes?.data.result.block?.header?.time ?? '';
         }
 
         console.log('txEvent : ', txEvent);
