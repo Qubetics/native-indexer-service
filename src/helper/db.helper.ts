@@ -2,8 +2,8 @@ import {
   RES_MSG,
   REDIS_KEY,
   CONST_NAME,
-  FETCH_METHODS,
-  HEADERS,
+  // FETCH_METHODS,
+  // HEADERS,
 } from '../constant';
 import {
   IBlock,
@@ -133,7 +133,16 @@ class ExlorerHelper {
         error: false,
       };
     } catch (err) {
-      console.log(`error while saving tx -${err}`);
+      if (err instanceof Error) {
+        console.log('error while saving tx: ', err.message);
+        if (err.message.includes('Unique constraint')) {
+          return {
+            error: false,
+          };
+        }
+      }else{
+        console.log(`error while saving tx -${err}`);
+      }
       return {
         error: true,
       };

@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+// import { decodeTxRaw } from '@cosmjss/proto-signing';
 import axios from 'axios';
 import { ITimeStamp } from '../interface';
 
@@ -12,7 +14,7 @@ export async function fetchRequest(
   url: string,
   method: string,
   headers: any,
-  data: any = null,
+  data: any = null
 ) {
   try {
     const result = await axios({
@@ -312,4 +314,21 @@ export function exp(val: string): string {
     value += 1;
   }
   return str + z;
+}
+
+export function parseTx(base64Tx: string) {
+  const rawTx = Buffer.from(base64Tx, 'base64');
+
+  const txHash = crypto
+    .createHash('sha256')
+    .update(rawTx)
+    .digest('hex')
+    .toUpperCase();
+
+  // const decodedTx = decodeTxRaw(rawTx);
+
+  return {
+    txHash,
+    // decodedTx,
+  };
 }

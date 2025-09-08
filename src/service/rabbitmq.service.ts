@@ -31,6 +31,7 @@ class RabbitMq {
       this.consumeLatestBlocks();
       this.consumeMissedBlocks();
       this.consumeDownTimeBlocks();
+      this.consumeDownTransaction();
       // this.consumeValidatorDetails();
       this.consumeLatestTransaction();
 
@@ -123,8 +124,37 @@ class RabbitMq {
     } catch (error) {
       console.log(
         'error while consuming all consumeLatestTransaction : ',
-        error,
+        error
       );
+    }
+  }
+
+  /**
+   * For consuming all type of transactions
+   */
+  public consumeDownTransaction() {
+    try {
+      this.channel?.consume(
+        QUEUE_NAME.DOWNTIME_TXS,
+        async (message: amqp.Message | null) => {
+          if (message) {
+            try {
+              const txHash = message.content.toString();
+              const txRes = await processHelper.processMissedTxs(txHash);
+              if (!txRes) {
+                this.inQueueData(QUEUE_NAME.DOWNTIME_TXS, txHash);
+              }
+              this.channel?.ack(message);
+            } catch (error) {
+              console.log('*** consumeLatestTransaction Error', error);
+              this.channel?.ack(message);
+            }
+          }
+        },
+        { noAck: false }
+      );
+    } catch (error) {
+      console.log('error while consuming all consumeDownTransaction : ', error);
     }
   }
 
