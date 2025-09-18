@@ -119,12 +119,12 @@ class RabbitMq {
             }
           }
         },
-        { noAck: false }
+        { noAck: false },
       );
     } catch (error) {
       console.log(
         "error while consuming all consumeLatestTransaction : ",
-        error
+        error,
       );
     }
   }
@@ -151,7 +151,7 @@ class RabbitMq {
             }
           }
         },
-        { noAck: false }
+        { noAck: false },
       );
     } catch (error) {
       console.log("error while consuming all consumeDownTransaction : ", error);
@@ -179,7 +179,7 @@ class RabbitMq {
                   if (blockNumber) {
                     this.inQueueData(
                       QUEUE_NAME.ERROR_BLOCK,
-                      blockNumber.toString()
+                      blockNumber.toString(),
                     );
                   }
                 }
@@ -191,7 +191,7 @@ class RabbitMq {
             }
           }
         },
-        { noAck: false }
+        { noAck: false },
       );
     } catch (error) {
       console.log("### Error consumeLatestBlocks ", error);
@@ -220,7 +220,7 @@ class RabbitMq {
             }
           }
         },
-        { noAck: false }
+        { noAck: false },
       );
     } catch (error) {
       console.log("### Error consumeMissedTxs", error);
@@ -246,7 +246,7 @@ class RabbitMq {
             }
           }
         },
-        { noAck: false }
+        { noAck: false },
       );
     } catch (error) {
       console.log("### error consumeErrorBlocks", error);
@@ -273,7 +273,7 @@ class RabbitMq {
                 if (blockData?.blocknumber) {
                   this.inQueueData(
                     QUEUE_NAME.ERROR_BLOCK,
-                    blockData.blocknumber.toString()
+                    blockData.blocknumber.toString(),
                   );
                 }
               }
@@ -283,7 +283,7 @@ class RabbitMq {
             }
           }
         },
-        { noAck: false }
+        { noAck: false },
       );
     } catch (error) {
       console.log("Error consumeMissedBlocks", error);
@@ -305,7 +305,7 @@ class RabbitMq {
               if (isSuccess) {
                 // Retrieve the block count from Redis or the database
                 let blockCount = await RedisService.getString(
-                  REDIS_KEY.NATIVE_BLOCKS_COUNT
+                  REDIS_KEY.NATIVE_BLOCKS_COUNT,
                 );
 
                 if (!blockCount) {
@@ -313,14 +313,14 @@ class RabbitMq {
                   blockCount = await prisma.blocks.count();
                   await RedisService.setString(
                     REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                    blockCount
+                    blockCount,
                   );
                 } else {
                   // Increment the block count
                   blockCount = Number(blockCount) + 1;
                   await RedisService.setString(
                     REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                    blockCount
+                    blockCount,
                   );
                 }
               }
@@ -329,7 +329,7 @@ class RabbitMq {
                 "downtime block : ",
                 COLORS.cyan,
                 `${block} ${isSuccess}`,
-                COLORS.yellow
+                COLORS.yellow,
               );
               if (!isSuccess) {
                 this.inQueueData(QUEUE_NAME.ERROR_BLOCK, block.toString());
@@ -340,7 +340,7 @@ class RabbitMq {
             }
           }
         },
-        { noAck: false }
+        { noAck: false },
       );
     } catch (error) {
       console.log("### Error consumeDownTimeBlocks", error);
@@ -363,7 +363,7 @@ class RabbitMq {
             }
           }
         },
-        { noAck: false }
+        { noAck: false },
       );
     } catch (error) {
       console.log("### error consumeNullTimestamp", error);
