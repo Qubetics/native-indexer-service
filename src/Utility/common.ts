@@ -1,3 +1,5 @@
+import crypto from "crypto";
+// import { decodeTxRaw } from '@cosmjss/proto-signing';
 import axios from "axios";
 import { ITimeStamp } from "../interface";
 
@@ -12,7 +14,7 @@ export async function fetchRequest(
   url: string,
   method: string,
   headers: any,
-  data: any = null,
+  data: any = null
 ) {
   try {
     const result = await axios({
@@ -45,7 +47,7 @@ export function log(
   msg: string,
   msgColor: string,
   data: any,
-  dataColor: string,
+  dataColor: string
 ) {
   console.log(`${msgColor}${msg}${dataColor}${data}\x1b[0m`);
 }
@@ -126,7 +128,7 @@ export function formatDateByMin(date: Date): string {
 export async function fillMissingMinutes(
   inputData: Array<{ hour: Date; count: number }> | [],
   startMinute: Date,
-  endMinute: Date,
+  endMinute: Date
 ) {
   startMinute.setMinutes(startMinute.getMinutes() + 1);
   const fromTime = startMinute;
@@ -176,7 +178,7 @@ export function formatDate(date: Date): string {
 
 export async function fillMissingDatesWithZeroByhr(
   graphData: Array<{ hour: Date; count: number }>,
-  startDate: Date,
+  startDate: Date
 ) {
   startDate.setHours(startDate.getHours());
 
@@ -223,14 +225,14 @@ export function formatDateBySec(date: Date): string {
 export async function fillMissingSeconds(
   data: Array<{ second: Date; count: number }>,
   startTime: Date,
-  endTime: Date,
+  endTime: Date
 ) {
   const newData = [];
   const currentTime = new Date(startTime);
 
   while (currentTime <= endTime) {
     const matchingData = data.find(
-      (item) => item.second.getTime() === currentTime.getTime(),
+      (item) => item.second.getTime() === currentTime.getTime()
     );
     if (matchingData) {
       const secondVal = {
@@ -265,18 +267,18 @@ export function formatDateForDay(date: Date): string {
 export async function fillMissingDatesWithZeroByDay(
   data: Array<{ day: Date; count: number }>,
   startDate: Date,
-  currentDateVal: Date,
+  currentDateVal: Date
 ) {
   startDate.setDate(startDate.getDate() + 1);
   const dateMap = new Map(
-    data.map((item) => [item.day.toISOString(), item.count]),
+    data.map((item) => [item.day.toISOString(), item.count])
   );
   const result = [];
   const currentDate = new Date(startDate);
 
   // Calculate the number of days between the startDate and the last date in your data
   const daysDifference = Math.floor(
-    (+currentDateVal - +currentDate) / (24 * 60 * 60 * 1000),
+    (+currentDateVal - +currentDate) / (24 * 60 * 60 * 1000)
   );
 
   for (let i = 0; i <= daysDifference; i += 1) {
@@ -312,4 +314,21 @@ export function exp(val: string): string {
     value += 1;
   }
   return str + z;
+}
+
+export function parseTx(base64Tx: string) {
+  const rawTx = Buffer.from(base64Tx, "base64");
+
+  const txHash = crypto
+    .createHash("sha256")
+    .update(rawTx)
+    .digest("hex")
+    .toUpperCase();
+
+  // const decodedTx = decodeTxRaw(rawTx);
+
+  return {
+    txHash,
+    // decodedTx,
+  };
 }
