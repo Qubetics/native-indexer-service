@@ -46,6 +46,7 @@ export interface ITransaction {
   blocknumber: number;
   fromAddress: string;
   contractAddress: string;
+  burnedFee: number;
 }
 
 export interface ICOINTX {
@@ -60,6 +61,7 @@ export interface ICOINTX {
   fromAddress: string;
   blocknumber: number;
   status: TRANSACTION_STATUS;
+  burnedFee: number;
 }
 
 export interface IContracts {
@@ -222,6 +224,7 @@ export interface IContractLogs {
   method: string;
   status: string;
   timestamp: string;
+  burnedFee: number;
 }
 
 export interface IHolders {

@@ -32,13 +32,14 @@ CREATE TABLE "Transactions" (
     "blocknumber" BIGINT NOT NULL,
     "txhash" TEXT NOT NULL,
     "timestamp" TIMESTAMP(3) NOT NULL,
+    "gasUsed" BIGINT NOT NULL DEFAULT 0,
     "contractAddress" TEXT NOT NULL DEFAULT 'N/A',
     "fromAddress" VARCHAR(255) NOT NULL,
     "toAddress" VARCHAR(255) NOT NULL,
     "gasWanted" BIGINT NOT NULL DEFAULT 0,
-    "gasUsed" BIGINT NOT NULL DEFAULT 0,
     "txFee" TEXT NOT NULL DEFAULT '',
     "value" TEXT NOT NULL DEFAULT '0',
+    "burnedFee" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Transactions_pkey" PRIMARY KEY ("id")
@@ -163,6 +164,7 @@ CREATE TABLE "ValidatorStake" (
     "validatorOperatorAddress" TEXT NOT NULL DEFAULT '',
     "delegatorAddress" TEXT NOT NULL,
     "balanceAmount" DECIMAL(65,30) NOT NULL,
+    "delegatorRewards" DECIMAL(65,30) NOT NULL DEFAULT 0,
     "denom" TEXT NOT NULL,
 
     CONSTRAINT "ValidatorStake_pkey" PRIMARY KEY ("id")
@@ -213,6 +215,16 @@ CREATE TABLE "Voters" (
     "voter" TEXT NOT NULL,
 
     CONSTRAINT "Voters_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Rewards" (
+    "id" SERIAL NOT NULL,
+    "address" TEXT NOT NULL,
+    "timeStamp" TIMESTAMP(3) NOT NULL,
+    "rewardAmount" TEXT NOT NULL,
+
+    CONSTRAINT "Rewards_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -286,6 +298,12 @@ CREATE INDEX "Voters_proposalId_answer_voter_idx" ON "Voters"("proposalId", "ans
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Voters_proposalId_voter_key" ON "Voters"("proposalId", "voter");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Rewards_address_key" ON "Rewards"("address");
+
+-- CreateIndex
+CREATE INDEX "Rewards_address_timeStamp_idx" ON "Rewards"("address", "timeStamp");
 
 -- AddForeignKey
 ALTER TABLE "Tokens" ADD CONSTRAINT "Tokens_contractAddress_fkey" FOREIGN KEY ("contractAddress") REFERENCES "Contracts"("address") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -40,8 +40,8 @@ class RedisService {
       });
       this.client.on("error", (err: Error) =>
         logger.error(
-          '\x1b[31m%s\x1b[0m',
-          'error while connecting redis server: ',
+          "\x1b[31m%s\x1b[0m",
+          "error while connecting redis server: ",
           err.message
         )
       );
@@ -90,12 +90,12 @@ class RedisService {
         );
         console.log("data.validatorAddress : ", data.validatorAddress);
         console.log(
-          'valExistingData?.validatorAddress : ',
+          "valExistingData?.validatorAddress : ",
           valExistingData?.validatorAddress
         );
 
         // console.log('valExistingData : ', valExistingData);
-        console.log('valExistingData : ', !!valExistingData);
+        console.log("valExistingData : ", !!valExistingData);
 
         if (!valExistingData) {
           datatoSave.score = id;
@@ -210,10 +210,10 @@ class RedisService {
     try {
       await this.client.hSet(redisKey, dataKey, JSON.stringify(dataValue));
       await this.client.expire(redisKey, environment.ttlTimeRewards * 60 * 60);
-      console.log('ttlTimeRewards :',  environment.ttlTimeRewards);      
+      console.log("ttlTimeRewards :", environment.ttlTimeRewards);
       return true;
     } catch (err) {
-      logger.error('error while saving in redis: ', err);
+      logger.error("error while saving in redis: ", err);
       return null;
     }
   }
@@ -223,8 +223,19 @@ class RedisService {
       const res = (await this.client.hGet(redisKey, dataKey)) as string;
       return JSON.parse(res);
     } catch (err) {
-      logger.error('error while saving in redis: ', err);
+      logger.error("error while saving in redis: ", err);
       return null;
+    }
+  }
+
+  // get the string data from redis
+  public async incrementValue<T>(key: string, value: number) {
+    try {
+      await this.client.incrByFloat(key, value);
+      return true;
+    } catch (err) {
+      logger.error("Error while incrementing the data from redis: ", err);
+      return false;
     }
   }
 }
