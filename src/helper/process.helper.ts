@@ -6,6 +6,7 @@ import {
   retriveNumbers,
   cleanEscapedString,
   addHours,
+  getType,
 } from "../Utility/common";
 import {
   COLORS,
@@ -413,9 +414,9 @@ class ProcessHelper {
 
                 break;
 
-                default:
-                  type = txEvent; // send txEvent by default
-                  break;
+              default:
+                type = txEvent; // send txEvent by default
+                break;
             }
 
             break;
@@ -495,9 +496,9 @@ class ProcessHelper {
               : "";
             break;
 
-            default:
-              type = txEvent; // send txEvent by default
-              break;
+          default:
+            type = txEvent; // send txEvent by default
+            break;
         }
         let amount;
 
@@ -569,7 +570,7 @@ class ProcessHelper {
           : txFeeData;
         console.log("txFee", txFee);
         const txData = {
-          type,
+          type:getType(type),
           status,
           value: amount ? amount?.toString() : "",
           timestamp,

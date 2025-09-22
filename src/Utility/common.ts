@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ITimeStamp } from "../interface";
+import { TYPE_MAP } from "../constant";
 
 /**
  * For making http requests
@@ -337,3 +338,7 @@ export const addHours = (timestamp: any, hours: any) => {
   date.setTime(date.getTime() + hours * 60 * 60 * 1000);
   return date.toISOString();
 };
+
+export const getType=(type: string): string | undefined=> {
+  return TYPE_MAP[type] ?? type
+}

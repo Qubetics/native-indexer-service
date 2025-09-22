@@ -142,6 +142,7 @@ export enum TRANSACTION_TYPE {
   END_SUBSCRIPTION = "END_SUBSCRIPTION",
   START_REQUEST = "START_REQUEST",
   END_REQUEST = "END_REQUEST",
+
 }
 
 export const HEADERS = {
@@ -171,3 +172,12 @@ export const COLORS = {
 
 export const CURRENT_DEFAULT_COIN_PRICE = 0.337097;
 export const CURRENT_DEFAULT_CIRCULATING_SUPPLY = 30542186;
+
+export const TYPE_MAP: Record<string, string> = {
+  "/qubetics.plan.v3.MsgCreatePlanRequest": "CREATE_PLAN",
+  "/qubetics.plan.v3.MsgUpdatePlanStatusRequest": "UPDATE_PLAN_STATUS",
+  "/qubetics.lease.v1.MsgStartLeaseRequest": "START_LEASE",
+  "/qubetics.node.v3.MsgUpdateNodeStatusRequest": "UPDATE_NODE_STATUS",
+  "/qubetics.plan.v3.MsgLinkNodeRequest": "LINK_NODE",
+  "/qubetics.plan.v3.MsgUnlinkNodeRequest": "UNLINK_NODE",
+};
