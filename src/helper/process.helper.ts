@@ -413,9 +413,9 @@ class ProcessHelper {
 
                 break;
 
-              default:
-                type = "UNKNOWN";
-                break;
+                default:
+                  type = txEvent; // send txEvent by default
+                  break;
             }
 
             break;
@@ -495,9 +495,9 @@ class ProcessHelper {
               : "";
             break;
 
-          default:
-            type = "UNKNOWN";
-            break;
+            default:
+              type = txEvent; // send txEvent by default
+              break;
         }
         let amount;
 
