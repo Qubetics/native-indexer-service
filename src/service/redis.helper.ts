@@ -42,8 +42,8 @@ class RedisService {
         logger.error(
           "\x1b[31m%s\x1b[0m",
           "error while connecting redis server: ",
-          err.message
-        )
+          err.message,
+        ),
       );
     } catch (error) {
       console.log("error while connecting to redis .. ", error);
@@ -77,7 +77,7 @@ class RedisService {
 
       const existingData =
         (await this.client.zRange(REDIS_KEY.VALIDATOR_DETAILS, 0, -1)).map(
-          (item) => JSON.parse(item)
+          (item) => JSON.parse(item),
         ) || [];
 
       console.log("existingData : : ", existingData);
@@ -86,12 +86,12 @@ class RedisService {
         const valExistingData = existingData.find(
           (i: any) =>
             // const extData = JSON.parse(i);
-            i.validatorAddress === data.validatorAddress
+            i.validatorAddress === data.validatorAddress,
         );
         console.log("data.validatorAddress : ", data.validatorAddress);
         console.log(
           "valExistingData?.validatorAddress : ",
-          valExistingData?.validatorAddress
+          valExistingData?.validatorAddress,
         );
 
         // console.log('valExistingData : ', valExistingData);
@@ -125,7 +125,7 @@ class RedisService {
     data: {
       score: string;
       value: string;
-    }[]
+    }[],
   ) {
     try {
       const formattedData = data.map(({ score, value }) => [score, value]);

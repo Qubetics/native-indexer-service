@@ -551,7 +551,12 @@ class ProcessHelper {
         } else {
           amount = val;
         }
-        console.log("amount---", amount);
+
+        console.log("txFeeData", events["tx.fee"]);
+
+        // const txFeeData = events["tx.fee"][0]
+        //   ? events["tx.fee"][0].match(/[\d.]+/g)[0]
+        //   : "";
 
         const txFeeData = events["tx.fee"][0]
           ? events["tx.fee"][0].match(/[\d.]+/g)[0]
