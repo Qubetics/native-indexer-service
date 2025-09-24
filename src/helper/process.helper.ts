@@ -911,7 +911,7 @@ class ProcessHelper {
         HEADERS.DEFAULT,
         null
       );
-      console.log("fetchRes2,", fetchRes2);
+
       if (!fetchRes2?.data?.result) {
         console.log("fetchRes2?.data ", fetchRes2);
       }
