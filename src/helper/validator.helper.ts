@@ -292,10 +292,13 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
           apiRes,
           validatorAddress
         );
-
+        console.log("valIndexShow", valIndex, getDelegationDetail);
         selfStakeValue =
           getDelegationDetail?.delegation_responses[0]?.balance.amount;
-        stakeDetails.push(getDelegationDetail);
+        if (getDelegationDetail) {
+          stakeDetails.push(getDelegationDetail);
+          console.log("stakeDetails3", stakeDetails);
+        }
       }
 
       let deleShares = 0;
@@ -314,13 +317,20 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
 
       for (let j = 0; j < delegatorCount; j++) {
         const val = stakeDetails?.delegation_responses[j];
-        console.log(val, "valofDeelgator");
+
         const delegatorRewards: number = await getDelegatorReward(
           apiRes,
           val?.delegation.delegator_address,
           validatorOperatorAddress
         );
-
+        console.log(
+          val?.delegation.delegator_address,
+          Number(val?.delegation?.shares),
+          "STAKE AMOUNT OF VALIDTOR",
+          validatorOperatorAddress,
+          "against the DELEGATOR",
+          val?.delegation.delegator_address
+        );
         if (val?.delegation?.delegator_address) {
           const data: IValidatorStake = {
             validatorOperatorAddress,
