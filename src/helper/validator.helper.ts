@@ -295,7 +295,7 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
         console.log("valIndexShow", valIndex, getDelegationDetail);
         selfStakeValue =
           getDelegationDetail?.delegation_responses[0]?.balance.amount;
-        if (getDelegationDetail) {
+        if (getDelegationDetail?.delegation_responses.length > 0) {
           stakeDetails.push(getDelegationDetail);
           console.log("stakeDetails3", stakeDetails);
         }
