@@ -558,9 +558,7 @@ class ProcessHelper {
         //   ? events["tx.fee"][0].match(/[\d.]+/g)[0]
         //   : "";
 
-        const txFeeData = events["tx.fee"][0]
-          ? events["tx.fee"][0].match(/[\d.]+/g)[0]
-          : "";
+        const txFeeData = events?.["tx.fee"]?.[0]?.match(/[\d.]+/g)?.[0] ?? 0;
 
         console.log("txFeeData", txFeeData);
 
