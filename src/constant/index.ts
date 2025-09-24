@@ -142,7 +142,6 @@ export enum TRANSACTION_TYPE {
   END_SUBSCRIPTION = "END_SUBSCRIPTION",
   START_REQUEST = "START_REQUEST",
   END_REQUEST = "END_REQUEST",
-
 }
 
 export const HEADERS = {
@@ -180,4 +179,6 @@ export const TYPE_MAP: Record<string, string> = {
   "/qubetics.node.v3.MsgUpdateNodeStatusRequest": "UPDATE_NODE_STATUS",
   "/qubetics.plan.v3.MsgLinkNodeRequest": "LINK_NODE",
   "/qubetics.plan.v3.MsgUnlinkNodeRequest": "UNLINK_NODE",
+  "/qubetics.lease.v1.MsgEndLeaseRequest": "End_Lease",
+  "/qubetics.session.v3.MsgUpdateSessionRequest": "Session_Updated",
 };

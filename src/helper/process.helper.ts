@@ -570,7 +570,7 @@ class ProcessHelper {
           : txFeeData;
         console.log("txFee", txFee);
         const txData = {
-          type:getType(type),
+          type: getType(type),
           status,
           value: amount ? amount?.toString() : "",
           timestamp,

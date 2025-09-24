@@ -33,7 +33,7 @@ export interface IBlock {
 }
 
 export interface ITransaction {
-  type: string |undefined;
+  type: string | undefined;
   status: string;
   txhash: string;
   value: string;
