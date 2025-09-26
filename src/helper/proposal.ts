@@ -1,8 +1,8 @@
-import { AxiosInstance, AxiosResponse } from "axios";
-import { fetchRequest } from "../Utility/common";
-import { FETCH_METHODS, HEADERS, RES_MSG } from "../constant";
-import { IProposalData } from "../interface";
-import dbHelper from "./db.helper";
+import { AxiosInstance, AxiosResponse } from 'axios';
+import { fetchRequest } from '../Utility/common';
+import { FETCH_METHODS, HEADERS, RES_MSG } from '../constant';
+import { IProposalData } from '../interface';
+import dbHelper from './db.helper';
 
 /**
  *  Process and update information for each proposal
@@ -11,10 +11,9 @@ import dbHelper from "./db.helper";
  */
 async function getProposalsInfo(apiRes: AxiosInstance) {
   try {
-    console.log("Checking for new proposals....");
 
     const response: AxiosResponse = await apiRes.get(
-      "/cosmos/gov/v1/proposals?proposal_status=PROPOSAL_STATUS_UNSPECIFIED",
+      '/cosmos/gov/v1/proposals?proposal_status=PROPOSAL_STATUS_UNSPECIFIED',
     );
 
     const proposals: IProposalData[] = [];
@@ -46,10 +45,10 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
 
       const amountObj = proposal.total_deposit.find(
         (item: any) =>
-          item?.denom === (environment?.symbol ?? "").toLowerCase(),
+          item?.denom === (environment?.symbol ?? '').toLowerCase(),
       );
 
-      const messageType = proposal?.messages[0]?.["@type"];
+      const messageType = proposal?.messages[0]?.['@type'];
 
       const proposalId = proposal?.id;
 
@@ -69,13 +68,11 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
         summary: proposal?.summary,
         proposer: proposal?.proposer,
         totalDeposit: amountObj?.amount,
-        proposerType: messageType || "",
+        proposerType: messageType || '',
         tally: JSON.stringify(tallyData?.data?.tally),
         votingStartTime: proposal?.voting_start_time,
         votingEndTime: proposal?.voting_end_time,
       };
-
-      // console.log("proposalData : ", proposalData);
 
       await dbHelper.saveProposals(proposalData);
 
@@ -84,10 +81,10 @@ async function getProposalsInfo(apiRes: AxiosInstance) {
     return proposals;
   } catch (err) {
     if (err instanceof Error) {
-      console.log("Error while saving proposal", err?.message);
+      console.log('Error while saving proposal', err?.message);
       return { error: true, message: err.message };
     }
-    console.log("Error while saving proposal", err);
+    console.log('Error while saving proposal', err);
 
     return {
       error: true,

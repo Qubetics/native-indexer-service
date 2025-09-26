@@ -1,17 +1,17 @@
-import axios, { AxiosInstance, AxiosResponse } from "axios";
-import { bech32 } from "bech32";
-import { noExponent } from "../Utility/common";
-import { RES_MSG, CONST_NAME, REDIS_KEY } from "../constant";
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { bech32 } from 'bech32';
+import { noExponent } from '../Utility/common';
+import { RES_MSG, CONST_NAME, REDIS_KEY } from '../constant';
 import {
   Params,
   // IValidator,
   ValidatorDelegations,
   IValidatorStake,
   IValidatorToSave,
-} from "../interface/index";
-import { RedisService } from "../service";
+} from '../interface/index';
+import { RedisService } from '../service';
 // import redisHelper from '../service/redis.helper';
-import dbHelper from "./db.helper";
+import dbHelper from './db.helper';
 
 async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
   try {
@@ -24,15 +24,15 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       total_Supply,
       annualProvision,
     ] = await Promise.all([
-      apiRes.get("/cosmos/staking/v1beta1/validators"),
+      apiRes.get('/cosmos/staking/v1beta1/validators'),
       apiRes.get(
         `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`,
       ),
-      apiRes.get("/cosmos/mint/v1beta1/inflation"),
-      apiRes.get("/cosmos/staking/v1beta1/pool"),
-      apiRes.get("/cosmos/distribution/v1beta1/params"),
-      apiRes.get("/cosmos/bank/v1beta1/supply"),
-      apiRes.get("/cosmos/mint/v1beta1/annual_provisions"),
+      apiRes.get('/cosmos/mint/v1beta1/inflation'),
+      apiRes.get('/cosmos/staking/v1beta1/pool'),
+      apiRes.get('/cosmos/distribution/v1beta1/params'),
+      apiRes.get('/cosmos/bank/v1beta1/supply'),
+      apiRes.get('/cosmos/mint/v1beta1/annual_provisions'),
     ]);
 
     // Filter active validators
@@ -81,12 +81,33 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
     };
   } catch (error) {
     if (error instanceof Error) {
-      console.log("error occurred while calculating stake APR", error.message);
+      console.log('error occurred while calculating stake APR', error.message);
     } else {
-      console.log("error occurred while calculating stake APR", error);
+      console.log('error occurred while calculating stake APR', error);
     }
     return false;
   }
+}
+
+/**
+ * retrive delegator reward amount
+ * @param apiRes
+ * @param address
+ * @returns
+ */
+async function getDelegatorReward(
+  apiRes: AxiosInstance,
+  delegator: string,
+  validator: string,
+) {
+  const response: AxiosResponse = await apiRes.get(
+    `/cosmos/distribution/v1beta1/delegators/${delegator}/rewards/${validator}`,
+  );
+  const resData = response?.data;
+
+  // console.log("Res Data : ", resData?.rewards[0]?.amount);
+
+  return resData?.rewards[0]?.amount || 0;
 }
 
 // Calculate Annual Percentage Yield (APY) based on parameters
@@ -119,8 +140,8 @@ const calculateData = async (): Promise<
     const apiRes = axios.create({
       baseURL: apiUrl,
       headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        Accept: "application/json",
+        'Content-Type': 'application/json; charset=utf-8',
+        Accept: 'application/json',
       },
       timeout: 10000,
     });
@@ -234,7 +255,7 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
   // : Promise<IValidator[] | { error: boolean; message: string }>
   try {
     const response: AxiosResponse = await apiRes.get(
-      "/cosmos/staking/v1beta1/validators",
+      '/cosmos/staking/v1beta1/validators',
       { timeout: 10000 },
     );
     const validators: IValidatorToSave[] = [];
@@ -282,10 +303,18 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
       for (let j = 0; j < delegatorCount; j++) {
         // if (j !== valIndex) {
         const val = stakeDetails?.delegation_responses[j];
+
+        const delegatorRewards: number = await getDelegatorReward(
+          apiRes,
+          val?.delegation.delegator_address,
+          validatorOperatorAddress,
+        );
+
         if (val?.delegation?.delegator_address) {
           const data: IValidatorStake = {
             validatorOperatorAddress,
             denom: val?.balance?.denom,
+            delegatorRewards,
             stake: Number(val?.delegation?.shares),
             balanceAmount: val?.balance?.amount,
             delegatorAddress: val?.delegation.delegator_address,
@@ -362,16 +391,15 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
     }
 
     await dbHelper.saveValidators(validators);
-    // console.log('delegators delegators', validators);
 
     await dbHelper.saveDelegatorStakeData(delegators);
     return validators;
   } catch (err) {
     if (err instanceof Error) {
-      console.log("Error occurred while saving validator details", err.message);
+      console.log('Error occurred while saving validator details', err.message);
       return { error: true, message: err.message };
     }
-    console.log("Error occurred while saving validator details", err);
+    console.log('Error occurred while saving validator details ::: ', err);
 
     return {
       error: true,

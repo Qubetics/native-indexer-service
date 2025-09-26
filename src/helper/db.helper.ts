@@ -6,7 +6,7 @@ import {
   HEADERS,
   CURRENT_DEFAULT_COIN_PRICE,
   CURRENT_DEFAULT_CIRCULATING_SUPPLY,
-} from "../constant";
+} from '../constant';
 import {
   IBlock,
   IContractLogs,
@@ -21,12 +21,12 @@ import {
   IValidatorToSave,
   IVoters,
   ValidatorData,
-} from "../interface/index";
-import { prisma } from "../lib/db";
-import logger from "../lib/logger";
-import { RedisService } from "../service/index";
-import { fetchRequest } from "./common.helper";
-import SocketHelper from "./socket.helper";
+} from '../interface/index';
+import { prisma } from '../lib/db';
+import logger from '../lib/logger';
+import { RedisService } from '../service/index';
+import { fetchRequest } from './common.helper';
+import SocketHelper from './socket.helper';
 
 class ExlorerHelper {
   /**
@@ -47,15 +47,15 @@ class ExlorerHelper {
 
       console.log(
         "error.code === 'P2002' unique check fail : ",
-        error.code === "P2002",
+        error.code === 'P2002',
       );
 
-      if (error.code === "P2002") {
+      if (error.code === 'P2002') {
         return {
           error: false,
         };
       }
-      console.log("block db error : ", err);
+      console.log('block db error : ', err);
       return {
         error: true,
       };
@@ -100,7 +100,7 @@ class ExlorerHelper {
         error: false,
       };
     } catch (err) {
-      console.log("db error upsertValidatorsCount : ", err);
+      console.log('db error upsertValidatorsCount : ', err);
       return {
         error: true,
       };
@@ -122,11 +122,11 @@ class ExlorerHelper {
       const userData = [
         {
           address:
-            !txData.toAddress || txData.toAddress === "N/A"
-              ? ""
+            !txData.toAddress || txData.toAddress === 'N/A'
+              ? ''
               : txData.toAddress,
         },
-        { address: txData.fromAddress ?? "" },
+        { address: txData.fromAddress ?? '' },
       ];
 
       await this.userSave(userData);
@@ -135,7 +135,16 @@ class ExlorerHelper {
         error: false,
       };
     } catch (err) {
-      console.log(`error while saving tx -${err}`);
+      if (err instanceof Error) {
+        console.log('error while saving tx: ', err.message);
+        if (err.message.includes('Unique constraint')) {
+          return {
+            error: false,
+          };
+        }
+      }else{
+        console.log(`error while saving tx -${err}`);
+      }
       return {
         error: true,
       };
@@ -184,7 +193,7 @@ class ExlorerHelper {
 
       return true;
     } catch (err) {
-      logger.error("error while saving user data:", err);
+      logger.error('error while saving user data:', err);
       return false;
     }
   };
@@ -220,12 +229,12 @@ class ExlorerHelper {
         data: validatorData,
         skipDuplicates: true,
       });
-      console.log("validator saveRes", saveRes);
+      console.log('validator saveRes', saveRes);
       return {
         error: false,
       };
     } catch (err) {
-      console.error("Error while saving validators data  : ", err);
+      console.error('Error while saving validators data  : ', err);
       return {
         error: true,
       };
@@ -239,9 +248,9 @@ class ExlorerHelper {
         data: delegatorData,
         skipDuplicates: true,
       });
-      console.log("delegator saveRes", saveRes);
+      console.log('delegator saveRes', saveRes);
     } catch (error) {
-      console.log("Error while saving validator stake data : ", error);
+      console.log('Error while saving validator stake data : ', error);
     }
   };
 
@@ -269,9 +278,9 @@ class ExlorerHelper {
         convert: currency,
       };
 
-      const coinResult = (await fetchRequest(coinMarketApi, params, "get", {
-        accept: "application/json",
-        "X-CMC_PRO_API_KEY": coinMarketKey,
+      const coinResult = (await fetchRequest(coinMarketApi, params, 'get', {
+        accept: 'application/json',
+        'X-CMC_PRO_API_KEY': coinMarketKey,
       })) as {
         price: number;
         volume24h: number;
@@ -320,7 +329,7 @@ class ExlorerHelper {
         error: false,
       };
     } catch (err) {
-      logger.error("unable to save token price", err);
+      logger.error('unable to save token price', err);
       return {
         error: true,
       };
@@ -347,14 +356,14 @@ class ExlorerHelper {
       let validatorData;
       validatorData = await RedisService.getString(REDIS_KEY.INFLATION_APY);
 
-      validatorData = validatorData || "";
+      validatorData = validatorData || '';
       return {
         supply,
         marketCap,
         validatorData,
       };
     } catch (err) {
-      logger.error("error while getting value from redis ", err);
+      logger.error('error while getting value from redis ', err);
       return false;
     }
   };
@@ -388,7 +397,7 @@ class ExlorerHelper {
       obj.count = await prisma.users.count();
       return obj;
     } catch (error) {
-      logger.error("error occured in getAnalytics: ", error);
+      logger.error('error occured in getAnalytics: ', error);
       return {};
     }
   }
@@ -421,7 +430,7 @@ class ExlorerHelper {
         data: { isAdded: true },
       };
     } catch (err) {
-      console.log("error while saving contract deploy details  :  ", err);
+      console.log('error while saving contract deploy details  :  ', err);
 
       return {
         error: true,
@@ -442,7 +451,7 @@ class ExlorerHelper {
         data: { isAdded: true },
       };
     } catch (err) {
-      console.error("error while saving token detail", err);
+      console.error('error while saving token detail', err);
       return {
         error: true,
         message: RES_MSG.TOKEN_ADDED_ERROR,
@@ -468,7 +477,7 @@ class ExlorerHelper {
         data: { isAdded: true },
       };
     } catch (error) {
-      console.log("error while updating contract execution feild : ", error);
+      console.log('error while updating contract execution feild : ', error);
       return {
         error: true,
         message: RES_MSG.ERROR,
@@ -497,14 +506,14 @@ class ExlorerHelper {
                 tokenBalance: holderData.tokenBalance,
               },
             });
-            console.log("Updated holder:", updatedHolder);
+            console.log('Updated holder:', updatedHolder);
           }),
         );
       } else {
         const newHolder = await prisma.holders.create({
           data: holderData,
         });
-        console.log("Created new holder:", newHolder);
+        console.log('Created new holder:', newHolder);
       }
 
       return {
@@ -513,7 +522,7 @@ class ExlorerHelper {
         data: { isAdded: true },
       };
     } catch (error) {
-      console.error("Error upserting holder:", error);
+      console.error('Error upserting holder:', error);
       return {
         error: true,
         message: RES_MSG.ERROR,
@@ -524,7 +533,7 @@ class ExlorerHelper {
 
   saveContractLogs = async (contractData: IContractLogs) => {
     try {
-      console.log("contractData : ", contractData);
+      console.log('contractData : ', contractData);
 
       await prisma.contractLogs.create({
         data: contractData,
@@ -535,7 +544,7 @@ class ExlorerHelper {
         data: { isAdded: true },
       };
     } catch (error) {
-      console.error("error while save contract events", error);
+      console.error('error while save contract events', error);
       return {
         error: true,
         message: RES_MSG.ERROR,
@@ -556,7 +565,7 @@ class ExlorerHelper {
         error: false,
       };
     } catch (err) {
-      console.error("Error while saving proposals data  : ", err);
+      console.error('Error while saving proposals data  : ', err);
       return {
         error: true,
       };
@@ -585,7 +594,7 @@ class ExlorerHelper {
         data: { isAdded: true },
       };
     } catch (err) {
-      console.error("error while saving voter detail", err);
+      console.error('error while saving voter detail', err);
       return {
         error: true,
         message: RES_MSG.VOTER_SAVED_ERROR,

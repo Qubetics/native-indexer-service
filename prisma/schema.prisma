@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+
 }
 
 model Users {
@@ -162,6 +163,7 @@ model ValidatorStake {
   validatorOperatorAddress String    @default("")
   delegatorAddress         String
   balanceAmount            Decimal
+  delegatorRewards         Decimal @default(0)
   denom                    String
   delegator                Delegator @relation(fields: [delegatorAddress], references: [address])
 
@@ -237,4 +239,14 @@ model DvpnTransaction {
   logs           Json?
   price          String?
   provAddress    String?
+
+}
+
+model Rewards {
+  id           Int      @id @default(autoincrement())
+  address      String   @unique
+  timeStamp    DateTime
+  rewardAmount String
+
+  @@index([address, timeStamp])
 }
