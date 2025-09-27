@@ -3,7 +3,7 @@ name: '[testnet] Deploy V2 stable native-indexer'
 on: 
   push:
     branches: 
-      - testnet
+      - v2-stable
 
 jobs:
   v2-stable-native-indexer:
@@ -13,7 +13,7 @@ jobs:
       ARGOCD_BRANCH: testnet
       HUAWEI_REGION: 'ap-southeast-3'
       ARGOCD_REPOSITORY: Qubetics/argocd-qubetics
-      DEPLOYMENT_PATH: v2-stable-native-indexer/deployment.yaml
+      DEPLOYMENT_PATH: V2-stable-native-indexer/deployment.yaml
       HUAWEI_IMAGE: native-indexer-v2-stable
       DOCKER_USERNAME: ap-southeast-3@HPUAPZMSZHNKTAIENRZO
       ENV: ${{ vars.TESTNET_V2_STABLE_NATIVE_INDEXER }}
