@@ -6,7 +6,7 @@ on:
       - dev
 
 jobs:
-  dev_deploy_native_indexer:
+  dev_native_indexer:
     uses: ./.github/workflows/dev-deployment.yml
     with:
       SWR_ORGANIZATION: dev-qubetics
