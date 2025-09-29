@@ -703,7 +703,7 @@ class ProcessHelper {
           blocknumber: Number(message.result.data?.value?.TxResult?.height),
           fromAddress: cleanEscapedString(fromAddress),
           nodeAddress: cleanEscapedString(nodeAddress),
-          txFee,
+          txFee:String(txFee) ,
           gasWanted: Number(
             message.result.data?.value?.TxResult?.result?.gas_wanted ?? ''
           ),
@@ -713,6 +713,7 @@ class ProcessHelper {
           contractAddress,
         };
 
+        
         socketEventsHelper.emitMessage(
           SOCKET_EVENT.NATIVE_LATEST_TRANSACTIONS,
           txData
