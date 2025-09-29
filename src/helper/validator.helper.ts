@@ -323,14 +323,7 @@ async function getValidatorsInfo(apiRes: AxiosInstance) {
           val?.delegation.delegator_address,
           validatorOperatorAddress
         );
-        console.log(
-          val?.delegation.delegator_address,
-          Number(val?.delegation?.shares),
-          "STAKE AMOUNT OF VALIDTOR",
-          validatorOperatorAddress,
-          "against the DELEGATOR",
-          val?.delegation.delegator_address
-        );
+
         if (val?.delegation?.delegator_address) {
           const data: IValidatorStake = {
             validatorOperatorAddress,
