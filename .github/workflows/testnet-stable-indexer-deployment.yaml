@@ -1,0 +1,22 @@
+name: '[testnet] Deploy native indexer'
+
+on: 
+  push:
+    branches: 
+      - stable-indexer-native
+
+jobs:
+  testnet_deploy_native_indexer:
+    uses: ./.github/workflows/testnet-native-indexer-service.yaml
+    with:
+      SWR_ORGANIZATION: testnet-qubetics
+      ARGOCD_BRANCH: testnet_v2
+      HUAWEI_REGION: 'ap-southeast-3'
+      ARGOCD_REPOSITORY: Qubetics/argocd-qubetics
+      DEPLOYMENT_PATH: Native-indexer/native-indexer-deployment.yaml
+      HUAWEI_IMAGE: testnet-native-indexer
+      DOCKER_USERNAME: ap-southeast-3@BQG9INQF0BKVHSNQOLJG
+      ENV: ${{ vars.TESTNET_V2_INDEXER_ENV }}
+    secrets:
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD_DEV }}
+      GIT_SSH_KEY: ${{ secrets.ARGOCD_SSH_KEY }}
