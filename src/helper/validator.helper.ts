@@ -100,14 +100,18 @@ async function getDelegatorReward(
   delegator: string,
   validator: string
 ) {
-  const response: AxiosResponse = await apiRes.get(
-    `/cosmos/distribution/v1beta1/delegators/${delegator}/rewards/${validator}`
-  );
-  const resData = response?.data;
+  try {
+    const response: AxiosResponse = await apiRes.get(
+      `/cosmos/distribution/v1beta1/delegators/${delegator}/rewards/${validator}`
+    );
+    const resData = response?.data;
+    return resData?.rewards[0]?.amount || 0;
+  } catch (error) {
+    console.log("error", error);
+    return 0;
+  }
 
   // console.log("Res Data : ", resData?.rewards[0]?.amount);
-
-  return resData?.rewards[0]?.amount || 0;
 }
 
 // Calculate Annual Percentage Yield (APY) based on parameters

@@ -1,12 +1,12 @@
-import * as amqp from 'amqplib/callback_api';
-import { log } from '../Utility/common';
-import { COLORS, QUEUE_NAME, REDIS_KEY } from '../constant';
-import dbHelper from '../helper/db.helper';
-import processHelper from '../helper/process.helper';
-import { IValidator } from '../interface';
-import { prisma } from '../lib/db';
-import logger from '../lib/logger';
-import { RedisService } from '.';
+import * as amqp from "amqplib/callback_api";
+import { log } from "../Utility/common";
+import { COLORS, QUEUE_NAME, REDIS_KEY } from "../constant";
+import dbHelper from "../helper/db.helper";
+import processHelper from "../helper/process.helper";
+import { IValidator } from "../interface";
+import { prisma } from "../lib/db";
+import logger from "../lib/logger";
+import { RedisService } from ".";
 
 class RabbitMq {
   public channel: amqp.Channel;
@@ -36,7 +36,7 @@ class RabbitMq {
 
       return true;
     } catch (error) {
-      logger.error('Error while connecting to RabbitMQ: ', error);
+      logger.error("Error while connecting to RabbitMQ: ", error);
       return false;
     }
   }
@@ -47,23 +47,23 @@ class RabbitMq {
       const attemptConnection = () => {
         amqp.connect(environment.rabbitMq, (err, connection) => {
           if (err) {
-            logger.error('Error connecting to RabbitMQ:', err);
+            logger.error("Error connecting to RabbitMQ:", err);
             reject(err);
             return;
           }
 
-          connection.on('error', (error) => {
-            logger.error('RabbitMQ connection error:', error.message);
+          connection.on("error", (error) => {
+            logger.error("RabbitMQ connection error:", error.message);
             setTimeout(attemptConnection, RECONNECT_DELAY);
           });
 
           connection.createChannel((error: Error, channel) => {
             if (error) {
-              logger.error('Error creating channel:', error);
+              logger.error("Error creating channel:", error);
               reject(error);
               return;
             }
-            log('RabbitMQ Conneted ', COLORS.yellow, 'true', COLORS.green);
+            log("RabbitMQ Conneted ", COLORS.yellow, "true", COLORS.green);
             resolve(channel);
           });
         });
@@ -84,7 +84,7 @@ class RabbitMq {
       this.channel?.sendToQueue(queue, Buffer.from(data));
       return true;
     } catch (error) {
-      console.log('error inside inQueueData : ', error);
+      console.log("error inside inQueueData : ", error);
       return false;
     }
   }
@@ -100,7 +100,7 @@ class RabbitMq {
           if (message) {
             try {
               const txData = JSON.parse(message.content.toString());
-              console.log('consumeLatestTransactionData', txData);
+              console.log("consumeLatestTransactionData", txData);
               const txRes = await processHelper.processTxs(txData);
               if (!txRes) {
                 if (txData?.result?.events) {
@@ -114,17 +114,17 @@ class RabbitMq {
               }
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** consumeLatestTransaction Error', error);
+              console.log("*** consumeLatestTransaction Error", error);
               this.channel?.ack(message);
             }
           }
         },
-        { noAck: false },
+        { noAck: false }
       );
     } catch (error) {
       console.log(
-        'error while consuming all consumeLatestTransaction : ',
-        error,
+        "error while consuming all consumeLatestTransaction : ",
+        error
       );
     }
   }
@@ -150,22 +150,22 @@ class RabbitMq {
                   if (blockNumber) {
                     this.inQueueData(
                       QUEUE_NAME.ERROR_BLOCK,
-                      blockNumber.toString(),
+                      blockNumber.toString()
                     );
                   }
                 }
               }
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** #error consumeLatestBlocks', error);
+              console.log("*** #error consumeLatestBlocks", error);
               this.channel?.ack(message);
             }
           }
         },
-        { noAck: false },
+        { noAck: false }
       );
     } catch (error) {
-      console.log('### Error consumeLatestBlocks ', error);
+      console.log("### Error consumeLatestBlocks ", error);
     }
   }
 
@@ -186,15 +186,15 @@ class RabbitMq {
               }
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** Error consumeMissedTxs', error);
+              console.log("*** Error consumeMissedTxs", error);
               this.channel?.ack(message);
             }
           }
         },
-        { noAck: false },
+        { noAck: false }
       );
     } catch (error) {
-      console.log('### Error consumeMissedTxs', error);
+      console.log("### Error consumeMissedTxs", error);
     }
   }
 
@@ -212,15 +212,15 @@ class RabbitMq {
               await processHelper.processErrorBlock(blockNo);
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** error consumeErrorBlocks', error);
+              console.log("*** error consumeErrorBlocks", error);
               this.channel?.ack(message);
             }
           }
         },
-        { noAck: false },
+        { noAck: false }
       );
     } catch (error) {
-      console.log('### error consumeErrorBlocks', error);
+      console.log("### error consumeErrorBlocks", error);
     }
   }
 
@@ -235,7 +235,7 @@ class RabbitMq {
           if (message) {
             try {
               const blockData = JSON.parse(message.content.toString());
-              console.log('inside missed blockData: ', blockData);
+              console.log("inside missed blockData: ", blockData);
 
               const isSaved =
                 await processHelper.processMissedBlocks(blockData);
@@ -244,20 +244,20 @@ class RabbitMq {
                 if (blockData?.blocknumber) {
                   this.inQueueData(
                     QUEUE_NAME.ERROR_BLOCK,
-                    blockData.blocknumber.toString(),
+                    blockData.blocknumber.toString()
                   );
                 }
               }
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** #consumeMissedBlocks: ', error);
+              console.log("*** #consumeMissedBlocks: ", error);
             }
           }
         },
-        { noAck: false },
+        { noAck: false }
       );
     } catch (error) {
-      console.log('Error consumeMissedBlocks', error);
+      console.log("Error consumeMissedBlocks", error);
     }
   }
 
@@ -276,7 +276,7 @@ class RabbitMq {
               if (isSuccess) {
                 // Retrieve the block count from Redis or the database
                 let blockCount = await RedisService.getString(
-                  REDIS_KEY.NATIVE_BLOCKS_COUNT,
+                  REDIS_KEY.NATIVE_BLOCKS_COUNT
                 );
 
                 if (!blockCount) {
@@ -284,37 +284,37 @@ class RabbitMq {
                   blockCount = await prisma.blocks.count();
                   await RedisService.setString(
                     REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                    blockCount,
+                    blockCount
                   );
                 } else {
                   // Increment the block count
                   blockCount = Number(blockCount) + 1;
                   await RedisService.setString(
                     REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                    blockCount,
+                    blockCount
                   );
                 }
               }
 
               log(
-                'downtime block : ',
+                "downtime block : ",
                 COLORS.cyan,
                 `${block} ${isSuccess}`,
-                COLORS.yellow,
+                COLORS.yellow
               );
               if (!isSuccess) {
                 this.inQueueData(QUEUE_NAME.ERROR_BLOCK, block.toString());
               }
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** Error consumeDownTimeBlocks', error);
+              console.log("*** Error consumeDownTimeBlocks", error);
             }
           }
         },
-        { noAck: false },
+        { noAck: false }
       );
     } catch (error) {
-      console.log('### Error consumeDownTimeBlocks', error);
+      console.log("### Error consumeDownTimeBlocks", error);
     }
   }
 
@@ -329,15 +329,15 @@ class RabbitMq {
               await processHelper.processLatestBlock(blockData);
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** consumeNullTimestamp', error);
+              console.log("*** consumeNullTimestamp", error);
               this.channel?.ack(message);
             }
           }
         },
-        { noAck: false },
+        { noAck: false }
       );
     } catch (error) {
-      console.log('### error consumeNullTimestamp', error);
+      console.log("### error consumeNullTimestamp", error);
     }
   }
 }

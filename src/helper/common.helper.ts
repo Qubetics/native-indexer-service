@@ -1,5 +1,5 @@
-import axios, { AxiosResponse, Method } from 'axios';
-import logger from '../lib/logger';
+import axios, { AxiosResponse, Method } from "axios";
+import logger from "../lib/logger";
 
 const fetchRequest = async (
   url: string,
@@ -41,7 +41,7 @@ const fetchRequest = async (
         })
         .catch((err) => {
           logger.error(
-            'Error in catch of coin http : ',
+            "Error in catch of coin http : ",
             err.response.data.status.error_message,
           );
           //   console.error("Error in catch of coin http : ", err);

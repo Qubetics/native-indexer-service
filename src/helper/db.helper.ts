@@ -6,7 +6,7 @@ import {
   HEADERS,
   CURRENT_DEFAULT_COIN_PRICE,
   CURRENT_DEFAULT_CIRCULATING_SUPPLY,
-} from '../constant';
+} from "../constant";
 import {
   IBlock,
   IContractLogs,
@@ -21,12 +21,12 @@ import {
   IValidatorToSave,
   IVoters,
   ValidatorData,
-} from '../interface/index';
-import { prisma } from '../lib/db';
-import logger from '../lib/logger';
-import { RedisService } from '../service/index';
-import { fetchRequest } from './common.helper';
-import SocketHelper from './socket.helper';
+} from "../interface/index";
+import { prisma } from "../lib/db";
+import logger from "../lib/logger";
+import { RedisService } from "../service/index";
+import { fetchRequest } from "./common.helper";
+import SocketHelper from "./socket.helper";
 
 class ExlorerHelper {
   /**
@@ -45,12 +45,12 @@ class ExlorerHelper {
     } catch (err) {
       const error = JSON.parse(JSON.stringify(err));
 
-      if (error.code === 'P2002') {
+      if (error.code === "P2002") {
         return {
           error: false,
         };
       }
-      console.log('block db error : ', err);
+      console.log("block db error : ", err);
       return {
         error: true,
       };
@@ -64,7 +64,7 @@ class ExlorerHelper {
    */
   upsertValidatorsCount = async (
     operatorAddress: string,
-    validatorAddress: string
+    validatorAddress: string,
   ): Promise<IESResponse> => {
     try {
       const dataTosave = {
@@ -95,7 +95,7 @@ class ExlorerHelper {
         error: false,
       };
     } catch (err) {
-      console.log('db error upsertValidatorsCount : ', err);
+      console.log("db error upsertValidatorsCount : ", err);
       return {
         error: true,
       };
@@ -117,11 +117,11 @@ class ExlorerHelper {
       const userData = [
         {
           address:
-            !txData.toAddress || txData.toAddress === 'N/A'
-              ? ''
+            !txData.toAddress || txData.toAddress === "N/A"
+              ? ""
               : txData.toAddress,
         },
-        { address: txData.fromAddress ?? '' },
+        { address: txData.fromAddress ?? "" },
       ];
 
       await this.userSave(userData);
@@ -163,13 +163,13 @@ class ExlorerHelper {
 
       return true;
     } catch (err) {
-      logger.error('error while saving user data:', err);
+      logger.error("error while saving user data:", err);
       return false;
     }
   };
 
   userSave = async (
-    userData: Array<{ address: string }>
+    userData: Array<{ address: string }>,
   ): Promise<IESResponse> => {
     try {
       await Promise.all(userData.map(this.processUserData));
@@ -191,7 +191,7 @@ class ExlorerHelper {
   };
 
   saveValidators = async (
-    validatorData: IValidatorToSave[]
+    validatorData: IValidatorToSave[],
   ): Promise<IESResponse> => {
     try {
       await prisma.validator.deleteMany();
@@ -199,12 +199,12 @@ class ExlorerHelper {
         data: validatorData,
         skipDuplicates: true,
       });
-      console.log('validator saveRes', saveRes);
+      console.log("validator saveRes", saveRes);
       return {
         error: false,
       };
     } catch (err) {
-      console.error('Error while saving validators data  : ', err);
+      console.error("Error while saving validators data  : ", err);
       return {
         error: true,
       };
@@ -218,9 +218,9 @@ class ExlorerHelper {
         data: delegatorData,
         skipDuplicates: true,
       });
-      console.log('delegator saveRes', saveRes);
+      console.log("delegator saveRes", saveRes);
     } catch (error) {
-      console.log('Error while saving validator stake data : ', error);
+      console.log("Error while saving validator stake data : ", error);
     }
   };
 
@@ -249,9 +249,9 @@ class ExlorerHelper {
         convert: currency,
       };
 
-      const coinResult = (await fetchRequest(coinMarketApi, params, 'get', {
-        accept: 'application/json',
-        'X-CMC_PRO_API_KEY': coinMarketKey,
+      const coinResult = (await fetchRequest(coinMarketApi, params, "get", {
+        accept: "application/json",
+        "X-CMC_PRO_API_KEY": coinMarketKey,
       })) as {
         price: number;
         volume24h: number;
@@ -282,25 +282,25 @@ class ExlorerHelper {
 
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP,
-        JSON.stringify(coinResult.marketCap)
+        JSON.stringify(coinResult.marketCap),
       );
       await RedisService.setString(
         REDIS_KEY.CIRCULATING_SUPPLY,
-        JSON.stringify(coinResult.circulatingSupply)
+        JSON.stringify(coinResult.circulatingSupply),
       );
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP_PRICE,
-        JSON.stringify(coinMarketResult)
+        JSON.stringify(coinMarketResult),
       );
       await RedisService.setString(
         REDIS_KEY.TOKEN_PRICE,
-        JSON.stringify(coinResult.price)
+        JSON.stringify(coinResult.price),
       );
       return {
         error: false,
       };
     } catch (err) {
-      logger.error('unable to save token price', err);
+      logger.error("unable to save token price", err);
       return {
         error: true,
       };
@@ -327,14 +327,14 @@ class ExlorerHelper {
       let validatorData;
       validatorData = await RedisService.getString(REDIS_KEY.INFLATION_APY);
 
-      validatorData = validatorData || '';
+      validatorData = validatorData || "";
       return {
         supply,
         marketCap,
         validatorData,
       };
     } catch (err) {
-      logger.error('error while getting value from redis ', err);
+      logger.error("error while getting value from redis ", err);
       return false;
     }
   };
@@ -368,7 +368,7 @@ class ExlorerHelper {
       obj.count = await prisma.users.count();
       return obj;
     } catch (error) {
-      logger.error('error occured in getAnalytics: ', error);
+      logger.error("error occured in getAnalytics: ", error);
       return {};
     }
   }
@@ -386,7 +386,7 @@ class ExlorerHelper {
   // }
 
   saveContractDeployTx = async (
-    contactData: IContracts
+    contactData: IContracts,
   ): Promise<IESResponse> => {
     try {
       await prisma.contracts.createMany({
@@ -401,7 +401,7 @@ class ExlorerHelper {
         data: { isAdded: true },
       };
     } catch (err) {
-      console.log('error while saving contract deploy details  :  ', err);
+      console.log("error while saving contract deploy details  :  ", err);
 
       return {
         error: true,
@@ -422,7 +422,7 @@ class ExlorerHelper {
         data: { isAdded: true },
       };
     } catch (err) {
-      console.error('error while saving token detail', err);
+      console.error("error while saving token detail", err);
       return {
         error: true,
         message: RES_MSG.TOKEN_ADDED_ERROR,
@@ -448,7 +448,7 @@ class ExlorerHelper {
         data: { isAdded: true },
       };
     } catch (error) {
-      console.log('error while updating contract execution feild : ', error);
+      console.log("error while updating contract execution feild : ", error);
       return {
         error: true,
         message: RES_MSG.ERROR,
@@ -477,14 +477,14 @@ class ExlorerHelper {
                 tokenBalance: holderData.tokenBalance,
               },
             });
-            console.log('Updated holder:', updatedHolder);
-          })
+            console.log("Updated holder:", updatedHolder);
+          }),
         );
       } else {
         const newHolder = await prisma.holders.create({
           data: holderData,
         });
-        console.log('Created new holder:', newHolder);
+        console.log("Created new holder:", newHolder);
       }
 
       return {
@@ -493,7 +493,7 @@ class ExlorerHelper {
         data: { isAdded: true },
       };
     } catch (error) {
-      console.error('Error upserting holder:', error);
+      console.error("Error upserting holder:", error);
       return {
         error: true,
         message: RES_MSG.ERROR,
@@ -504,7 +504,7 @@ class ExlorerHelper {
 
   saveContractLogs = async (contractData: IContractLogs) => {
     try {
-      console.log('contractData : ', contractData);
+      console.log("contractData : ", contractData);
 
       await prisma.contractLogs.create({
         data: contractData,
@@ -515,7 +515,7 @@ class ExlorerHelper {
         data: { isAdded: true },
       };
     } catch (error) {
-      console.error('error while save contract events', error);
+      console.error("error while save contract events", error);
       return {
         error: true,
         message: RES_MSG.ERROR,
@@ -536,7 +536,7 @@ class ExlorerHelper {
         error: false,
       };
     } catch (err) {
-      console.error('Error while saving proposals data  : ', err);
+      console.error("Error while saving proposals data  : ", err);
       return {
         error: true,
       };
@@ -565,7 +565,7 @@ class ExlorerHelper {
         data: { isAdded: true },
       };
     } catch (err) {
-      console.error('error while saving voter detail', err);
+      console.error("error while saving voter detail", err);
       return {
         error: true,
         message: RES_MSG.VOTER_SAVED_ERROR,
@@ -582,10 +582,10 @@ class ExlorerHelper {
         convert: currency.toLowerCase(),
       };
 
-      console.log('params', params);
-      const coinResult = (await fetchRequest(coinMarketApi, params, 'get', {
-        accept: 'application/json',
-        'X-CMC_PRO_API_KEY': coinMarketKey,
+      console.log("params", params);
+      const coinResult = (await fetchRequest(coinMarketApi, params, "get", {
+        accept: "application/json",
+        "X-CMC_PRO_API_KEY": coinMarketKey,
       })) as {
         price: number;
         volume24h: number;
@@ -599,7 +599,7 @@ class ExlorerHelper {
         self_reported_circulating_supply: number;
         self_reported_market_cap: number;
       };
-      console.log('coinResult', coinResult);
+      console.log("coinResult", coinResult);
 
       // For this example, let (C) = 10,000 USD / 1 BTC and let (S) = 17,000,000 BTC.
 
@@ -662,11 +662,11 @@ class ExlorerHelper {
       await RedisService.setString(REDIS_KEY.MARKET_CAP, marketCapital);
       await RedisService.setString(
         REDIS_KEY.CIRCULATING_SUPPLY,
-        circulating_supply
+        circulating_supply,
       );
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP_PRICE,
-        coinMarketResult
+        coinMarketResult,
       );
 
       await RedisService.setString(REDIS_KEY.COIN_PRICE, coinPrice);
@@ -674,7 +674,7 @@ class ExlorerHelper {
 
       return true;
     } catch (err) {
-      logger.error('unable to save token price', err);
+      logger.error("unable to save token price", err);
       return false;
     }
   };
