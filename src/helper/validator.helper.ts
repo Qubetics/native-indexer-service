@@ -107,7 +107,7 @@ async function getDelegatorReward(
     const resData = response?.data;
     return resData?.rewards[0]?.amount || 0;
   } catch (error) {
-    console.log("error", error);
+    console.log("error getDelegatorReward", error);
     return 0;
   }
 
