@@ -1,3 +1,4 @@
+import { cleanEscapedString, parseTics , fetchRequest as fetchChainRequest } from '../Utility/common';
 import {
   RES_MSG,
   REDIS_KEY,
@@ -26,9 +27,7 @@ import {
 import { prisma } from '../lib/db';
 import logger from '../lib/logger';
 import { RedisService } from '../service/index';
-import { cleanEscapedString, parseTics } from '../Utility/common';
 import { fetchRequest } from './common.helper';
-import { fetchRequest as fetchChainRequest } from '../Utility/common';
 import SocketHelper from './socket.helper';
 
 class ExlorerHelper {
@@ -614,10 +613,10 @@ class ExlorerHelper {
         convert: currency.toLowerCase(),
       };
 
-      console.log("params", params);
-      const coinResult = (await fetchRequest(coinMarketApi, params, "get", {
-        accept: "application/json",
-        "X-CMC_PRO_API_KEY": coinMarketKey,
+      console.log('params', params);
+      const coinResult = (await fetchRequest(coinMarketApi, params, 'get', {
+        accept: 'application/json',
+        'X-CMC_PRO_API_KEY': coinMarketKey,
       })) as {
         price: number;
         volume24h: number;
@@ -631,7 +630,7 @@ class ExlorerHelper {
         self_reported_circulating_supply: number;
         self_reported_market_cap: number;
       };
-      console.log("coinResult", coinResult);
+      console.log('coinResult', coinResult);
 
       // For this example, let (C) = 10,000 USD / 1 BTC and let (S) = 17,000,000 BTC.
 
@@ -706,7 +705,7 @@ class ExlorerHelper {
 
       return true;
     } catch (err) {
-      logger.error("unable to save token price", err);
+      logger.error('unable to save token price', err);
       return false;
     }
   };
@@ -789,7 +788,7 @@ class ExlorerHelper {
 
   getNodeEarning = async (blockNumber: any) => {
     try {
-      const url2 = `${environment.httpHost}/block_results?height=${blockNumber}`
+      const url2 = `${environment.httpHost}/block_results?height=${blockNumber}`;
       const fetchRes2 = await fetchChainRequest(
         url2,
         FETCH_METHODS.GET,
@@ -802,26 +801,26 @@ class ExlorerHelper {
       for (const ev of evs) {
         // Payouts
         if (ev.type === 'qubetics.lease.v1.EventPay') {
-          let nodeAddress = ev.attributes[1].value || '';
-          let provAddress = ev.attributes[3].value || '';
-          let price = ev.attributes[2].value || '';
-          let stackingRewardVal = ev.attributes[4].value || '';
-          let amount = parseTics(price);
-          let stackingReward = parseTics(stackingRewardVal);
+          const nodeAddress = ev.attributes[1].value || '';
+          const provAddress = ev.attributes[3].value || '';
+          const price = ev.attributes[2].value || '';
+          const stackingRewardVal = ev.attributes[4].value || '';
+          const amount = parseTics(price);
+          const stackingReward = parseTics(stackingRewardVal);
 
           sessionData = {
-            logs: "",
-            txhash: "",
-            subscriptionId: "",
-            planId: "",
-            sessionId: "",
-            status: "",
+            logs: '',
+            txhash: '',
+            subscriptionId: '',
+            planId: '',
+            sessionId: '',
+            status: '',
             type: TRANSACTION_TYPE.NODE_EARNING,
             provAddress: cleanEscapedString(provAddress),
-            accAddress: cleanEscapedString(""),
+            accAddress: cleanEscapedString(''),
             nodeAddress: cleanEscapedString(nodeAddress),
-            price: amount ? amount?.toString() : "",
-            stackingReward: stackingReward ? stackingReward?.toString() : "",
+            price: amount ? amount?.toString() : '',
+            stackingReward: stackingReward ? stackingReward?.toString() : '',
             inactiveAt: null,
           };
         }
@@ -829,10 +828,10 @@ class ExlorerHelper {
 
       return sessionData;
     } catch (err) {
-      logger.error("unable to save token price", err);
+      logger.error('unable to save token price', err);
       return null;
     }
-  }
+  };
 }
 
 export default new ExlorerHelper();

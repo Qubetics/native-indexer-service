@@ -36,9 +36,9 @@ import rabbitmqService from '../service/rabbitmq.service';
 import redisHelper from '../service/redis.helper';
 import socketEventsHelper from '../service/socketEvents.helper';
 import { CosmJsRpcMethods } from './cosmsClient.helper';
+import ExlorerHelper from './db.helper';
 import dbHelper from './db.helper';
 import { CustomWebSocket } from './ws.helper';
-import ExlorerHelper from "../helper/db.helper"
 
 class ProcessHelper {
   cosmjsInstace: CosmJsRpcMethods;
@@ -333,15 +333,15 @@ class ProcessHelper {
         const hash = events['tx.hash'] ? `${events['tx.hash'][0]}` : '';
         let type: string;
         let val: string | number = 0;
-        let contractAddress = "";
-        let subscriptionId = "";
-        let planId: any = "";
-        let sessionId = "";
-        let dvpnStatus = "";
-        let accAddress = "";
-        let provAddress = "";
-        let nodeAddress = "";
-        let timestamp = "";
+        let contractAddress = '';
+        let subscriptionId = '';
+        let planId: any = '';
+        let sessionId = '';
+        let dvpnStatus = '';
+        let accAddress = '';
+        let provAddress = '';
+        let nodeAddress = '';
+        let timestamp = '';
         let stackingRewardValue: string | number = 0;
         let inactiveAt = null;
         let fromAddress: string = events['message.sender']
@@ -349,12 +349,12 @@ class ProcessHelper {
           : '';
         let toAddress = '';
         let method = '';
-        let timeStamp = '';
+        const timeStamp = '';
         const blocknumber = Number(
           message.result.data?.value?.TxResult?.height
         );
 
-        console.log("txEvent ttyycdjcjccdcdcdbcdb : ", txEvent);
+        console.log('txEvent ttyycdjcjccdcdcdbcdb : ', txEvent);
 
         switch (txEvent) {
           case '/cosmos.bank.v1beta1.MsgSend':
@@ -431,85 +431,85 @@ class ProcessHelper {
             break;
 
           // Start Subscription
-          case "/qubetics.subscription.v3.MsgStartSubscriptionRequest":
+          case '/qubetics.subscription.v3.MsgStartSubscriptionRequest':
             type = TRANSACTION_TYPE.START_SUBSCRIPTION;
             val =
-              events["qubetics.subscription.v3.EventPay.payment"]?.[0] ?? 0;
-            stackingRewardValue = events["qubetics.subscription.v3.EventPay.staking_reward"]?.[0] ?? 0;
+              events['qubetics.subscription.v3.EventPay.payment']?.[0] ?? 0;
+            stackingRewardValue = events['qubetics.subscription.v3.EventPay.staking_reward']?.[0] ?? 0;
             provAddress =
               events[
-              "qubetics.subscription.v3.EventCreate.prov_address"
-              ]?.[0] ?? "";
+              'qubetics.subscription.v3.EventCreate.prov_address'
+              ]?.[0] ?? '';
             accAddress =
-              events["qubetics.subscription.v3.EventCreate.acc_address"]?.[0] ??
-              "";
+              events['qubetics.subscription.v3.EventCreate.acc_address']?.[0] ??
+              '';
             subscriptionId =
-              events["qubetics.subscription.v3.EventCreate.id"]?.[0] ?? "";
+              events['qubetics.subscription.v3.EventCreate.id']?.[0] ?? '';
             planId =
-              events["qubetics.subscription.v3.EventCreate.plan_id"]?.[0] ?? "";
+              events['qubetics.subscription.v3.EventCreate.plan_id']?.[0] ?? '';
 
             break;
 
           // Start Session
-          case "/qubetics.subscription.v3.MsgStartSessionRequest":
+          case '/qubetics.subscription.v3.MsgStartSessionRequest':
             type = TRANSACTION_TYPE.START_REQUEST;
 
             nodeAddress =
               events[
-              "qubetics.subscription.v3.EventCreateSession.node_address"
-              ]?.[0] ?? "";
+              'qubetics.subscription.v3.EventCreateSession.node_address'
+              ]?.[0] ?? '';
             accAddress =
               events[
-              "qubetics.subscription.v3.EventCreateSession.acc_address"
-              ]?.[0] ?? "";
+              'qubetics.subscription.v3.EventCreateSession.acc_address'
+              ]?.[0] ?? '';
             subscriptionId =
               events[
-              "qubetics.subscription.v3.EventCreateSession.subscription_id"
-              ]?.[0] ?? "";
+              'qubetics.subscription.v3.EventCreateSession.subscription_id'
+              ]?.[0] ?? '';
             sessionId =
-              events["qubetics.subscription.v3.EventCreateSession.id"]?.[0] ??
-              "";
+              events['qubetics.subscription.v3.EventCreateSession.id']?.[0] ??
+              '';
 
             break;
 
           // End Session
-          case "/qubetics.session.v3.MsgCancelSessionRequest":
+          case '/qubetics.session.v3.MsgCancelSessionRequest':
             type = TRANSACTION_TYPE.END_REQUEST;
             provAddress =
               events[
-              "qubetics.session.v3.EventUpdateStatus.prov_address"
-              ]?.[0] ?? "";
+              'qubetics.session.v3.EventUpdateStatus.prov_address'
+              ]?.[0] ?? '';
             nodeAddress =
               events[
-              "qubetics.session.v3.EventUpdateStatus.node_address"
-              ]?.[0] ?? "";
+              'qubetics.session.v3.EventUpdateStatus.node_address'
+              ]?.[0] ?? '';
             sessionId =
-              events["qubetics.session.v3.EventUpdateStatus.id"]?.[0] ?? "";
+              events['qubetics.session.v3.EventUpdateStatus.id']?.[0] ?? '';
             dvpnStatus =
-              events["qubetics.session.v3.EventUpdateStatus.status"]?.[0] ?? "";
+              events['qubetics.session.v3.EventUpdateStatus.status']?.[0] ?? '';
 
             break;
 
           // End Subscription
-          case "/qubetics.subscription.v3.MsgCancelSubscriptionRequest":
+          case '/qubetics.subscription.v3.MsgCancelSubscriptionRequest':
             type = TRANSACTION_TYPE.END_SUBSCRIPTION;
 
             accAddress =
-              events["qubetics.subscription.v3.EventUpdate.acc_address"]?.[0] ??
-              "";
+              events['qubetics.subscription.v3.EventUpdate.acc_address']?.[0] ??
+              '';
             subscriptionId =
-              events["qubetics.subscription.v3.EventUpdate.id"]?.[0] ?? "";
+              events['qubetics.subscription.v3.EventUpdate.id']?.[0] ?? '';
             planId =
-              events["qubetics.subscription.v3.EventUpdate.plan_id"]?.[0] ?? "";
+              events['qubetics.subscription.v3.EventUpdate.plan_id']?.[0] ?? '';
             dvpnStatus =
-              events["qubetics.subscription.v3.EventUpdate.status"]?.[0] ?? "";
+              events['qubetics.subscription.v3.EventUpdate.status']?.[0] ?? '';
 
             break;
 
-          case "/ibc.core.client.v1.MsgUpdateClient":
-            txEvent = events?.["message.action"]
-              ? message?.result?.events?.["message.action"][1]
-              : "";
+          case '/ibc.core.client.v1.MsgUpdateClient':
+            txEvent = events?.['message.action']
+              ? message?.result?.events?.['message.action'][1]
+              : '';
 
             switch (txEvent) {
               case '/ibc.core.channel.v1.MsgRecvPacket':
@@ -672,11 +672,11 @@ class ProcessHelper {
           null,
         );
         if (!fetchRes.error) {
-          timestamp = fetchRes?.data.result.block?.header?.time ?? "";
+          timestamp = fetchRes?.data.result.block?.header?.time ?? '';
         }
 
         if (planId) {
-          planId = Number(planId.replace(/"/g, ""));
+          planId = Number(planId.replace(/"/g, ''));
 
           try {
             const planDetailsUrl = `${environment.evmHost}/qubetics/plan/v3/plans/${planId}`;
@@ -694,7 +694,7 @@ class ProcessHelper {
             }
 
           } catch (err) {
-            console.log(err, "error");
+            console.log(err, 'error');
           }
         }
 
@@ -705,10 +705,10 @@ class ProcessHelper {
         const txData = {
           type: getType(type),
           status,
-          value: amount ? amount?.toString() : "",
+          value: amount ? amount?.toString() : '',
           timestamp,
-          txString: message.result.data?.value?.TxResult?.tx ?? "",
-          txhash: `0x${hash ?? ""}`,
+          txString: message.result.data?.value?.TxResult?.tx ?? '',
+          txhash: `0x${hash ?? ''}`,
           toAddress: cleanEscapedString(toAddress),
           blocknumber: Number(message.result.data?.value?.TxResult?.height),
           fromAddress: cleanEscapedString(fromAddress),
@@ -773,7 +773,7 @@ class ProcessHelper {
           console.log('voterSaveRes : ', voterSaveRes);
         }
 
-        let contractType = "UNKNOWN";
+        let contractType = 'UNKNOWN';
         if (
           txData.type === TRANSACTION_TYPE.START_SUBSCRIPTION ||
           txData.type === TRANSACTION_TYPE.START_REQUEST ||
@@ -781,18 +781,18 @@ class ProcessHelper {
           txData.type === TRANSACTION_TYPE.END_SUBSCRIPTION
         ) {
           const sessionData = {
-            logs: logs || "",
-            txhash: `0x${hash ?? ""}`,
+            logs: logs || '',
+            txhash: `0x${hash ?? ''}`,
             subscriptionId,
-            planId: planId.toString() ?? "",
+            planId: planId.toString() ?? '',
             sessionId,
-            status: dvpnStatus ?? "",
+            status: dvpnStatus ?? '',
             type: txEvent,
             provAddress: cleanEscapedString(provAddress),
             accAddress: cleanEscapedString(accAddress),
             nodeAddress: cleanEscapedString(nodeAddress),
-            price: amount ? amount?.toString() : "",
-            stackingReward: stackingReward ? stackingReward?.toString() : "",
+            price: amount ? amount?.toString() : '',
+            stackingReward: stackingReward ? stackingReward?.toString() : '',
             blocknumber: txData.blocknumber,
             startAt: txData.timestamp || null,
             inactiveAt: inactiveAt || null,
@@ -1334,7 +1334,7 @@ class ProcessHelper {
    * calculate downtime blocks
    */
   public async downTimeBlocks() {
-    console.log("CalledBlock");
+    console.log('CalledBlock');
     try {
       const lastBlockSaved = await RedisService.getString(
         REDIS_KEY.LATEST_BLOCK
