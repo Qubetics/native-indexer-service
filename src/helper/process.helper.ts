@@ -9,6 +9,7 @@ import {
   addHours,
   getType,
   parseTx,
+  parseTics,
 } from '../Utility/common';
 import {
   COLORS,
@@ -37,6 +38,7 @@ import socketEventsHelper from '../service/socketEvents.helper';
 import { CosmJsRpcMethods } from './cosmsClient.helper';
 import dbHelper from './db.helper';
 import { CustomWebSocket } from './ws.helper';
+import ExlorerHelper from "../helper/db.helper"
 
 class ProcessHelper {
   cosmjsInstace: CosmJsRpcMethods;
@@ -131,6 +133,18 @@ class ProcessHelper {
 
         /* emit  analytics */
         SocketEventEmitter.emitMessage(SOCKET_EVENT.ANALYTICS, analytics);
+
+        const sessionData = await ExlorerHelper.getNodeEarning(blockDetails.blocknumber);
+
+        if (sessionData) {
+          const fullSessionData = {
+            ...sessionData,
+            blocknumber: message.result.data?.value?.block?.header?.height,
+            startAt: message.result.data?.value?.block?.header?.time || null,
+          };
+
+          await dbHelper.saveSessionTransactions(fullSessionData);
+        }
 
         const url = `${environment.httpHost}/block?height=${blockDetails.blocknumber}`;
         const fetchRes = await fetchRequest(
@@ -328,6 +342,7 @@ class ProcessHelper {
         let provAddress = "";
         let nodeAddress = "";
         let timestamp = "";
+        let stackingRewardValue: string | number = 0;
         let inactiveAt = null;
         let fromAddress: string = events['message.sender']
           ? `${events['message.sender'][0]}`
@@ -419,10 +434,11 @@ class ProcessHelper {
           case "/qubetics.subscription.v3.MsgStartSubscriptionRequest":
             type = TRANSACTION_TYPE.START_SUBSCRIPTION;
             val =
-              events["qubetics.subscription.v3.EventCreate.price"]?.[0] ?? 0;
+              events["qubetics.subscription.v3.EventPay.payment"]?.[0] ?? 0;
+            stackingRewardValue = events["qubetics.subscription.v3.EventPay.staking_reward"]?.[0] ?? 0;
             provAddress =
               events[
-                "qubetics.subscription.v3.EventCreate.prov_address"
+              "qubetics.subscription.v3.EventCreate.prov_address"
               ]?.[0] ?? "";
             accAddress =
               events["qubetics.subscription.v3.EventCreate.acc_address"]?.[0] ??
@@ -440,15 +456,15 @@ class ProcessHelper {
 
             nodeAddress =
               events[
-                "qubetics.subscription.v3.EventCreateSession.node_address"
+              "qubetics.subscription.v3.EventCreateSession.node_address"
               ]?.[0] ?? "";
             accAddress =
               events[
-                "qubetics.subscription.v3.EventCreateSession.acc_address"
+              "qubetics.subscription.v3.EventCreateSession.acc_address"
               ]?.[0] ?? "";
             subscriptionId =
               events[
-                "qubetics.subscription.v3.EventCreateSession.subscription_id"
+              "qubetics.subscription.v3.EventCreateSession.subscription_id"
               ]?.[0] ?? "";
             sessionId =
               events["qubetics.subscription.v3.EventCreateSession.id"]?.[0] ??
@@ -461,11 +477,11 @@ class ProcessHelper {
             type = TRANSACTION_TYPE.END_REQUEST;
             provAddress =
               events[
-                "qubetics.session.v3.EventUpdateStatus.prov_address"
+              "qubetics.session.v3.EventUpdateStatus.prov_address"
               ]?.[0] ?? "";
             nodeAddress =
               events[
-                "qubetics.session.v3.EventUpdateStatus.node_address"
+              "qubetics.session.v3.EventUpdateStatus.node_address"
               ]?.[0] ?? "";
             sessionId =
               events["qubetics.session.v3.EventUpdateStatus.id"]?.[0] ?? "";
@@ -620,15 +636,15 @@ class ProcessHelper {
             break;
         }
         let amount;
+        let stackingReward;
         // console.log('val==---', val);
 
         if (val) {
           if (type === TRANSACTION_TYPE.IBC_TRANSFER_RECEIVE) {
             amount = noExponent(Number(retriveNumbers(val)) / 10 ** 6);
           } else if (type === TRANSACTION_TYPE.START_SUBSCRIPTION) {
-            const json = JSON.parse(val?.toString());
-            const value = json.split(";");
-            amount = value[1] ? noExponent(Number(value[1]) / 10 ** 18) : "";
+            amount = parseTics(val);
+            stackingReward = parseTics(stackingRewardValue);
           } else {
             amount = noExponent(Number(retriveNumbers(val)) / 10 ** 18);
           }
@@ -663,26 +679,20 @@ class ProcessHelper {
           planId = Number(planId.replace(/"/g, ""));
 
           try {
-            const nodesUrl = `${environment.evmHost}/qubetics/node/v3/plans/${planId}/nodes`;
             const planDetailsUrl = `${environment.evmHost}/qubetics/plan/v3/plans/${planId}`;
 
-            const [planResponse, nodesResponse] = await Promise.all([
+            const planResponse = await
               fetchRequest(
                 planDetailsUrl,
                 FETCH_METHODS.GET,
                 HEADERS.DEFAULT,
                 null,
-              ),
-              fetchRequest(nodesUrl, FETCH_METHODS.GET, HEADERS.DEFAULT, null),
-            ]);
+              );
 
             if (!planResponse.error) {
               inactiveAt = addHours(timestamp, planResponse?.data?.plan?.hours);
             }
 
-            if (!nodesResponse.error) {
-              nodeAddress = nodesResponse?.data?.nodes[0]?.address ?? "";
-            }
           } catch (err) {
             console.log(err, "error");
           }
@@ -713,7 +723,7 @@ class ProcessHelper {
           contractAddress,
         };
 
-        
+
         socketEventsHelper.emitMessage(
           SOCKET_EVENT.NATIVE_LATEST_TRANSACTIONS,
           txData
@@ -782,6 +792,7 @@ class ProcessHelper {
             accAddress: cleanEscapedString(accAddress),
             nodeAddress: cleanEscapedString(nodeAddress),
             price: amount ? amount?.toString() : "",
+            stackingReward: stackingReward ? stackingReward?.toString() : "",
             blocknumber: txData.blocknumber,
             startAt: txData.timestamp || null,
             inactiveAt: inactiveAt || null,
@@ -937,7 +948,7 @@ class ProcessHelper {
         );
 
         console.log('fetchRes2: ', fetchRes2?.error);
-        
+
         if (!fetchRes2.error) {
           console.log(
             'timeStamp fro RPC: ',
@@ -1016,7 +1027,6 @@ class ProcessHelper {
             const rewardValArr = valArrReward.map((item: any) => item.value);
 
             console.log('txData : : ', txData);
-            
 
             this.processDelegatorRewards(
               txData.fromAddress,
@@ -1242,6 +1252,19 @@ class ProcessHelper {
         HEADERS.DEFAULT,
         null
       );
+
+      const sessionData = await ExlorerHelper.getNodeEarning(blockNumber);
+
+      if (sessionData) {
+        const fullSessionData = {
+          ...sessionData,
+          blocknumber: fetchRes?.data.result.block?.header?.height,
+          startAt: fetchRes?.data.result.block?.header?.time || null,
+        };
+
+        await dbHelper.saveSessionTransactions(fullSessionData);
+      }
+
 
       if (!fetchRes.error) {
         const validatorOperatorAddress: string =

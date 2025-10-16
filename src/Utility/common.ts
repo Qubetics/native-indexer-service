@@ -360,3 +360,10 @@ export function parseTx(base64Tx: string) {
     // decodedTx,
   };
 }
+
+export const parseTics = (val: string | number): string => {
+  if (!val) return "";
+  const raw = val.toString().replace(/"/g, "").trim();
+  const value = Number(raw.replace("tics", ""));
+  return value ? noExponent(value / 10 ** 18) : "";
+}

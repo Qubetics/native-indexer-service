@@ -325,6 +325,11 @@ class RabbitMq {
                     blockCount,
                   );
                 }
+
+                await RedisService.setString(
+                  REDIS_KEY.LATEST_BLOCK,
+                  Number(block)
+                );
               }
 
               log(

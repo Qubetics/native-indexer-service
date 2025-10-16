@@ -6,6 +6,7 @@ import {
   HEADERS,
   CURRENT_DEFAULT_COIN_PRICE,
   CURRENT_DEFAULT_CIRCULATING_SUPPLY,
+  TRANSACTION_TYPE,
 } from '../constant';
 import {
   IBlock,
@@ -25,7 +26,9 @@ import {
 import { prisma } from '../lib/db';
 import logger from '../lib/logger';
 import { RedisService } from '../service/index';
+import { cleanEscapedString, parseTics } from '../Utility/common';
 import { fetchRequest } from './common.helper';
+import { fetchRequest as fetchChainRequest } from '../Utility/common';
 import SocketHelper from './socket.helper';
 
 class ExlorerHelper {
@@ -142,7 +145,7 @@ class ExlorerHelper {
             error: false,
           };
         }
-      }else{
+      } else {
         console.log(`error while saving tx -${err}`);
       }
       return {
@@ -338,10 +341,10 @@ class ExlorerHelper {
 
   getRedisValue = async (): Promise<
     | {
-        supply: number;
-        marketCap: number;
-        validatorData: ValidatorData;
-      }
+      supply: number;
+      marketCap: number;
+      validatorData: ValidatorData;
+    }
     | false
   > => {
     try {
@@ -783,6 +786,53 @@ class ExlorerHelper {
   //     };
   //   }
   // };
+
+  getNodeEarning = async (blockNumber: any) => {
+    try {
+      const url2 = `${environment.httpHost}/block_results?height=${blockNumber}`
+      const fetchRes2 = await fetchChainRequest(
+        url2,
+        FETCH_METHODS.GET,
+        HEADERS.DEFAULT,
+        null
+      );
+
+      const evs = fetchRes2?.data?.result?.begin_block_events || [];
+      let sessionData: any;
+      for (const ev of evs) {
+        // Payouts
+        if (ev.type === 'qubetics.lease.v1.EventPay') {
+          let nodeAddress = ev.attributes[1].value || '';
+          let provAddress = ev.attributes[3].value || '';
+          let price = ev.attributes[2].value || '';
+          let stackingRewardVal = ev.attributes[4].value || '';
+          let amount = parseTics(price);
+          let stackingReward = parseTics(stackingRewardVal);
+
+          sessionData = {
+            logs: "",
+            txhash: "",
+            subscriptionId: "",
+            planId: "",
+            sessionId: "",
+            status: "",
+            type: TRANSACTION_TYPE.NODE_EARNING,
+            provAddress: cleanEscapedString(provAddress),
+            accAddress: cleanEscapedString(""),
+            nodeAddress: cleanEscapedString(nodeAddress),
+            price: amount ? amount?.toString() : "",
+            stackingReward: stackingReward ? stackingReward?.toString() : "",
+            inactiveAt: null,
+          };
+        }
+      }
+
+      return sessionData;
+    } catch (err) {
+      logger.error("unable to save token price", err);
+      return null;
+    }
+  }
 }
 
 export default new ExlorerHelper();

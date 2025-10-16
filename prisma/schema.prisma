@@ -217,7 +217,7 @@ model Voters {
 
 model DvpnTransaction {
   id             Int      @id @default(autoincrement())
-  txhash         String   @unique
+  txhash         String?   
   blocknumber    BigInt
   planId         String?
   sessionId      String?
@@ -238,8 +238,8 @@ model DvpnTransaction {
   updatedAt      DateTime @updatedAt
   logs           Json?
   price          String?
+  stackingReward String?
   provAddress    String?
-
 }
 
 model Rewards {
