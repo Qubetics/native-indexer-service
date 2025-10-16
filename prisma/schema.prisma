@@ -238,7 +238,7 @@ model DvpnTransaction {
   updatedAt      DateTime @updatedAt
   logs           Json?
   price          String?
-  stackingReward String?
+  stackingReward String?  @default("0")
   provAddress    String?
 }
 
