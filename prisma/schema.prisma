@@ -45,6 +45,7 @@ model Transactions {
   gasUsed         BigInt        @default(0)
   txFee           String        @default("")
   value           String        @default("0")
+  burnedFee       Float            @default(0)
   createdAt       DateTime      @default(now())
   nodeAddress     String?
   ContractLogs    ContractLogs?
