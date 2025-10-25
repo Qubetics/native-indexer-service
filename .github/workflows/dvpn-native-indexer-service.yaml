@@ -59,7 +59,7 @@ jobs:
             uses: actions/checkout@v3
 
           - name: Install OIDC Client from Core Package
-            run: npm install @actions/core @actions/http-client  
+            run: npm install -g @actions/core @actions/http-client --legacy-peer-deps  
               
           - name: Login to Huawei SWR
             id: login 
