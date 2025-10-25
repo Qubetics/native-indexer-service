@@ -106,10 +106,6 @@ class RabbitMq {
               if (!txRes) {
                 if (txData?.result?.events) {
                   const tx = JSON.stringify(txData);
-                  // console.log(
-                  //   'txHash data inside not saved case in queue : ',
-                  //   tx,
-                  // );
                   this.inQueueData(QUEUE_NAME.MISSED_TXS, tx);
                 }
               }
@@ -266,7 +262,6 @@ class RabbitMq {
           if (message) {
             try {
               const blockData = JSON.parse(message.content.toString());
-              console.log('inside missed blockData: ', blockData);
 
               const isSaved =
                 await processHelper.processMissedBlocks(blockData);
@@ -325,6 +320,11 @@ class RabbitMq {
                     blockCount,
                   );
                 }
+
+                await RedisService.setString(
+                  REDIS_KEY.LATEST_BLOCK,
+                  Number(block)
+                );
               }
 
               log(
