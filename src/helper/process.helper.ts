@@ -137,6 +137,7 @@ class ProcessHelper {
         const sessionData = await ExlorerHelper.getNodeEarning(
           blockDetails.blocknumber
         );
+        console.log(sessionData,"Block session")
 
         if (sessionData) {
           const fullSessionData = {
@@ -144,6 +145,7 @@ class ProcessHelper {
             blocknumber: message.result.data?.value?.block?.header?.height,
             startAt: message.result.data?.value?.block?.header?.time || null,
           };
+
 
           await dbHelper.saveSessionTransactions(fullSessionData);
         }
@@ -762,6 +764,7 @@ class ProcessHelper {
             startAt: txData.timestamp || null,
             inactiveAt: inactiveAt || null,
           };
+          console.log("Calling in sessionData!!!")
 
           await dbHelper.saveSessionTransactions(sessionData);
         }
