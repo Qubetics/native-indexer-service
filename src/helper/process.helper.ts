@@ -1023,13 +1023,25 @@ class ProcessHelper {
             txData.toAddress =
               "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward";
 
+            console.log(events, "eventXXs");
+            console.log(events[0], "eventXXs123");
+
+            const valAmount = events["transfer.amount"]
+              ? events["transfer.amount"][0]
+              : 0;
+            console.log(valAmount, "valAmount");
+
             const filtered = events.filter(
-              (e: any) => e.type === "cancel_unbonding_delegation"
+              (e: any) => e.type === "withdraw_rewards"
             );
+            console.log(filtered, "filteredXXX");
             const valArr = filtered[0]?.attributes.filter(
               (e: any) => e.key === "amount"
             );
+
             val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
+            console.log(valArr, "valArrXX2");
+
             break;
           }
 
