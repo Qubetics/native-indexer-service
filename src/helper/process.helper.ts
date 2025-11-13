@@ -345,174 +345,356 @@ class ProcessHelper {
 
         console.log("txEvent : ", txEvent);
 
+        // switch (txEvent) {
+        //   case "/cosmos.bank.v1beta1.MsgSend":
+        //     type = TRANSACTION_TYPE.COIN_TRANSFER;
+        //     val = events["transfer.amount"][1] ?? events["transfer.amount"][0];
+        //     toAddress =
+        //       events["transfer.recipient"][1] ??
+        //       events["transfer.recipient"][0];
+
+        //     break;
+
+        //   case "/cosmos.staking.v1beta1.MsgDelegate":
+        //     if (
+        //       events["message.sender"] &&
+        //       events["message.sender"].length === 1
+        //     ) {
+        //       type = TRANSACTION_TYPE.CREATE_DELEGATOR;
+        //     } else {
+        //       type = TRANSACTION_TYPE.BOND_MORE;
+        //     }
+
+        //     val = events["delegate.amount"] ? events["delegate.amount"][0] : 0;
+        //     toAddress = "/cosmos.staking.v1beta1.MsgDelegate";
+
+        //     this.processDelegatorRewards(
+        //       fromAddress,
+        //       events["withdraw_rewards.amount"],
+        //       timeStamp
+        //     );
+        //     break;
+
+        //   case "/cosmos.staking.v1beta1.MsgUndelegate":
+        //     type = TRANSACTION_TYPE.UNBOND_FUNDS;
+        //     val = events["unbond.amount"] ? events["unbond.amount"][0] : 0;
+        //     toAddress = "/cosmos.staking.v1beta1.MsgUndelegate";
+
+        //     this.processDelegatorRewards(
+        //       fromAddress,
+        //       events["withdraw_rewards.amount"],
+        //       timeStamp
+        //     );
+        //     break;
+
+        //   case "/cosmos.staking.v1beta1.MsgCreateValidator":
+        //     type = TRANSACTION_TYPE.CREATE_VALIDATOR;
+        //     val = events["create_validator.amount"]
+        //       ? events["create_validator.amount"][0]
+        //       : 0;
+        //     toAddress = "/cosmos.staking.v1beta1.MsgCreateValidator";
+
+        //     break;
+
+        //   case "/ibc.applications.transfer.v1.MsgTransfer":
+        //     type = TRANSACTION_TYPE.IBC_TRANSFER_INITIATE;
+        //     val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+        //     toAddress = events["ibc_transfer.receiver"]
+        //       ? events["ibc_transfer.receiver"][0]
+        //       : "";
+
+        //     break;
+
+        //   case "/cosmos.gov.v1beta1.MsgSubmitProposal":
+        //     type = TRANSACTION_TYPE.SUBMIT_PROPOSAL;
+        //     val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+        //     toAddress = "/cosmos.gov.v1.MsgSubmitProposal";
+
+        //     break;
+
+        //   case "/cosmos.gov.v1beta1.MsgVote":
+        //     type = TRANSACTION_TYPE.VOTING;
+        //     val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+        //     toAddress = "/cosmos.gov.v1.MsgVote";
+
+        //     break;
+
+        //   case "/ibc.core.client.v1.MsgUpdateClient":
+        //     txEvent = events?.["message.action"]
+        //       ? message?.result?.events?.["message.action"][1]
+        //       : "";
+
+        //     switch (txEvent) {
+        //       case "/ibc.core.channel.v1.MsgRecvPacket":
+        //         type = TRANSACTION_TYPE.IBC_TRANSFER_RECEIVE;
+        //         val = events["coin_spent.amount"]
+        //           ? events["coin_spent.amount"][0]
+        //           : 0;
+
+        //         toAddress = events["fungible_token_packet.receiver"]
+        //           ? events["fungible_token_packet.receiver"][0]
+        //           : "";
+        //         fromAddress = events["fungible_token_packet.sender"]
+        //           ? events["fungible_token_packet.sender"][0]
+        //           : "";
+
+        //         break;
+
+        //       case "/ibc.core.channel.v1.MsgAcknowledgement":
+        //         type = TRANSACTION_TYPE.IBC_TRANSFER_CONFIRM;
+        //         val = events["fungible_token_packet.amount"]
+        //           ? events["fungible_token_packet.amount"][0]
+        //           : 0;
+        //         toAddress = events["fungible_token_packet.receiver"]
+        //           ? events["fungible_token_packet.receiver"][0]
+        //           : "";
+        //         fromAddress = events["fungible_token_packet.sender"]
+        //           ? events["fungible_token_packet.sender"][0]
+        //           : "";
+
+        //         break;
+
+        //       default:
+        //         type = "UNKNOWN";
+        //         break;
+        //     }
+
+        //     break;
+
+        //   case "/cosmos.authz.v1beta1.MsgExec":
+        //     type = TRANSACTION_TYPE.RESTAKING_EXECUTION;
+        //     val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+        //     toAddress = "/cosmos.authz.v1beta1.MsgExec";
+
+        //     break;
+
+        //   case "/cosmos.staking.v1beta1.MsgEditValidator":
+        //     type = TRANSACTION_TYPE.EDIT_VALIDATOR;
+        //     toAddress = "/cosmos.staking.v1beta1.MsgEditValidator";
+        //     break;
+
+        //   case "/cosmos.staking.v1beta1.MsgBeginRedelegate":
+        //     type = TRANSACTION_TYPE.BEGIN_REDELEGATE;
+        //     toAddress = "/cosmos.staking.v1beta1.MsgBeginRedelegate";
+        //     val = events["redelegate.amount"]
+        //       ? events["redelegate.amount"][0]
+        //       : 0;
+
+        //     this.processDelegatorRewards(
+        //       fromAddress,
+        //       events["withdraw_rewards.amount"],
+        //       timeStamp
+        //     );
+        //     break;
+
+        //   case "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation":
+        //     type = TRANSACTION_TYPE.CANCEL_UNBONDING_DELEGATION;
+        //     val = events["cancel_unbonding_delegation.amount"]
+        //       ? events["cancel_unbonding_delegation.amount"][0]
+        //       : 0;
+        //     toAddress = "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation";
+        //     break;
+
+        //   case "/cosmos.slashing.v1beta1.MsgUnjail":
+        //     type = TRANSACTION_TYPE.UNJAIL;
+        //     toAddress = "/cosmos.slashing.v1beta1.MsgUnjail";
+        //     break;
+
+        //   case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
+        //     type = TRANSACTION_TYPE.DELEGATOR_REWARD;
+        //     toAddress =
+        //       "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward";
+        //     val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+        //     break;
+
+        //   case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission":
+        //     type = TRANSACTION_TYPE.VALIDATOR_COMMISSION;
+        //     toAddress =
+        //       "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission";
+        //     break;
+
+        //   case "/cosmwasm.wasm.v1.MsgStoreCode":
+        //     type = TRANSACTION_TYPE.CONTRACT_UPLOAD;
+        //     toAddress = "/cosmwasm.wasm.v1.MsgStoreCode";
+        //     break;
+
+        //   case "/cosmwasm.wasm.v1.MsgInstantiateContract":
+        //     type = TRANSACTION_TYPE.CONTRACT_CREATION;
+        //     contractAddress = events["instantiate._contract_address"]
+        //       ? events["instantiate._contract_address"][0]
+        //       : "";
+        //     break;
+
+        //   case "/cosmwasm.wasm.v1.MsgExecuteContract":
+        //     type = TRANSACTION_TYPE.CONTRACT_EXECUTE;
+        //     contractAddress = events["execute._contract_address"]
+        //       ? events["execute._contract_address"][0]
+        //       : "";
+        //     val = events["wasm.amount"] ? events["wasm.amount"][0] : 0;
+        //     method = events["wasm.action"] ? events["wasm.action"][0] : 0;
+        //     break;
+
+        //   case "/ethermint.evm.v1.MsgEthereumTx":
+        //     type = TRANSACTION_TYPE.COIN_RECEIVE;
+        //     val = events["coin_received.amount"]
+        //       ? events["coin_received.amount"][0]
+        //       : 0;
+        //     toAddress = events["transfer.recipient"]
+        //       ? events["transfer.recipient"][1]
+        //       : "";
+        //     break;
+
+        //   default:
+        //     type = "UNKNOWN";
+        //     break;
+        // }
         switch (txEvent) {
+          // ---------------------------------------------
+          // BANK TRANSFER
+          // ---------------------------------------------
           case "/cosmos.bank.v1beta1.MsgSend":
             type = TRANSACTION_TYPE.COIN_TRANSFER;
-            val = events["transfer.amount"][1] ?? events["transfer.amount"][0];
+            val =
+              events["transfer.amount"]?.[1] ??
+              events["transfer.amount"]?.[0] ??
+              0;
             toAddress =
-              events["transfer.recipient"][1] ??
-              events["transfer.recipient"][0];
-
+              events["transfer.recipient"]?.[1] ??
+              events["transfer.recipient"]?.[0] ??
+              "";
             break;
 
+          // ---------------------------------------------
+          // DELEGATION
+          // ---------------------------------------------
           case "/cosmos.staking.v1beta1.MsgDelegate":
-            if (
-              events["message.sender"] &&
-              events["message.sender"].length === 1
-            ) {
+            if (events["message.sender"]?.length === 1) {
               type = TRANSACTION_TYPE.CREATE_DELEGATOR;
             } else {
               type = TRANSACTION_TYPE.BOND_MORE;
             }
 
-            val = events["delegate.amount"] ? events["delegate.amount"][0] : 0;
+            val = events["delegate.amount"]?.[0] ?? 0;
             toAddress = "/cosmos.staking.v1beta1.MsgDelegate";
 
-            this.processDelegatorRewards(
-              fromAddress,
-              events["withdraw_rewards.amount"],
-              timeStamp
-            );
+            // ✅ DO NOT process withdraw_rewards here — it doesn't appear in delegate messages
             break;
 
+          // ---------------------------------------------
+          // UNDELEGATION
+          // ---------------------------------------------
           case "/cosmos.staking.v1beta1.MsgUndelegate":
             type = TRANSACTION_TYPE.UNBOND_FUNDS;
-            val = events["unbond.amount"] ? events["unbond.amount"][0] : 0;
+            val = events["unbond.amount"]?.[0] ?? 0;
             toAddress = "/cosmos.staking.v1beta1.MsgUndelegate";
 
-            this.processDelegatorRewards(
-              fromAddress,
-              events["withdraw_rewards.amount"],
-              timeStamp
-            );
+            // Sometimes undelegation auto-triggers reward withdrawal
+            if (events["withdraw_rewards.amount"]) {
+              this.processDelegatorRewards(
+                fromAddress,
+                events["withdraw_rewards.amount"],
+                timeStamp
+              );
+            }
             break;
 
+          // ---------------------------------------------
+          // CREATE VALIDATOR
+          // ---------------------------------------------
           case "/cosmos.staking.v1beta1.MsgCreateValidator":
             type = TRANSACTION_TYPE.CREATE_VALIDATOR;
-            val = events["create_validator.amount"]
-              ? events["create_validator.amount"][0]
-              : 0;
+            val = events["create_validator.amount"]?.[0] ?? 0;
             toAddress = "/cosmos.staking.v1beta1.MsgCreateValidator";
-
             break;
 
-          case "/ibc.applications.transfer.v1.MsgTransfer":
-            type = TRANSACTION_TYPE.IBC_TRANSFER_INITIATE;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
-            toAddress = events["ibc_transfer.receiver"]
-              ? events["ibc_transfer.receiver"][0]
-              : "";
-
-            break;
-
-          case "/cosmos.gov.v1beta1.MsgSubmitProposal":
-            type = TRANSACTION_TYPE.SUBMIT_PROPOSAL;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
-            toAddress = "/cosmos.gov.v1.MsgSubmitProposal";
-
-            break;
-
-          case "/cosmos.gov.v1beta1.MsgVote":
-            type = TRANSACTION_TYPE.VOTING;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
-            toAddress = "/cosmos.gov.v1.MsgVote";
-
-            break;
-
-          case "/ibc.core.client.v1.MsgUpdateClient":
-            txEvent = events?.["message.action"]
-              ? message?.result?.events?.["message.action"][1]
-              : "";
-
-            switch (txEvent) {
-              case "/ibc.core.channel.v1.MsgRecvPacket":
-                type = TRANSACTION_TYPE.IBC_TRANSFER_RECEIVE;
-                val = events["coin_spent.amount"]
-                  ? events["coin_spent.amount"][0]
-                  : 0;
-
-                toAddress = events["fungible_token_packet.receiver"]
-                  ? events["fungible_token_packet.receiver"][0]
-                  : "";
-                fromAddress = events["fungible_token_packet.sender"]
-                  ? events["fungible_token_packet.sender"][0]
-                  : "";
-
-                break;
-
-              case "/ibc.core.channel.v1.MsgAcknowledgement":
-                type = TRANSACTION_TYPE.IBC_TRANSFER_CONFIRM;
-                val = events["fungible_token_packet.amount"]
-                  ? events["fungible_token_packet.amount"][0]
-                  : 0;
-                toAddress = events["fungible_token_packet.receiver"]
-                  ? events["fungible_token_packet.receiver"][0]
-                  : "";
-                fromAddress = events["fungible_token_packet.sender"]
-                  ? events["fungible_token_packet.sender"][0]
-                  : "";
-
-                break;
-
-              default:
-                type = "UNKNOWN";
-                break;
-            }
-
-            break;
-
-          case "/cosmos.authz.v1beta1.MsgExec":
-            type = TRANSACTION_TYPE.RESTAKING_EXECUTION;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
-            toAddress = "/cosmos.authz.v1beta1.MsgExec";
-
-            break;
-
-          case "/cosmos.staking.v1beta1.MsgEditValidator":
-            type = TRANSACTION_TYPE.EDIT_VALIDATOR;
-            toAddress = "/cosmos.staking.v1beta1.MsgEditValidator";
-            break;
-
+          // ---------------------------------------------
+          // REDELEGATION
+          // ---------------------------------------------
           case "/cosmos.staking.v1beta1.MsgBeginRedelegate":
             type = TRANSACTION_TYPE.BEGIN_REDELEGATE;
             toAddress = "/cosmos.staking.v1beta1.MsgBeginRedelegate";
-            val = events["redelegate.amount"]
-              ? events["redelegate.amount"][0]
-              : 0;
+            val = events["redelegate.amount"]?.[0] ?? 0;
 
-            this.processDelegatorRewards(
-              fromAddress,
-              events["withdraw_rewards.amount"],
-              timeStamp
-            );
+            // Sometimes redelegation includes rewards withdrawal
+            if (events["withdraw_rewards.amount"]) {
+              this.processDelegatorRewards(
+                fromAddress,
+                events["withdraw_rewards.amount"],
+                timeStamp
+              );
+            }
             break;
 
+          // ---------------------------------------------
+          // CANCEL UNBONDING
+          // ---------------------------------------------
           case "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation":
             type = TRANSACTION_TYPE.CANCEL_UNBONDING_DELEGATION;
-            val = events["cancel_unbonding_delegation.amount"]
-              ? events["cancel_unbonding_delegation.amount"][0]
-              : 0;
+            val = events["cancel_unbonding_delegation.amount"]?.[0] ?? 0;
             toAddress = "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation";
             break;
 
+          // ---------------------------------------------
+          // UNJAIL
+          // ---------------------------------------------
           case "/cosmos.slashing.v1beta1.MsgUnjail":
             type = TRANSACTION_TYPE.UNJAIL;
             toAddress = "/cosmos.slashing.v1beta1.MsgUnjail";
             break;
 
+          // ---------------------------------------------
+          // WITHDRAW REWARDS (Delegator)
+          // ---------------------------------------------
           case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
             type = TRANSACTION_TYPE.DELEGATOR_REWARD;
             toAddress =
               "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward";
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+            val = events["transfer.amount"]?.[0] ?? 0;
+
+            this.processDelegatorRewards(
+              fromAddress,
+              events["withdraw_rewards.amount"],
+              timeStamp
+            );
             break;
 
+          // ---------------------------------------------
+          // WITHDRAW COMMISSION (Validator)
+          // ---------------------------------------------
           case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission":
             type = TRANSACTION_TYPE.VALIDATOR_COMMISSION;
             toAddress =
               "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission";
+            val = events["withdraw_rewards.amount"]?.[0] ?? 0;
             break;
 
+          // ---------------------------------------------
+          // GOVERNANCE
+          // ---------------------------------------------
+          case "/cosmos.gov.v1beta1.MsgSubmitProposal":
+            type = TRANSACTION_TYPE.SUBMIT_PROPOSAL;
+            val = events["transfer.amount"]?.[0] ?? 0;
+            toAddress = "/cosmos.gov.v1.MsgSubmitProposal";
+            break;
+
+          case "/cosmos.gov.v1beta1.MsgVote":
+            type = TRANSACTION_TYPE.VOTING;
+            val = events["transfer.amount"]?.[0] ?? 0;
+            toAddress = "/cosmos.gov.v1.MsgVote";
+            break;
+
+          // ---------------------------------------------
+          // AUTHZ EXEC
+          // ---------------------------------------------
+          case "/cosmos.authz.v1beta1.MsgExec":
+            type = TRANSACTION_TYPE.RESTAKING_EXECUTION;
+            val = events["transfer.amount"]?.[0] ?? 0;
+            toAddress = "/cosmos.authz.v1beta1.MsgExec";
+            break;
+
+          // ---------------------------------------------
+          // COSMWASM CONTRACTS
+          // ---------------------------------------------
           case "/cosmwasm.wasm.v1.MsgStoreCode":
             type = TRANSACTION_TYPE.CONTRACT_UPLOAD;
             toAddress = "/cosmwasm.wasm.v1.MsgStoreCode";
@@ -520,34 +702,67 @@ class ProcessHelper {
 
           case "/cosmwasm.wasm.v1.MsgInstantiateContract":
             type = TRANSACTION_TYPE.CONTRACT_CREATION;
-            contractAddress = events["instantiate._contract_address"]
-              ? events["instantiate._contract_address"][0]
-              : "";
+            contractAddress =
+              events["instantiate._contract_address"]?.[0] ?? "";
             break;
 
           case "/cosmwasm.wasm.v1.MsgExecuteContract":
             type = TRANSACTION_TYPE.CONTRACT_EXECUTE;
-            contractAddress = events["execute._contract_address"]
-              ? events["execute._contract_address"][0]
-              : "";
-            val = events["wasm.amount"] ? events["wasm.amount"][0] : 0;
-            method = events["wasm.action"] ? events["wasm.action"][0] : 0;
+            contractAddress = events["execute._contract_address"]?.[0] ?? "";
+            val = events["wasm.amount"]?.[0] ?? 0;
+            method = events["wasm.action"]?.[0] ?? "";
             break;
 
+          // ---------------------------------------------
+          // IBC TRANSFERS
+          // ---------------------------------------------
+          case "/ibc.applications.transfer.v1.MsgTransfer":
+            type = TRANSACTION_TYPE.IBC_TRANSFER_INITIATE;
+            val = events["transfer.amount"]?.[0] ?? 0;
+            toAddress = events["ibc_transfer.receiver"]?.[0] ?? "";
+            break;
+
+          case "/ibc.core.client.v1.MsgUpdateClient":
+            txEvent = events?.["message.action"]?.[1] ?? "";
+
+            switch (txEvent) {
+              case "/ibc.core.channel.v1.MsgRecvPacket":
+                type = TRANSACTION_TYPE.IBC_TRANSFER_RECEIVE;
+                val = events["coin_spent.amount"]?.[0] ?? 0;
+                toAddress = events["fungible_token_packet.receiver"]?.[0] ?? "";
+                fromAddress = events["fungible_token_packet.sender"]?.[0] ?? "";
+                break;
+
+              case "/ibc.core.channel.v1.MsgAcknowledgement":
+                type = TRANSACTION_TYPE.IBC_TRANSFER_CONFIRM;
+                val = events["fungible_token_packet.amount"]?.[0] ?? 0;
+                toAddress = events["fungible_token_packet.receiver"]?.[0] ?? "";
+                fromAddress = events["fungible_token_packet.sender"]?.[0] ?? "";
+                break;
+
+              default:
+                type = "UNKNOWN";
+                break;
+            }
+            break;
+
+          // ---------------------------------------------
+          // EVM TX (Ethermint)
+          // ---------------------------------------------
           case "/ethermint.evm.v1.MsgEthereumTx":
             type = TRANSACTION_TYPE.COIN_RECEIVE;
-            val = events["coin_received.amount"]
-              ? events["coin_received.amount"][0]
-              : 0;
-            toAddress = events["transfer.recipient"]
-              ? events["transfer.recipient"][1]
-              : "";
+            val = events["coin_received.amount"]?.[0] ?? 0;
+            toAddress = events["transfer.recipient"]?.[1] ?? "";
             break;
 
+          // ---------------------------------------------
+          // DEFAULT / UNKNOWN
+          // ---------------------------------------------
           default:
             type = "UNKNOWN";
             break;
         }
+
         let amount;
         // console.log('val==---', val);
 
@@ -760,8 +975,6 @@ class ProcessHelper {
 
         const events = result?.tx_result?.events;
 
-        console.log("events inside missed tx: ", JSON.stringify(events));
-
         const code = result?.tx_result?.code;
         const status = !code
           ? TRANSACTION_STATUS.SUCCESS
@@ -854,29 +1067,13 @@ class ProcessHelper {
             txData.type = TRANSACTION_TYPE.BOND_MORE;
             txData.toAddress = "/cosmos.staking.v1beta1.MsgDelegate";
 
-            const filtered = events.filter((e: any) => e.type === "delegate");
-            const valArr = filtered[0]?.attributes.filter(
+            const delegateEvent = events.find(
+              (e: any) => e.type === "delegate"
+            );
+            const amountAttr = delegateEvent?.attributes.find(
               (e: any) => e.key === "amount"
             );
-            val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
-
-            const filterForReward = events.filter(
-              (e: any) => e.type === "withdraw_rewards"
-            );
-
-            const valArrReward = filterForReward[0]?.attributes.filter(
-              (e: any) => e.key === "amount"
-            );
-
-            const rewardValArr = valArrReward.map((item: any) => item.value);
-
-            console.log("txData : : ", txData);
-
-            this.processDelegatorRewards(
-              txData.fromAddress,
-              rewardValArr,
-              txData.timestamp
-            );
+            val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
             break;
           }
 
@@ -884,27 +1081,13 @@ class ProcessHelper {
             txData.type = TRANSACTION_TYPE.BEGIN_REDELEGATE;
             txData.toAddress = "/cosmos.staking.v1beta1.MsgBeginRedelegate";
 
-            const filtered = events.filter((e: any) => e.type === "redelegate");
-
-            const valArr = filtered[0]?.attributes.filter(
+            const redelegateEvent = events.find(
+              (e: any) => e.type === "redelegate"
+            );
+            const amountAttr = redelegateEvent?.attributes.find(
               (e: any) => e.key === "amount"
             );
-            val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
-
-            const filterForReward = events.filter(
-              (e: any) => e.type === "withdraw_rewards"
-            );
-            const valArrReward = filterForReward[0]?.attributes.filter(
-              (e: any) => e.key === "amount"
-            );
-
-            const rewardValArr = valArrReward.map((item: any) => item.value);
-
-            this.processDelegatorRewards(
-              txData.fromAddress,
-              rewardValArr,
-              txData.timestamp
-            );
+            val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
             break;
           }
 
@@ -912,109 +1095,11 @@ class ProcessHelper {
             txData.type = TRANSACTION_TYPE.UNBOND_FUNDS;
             txData.toAddress = "/cosmos.staking.v1beta1.MsgUndelegate";
 
-            const filtered = events.filter((e: any) => e.type === "unbond");
-            const valArr = filtered[0]?.attributes.filter(
+            const unbondEvent = events.find((e: any) => e.type === "unbond");
+            const amountAttr = unbondEvent?.attributes.find(
               (e: any) => e.key === "amount"
             );
-            val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
-
-            const filterForReward = events.filter(
-              (e: any) => e.type === "withdraw_rewards"
-            );
-            const valArrReward = filterForReward[0]?.attributes.filter(
-              (e: any) => e.key === "amount"
-            );
-
-            const rewardValArr = valArrReward.map((item: any) => item.value);
-
-            this.processDelegatorRewards(
-              txData.fromAddress,
-              rewardValArr,
-              txData.timestamp
-            );
-            break;
-          }
-          case "/cosmos.gov.v1beta1.MsgSubmitProposal": {
-            txData.type = TRANSACTION_TYPE.SUBMIT_PROPOSAL;
-            txData.toAddress = "/cosmos.gov.v1.MsgSubmitProposal";
-
-            const filtered = events.filter((e: any) => e.type === "transfer");
-            const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount"
-            );
-            val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
-            break;
-          }
-
-          case "/ethermint.evm.v1.MsgEthereumTx": {
-            txData.type = TRANSACTION_TYPE.COIN_RECEIVE;
-
-            const filtered = events.filter(
-              (e: any) => e.type === "coin_received"
-            );
-            const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount"
-            );
-            const toArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "receiver"
-            );
-            val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
-            txData.toAddress = toArr[0].value;
-            break;
-          }
-
-          case "/cosmos.staking.v1beta1.MsgCreateValidator": {
-            txData.type = TRANSACTION_TYPE.CREATE_VALIDATOR;
-            txData.toAddress = "/cosmos.staking.v1beta1.MsgCreateValidator";
-
-            const filtered = events.filter(
-              (e: any) => e.type === "create_validator"
-            );
-            const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount"
-            );
-
-            val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
-
-            break;
-          }
-
-          case "/cosmos.gov.v1beta1.MsgVote": {
-            txData.type = TRANSACTION_TYPE.VOTING;
-            txData.toAddress = "/cosmos.gov.v1.MsgVote";
-
-            const filtered = events.filter((e: any) => e.type === "transfer");
-            const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount"
-            );
-            val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
-            break;
-          }
-
-          case "/cosmos.staking.v1beta1.MsgEditValidator": {
-            txData.type = TRANSACTION_TYPE.EDIT_VALIDATOR;
-            txData.toAddress = "/cosmos.staking.v1beta1.MsgEditValidator";
-            break;
-          }
-
-          case "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation": {
-            txData.type = TRANSACTION_TYPE.CANCEL_UNBONDING_DELEGATION;
-            txData.toAddress =
-              "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation";
-
-            const filtered = events.filter(
-              (e: any) => e.type === "cancel_unbonding_delegation"
-            );
-            const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount"
-            );
-            val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
-            break;
-          }
-
-          case "/cosmos.slashing.v1beta1.MsgUnjail": {
-            txData.type = TRANSACTION_TYPE.UNJAIL;
-            txData.toAddress = "/cosmos.slashing.v1beta1.MsgUnjail";
+            val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
             break;
           }
 
@@ -1023,25 +1108,19 @@ class ProcessHelper {
             txData.toAddress =
               "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward";
 
-            console.log(events, "eventXXs");
-            console.log(events[0], "eventXXs123");
-
-            const valAmount = events["transfer.amount"]
-              ? events["transfer.amount"][0]
-              : 0;
-            console.log(valAmount, "valAmount");
-
-            const filtered = events.filter(
+            const rewardEvent = events.find(
               (e: any) => e.type === "withdraw_rewards"
             );
-            console.log(filtered, "filteredXXX");
-            const valArr = filtered[0]?.attributes.filter(
+            const amountAttr = rewardEvent?.attributes.find(
               (e: any) => e.key === "amount"
             );
+            val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
 
-            val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
-            console.log(valArr, "valArrXX2");
-
+            this.processDelegatorRewards(
+              txData.fromAddress,
+              [val.toString()],
+              txData.timestamp
+            );
             break;
           }
 
@@ -1049,21 +1128,42 @@ class ProcessHelper {
             txData.type = TRANSACTION_TYPE.VALIDATOR_COMMISSION;
             txData.toAddress =
               "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission";
-            break;
-          }
 
-          case "/cosmos.authz.v1beta1.MsgExec": {
-            txData.type = TRANSACTION_TYPE.RESTAKING_EXECUTION;
-            txData.toAddress = "/cosmos.authz.v1beta1.MsgExec";
-
-            const filtered = events.filter((e: any) => e.type === "transfer");
-            const valArr = filtered[0]?.attributes.filter(
+            const commissionEvent = events.find(
+              (e: any) => e.type === "withdraw_commission"
+            );
+            const amountAttr = commissionEvent?.attributes.find(
               (e: any) => e.key === "amount"
             );
-            val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
-
+            val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
             break;
           }
+
+          // ✅ Other events same as before
+          case "/cosmos.gov.v1beta1.MsgSubmitProposal":
+            txData.type = TRANSACTION_TYPE.SUBMIT_PROPOSAL;
+            txData.toAddress = "/cosmos.gov.v1.MsgSubmitProposal";
+            break;
+
+          case "/cosmos.gov.v1beta1.MsgVote":
+            txData.type = TRANSACTION_TYPE.VOTING;
+            txData.toAddress = "/cosmos.gov.v1.MsgVote";
+            break;
+
+          case "/cosmos.staking.v1beta1.MsgCreateValidator":
+            txData.type = TRANSACTION_TYPE.CREATE_VALIDATOR;
+            txData.toAddress = "/cosmos.staking.v1beta1.MsgCreateValidator";
+            break;
+
+          case "/cosmos.staking.v1beta1.MsgEditValidator":
+            txData.type = TRANSACTION_TYPE.EDIT_VALIDATOR;
+            txData.toAddress = "/cosmos.staking.v1beta1.MsgEditValidator";
+            break;
+
+          case "/cosmos.slashing.v1beta1.MsgUnjail":
+            txData.type = TRANSACTION_TYPE.UNJAIL;
+            txData.toAddress = "/cosmos.slashing.v1beta1.MsgUnjail";
+            break;
 
           default:
             txData.type = "UNKNOWN";
