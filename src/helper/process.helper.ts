@@ -599,14 +599,11 @@ class ProcessHelper {
           contractAddress,
           burnedFee: Number(burnedFee),
         };
-        console.log("txData-created", txData);
 
         socketEventsHelper.emitMessage(
           SOCKET_EVENT.NATIVE_LATEST_TRANSACTIONS,
           txData
         );
-
-        console.log("txData : ", txData);
 
         // save transation
         await dbHelper.saveTransactions(txData);
