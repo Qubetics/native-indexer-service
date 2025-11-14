@@ -57,7 +57,7 @@ class ProcessHelper {
     const blockSocket = new CustomWebSocket(
       `${environment.wsUrl}/websocket`,
       QUEUE_NAME.LATEST_BLOCKS,
-      blockWsQuery,
+      blockWsQuery
     );
     blockSocket.connect();
   }
@@ -77,7 +77,7 @@ class ProcessHelper {
     const txSocket = new CustomWebSocket(
       `${environment.wsUrl}/websocket`,
       QUEUE_NAME.LATEST_TXS,
-      txWsQuery,
+      txWsQuery
     );
     txSocket.connect();
   }
@@ -92,11 +92,11 @@ class ProcessHelper {
       if (message?.result?.data) {
         const validatorOperatorAddress: string =
           await this.cosmjsInstace.tendermintValAddressToValoperAddress(
-            message.result.data?.value?.block?.header?.proposer_address,
+            message.result.data?.value?.block?.header?.proposer_address
           );
 
         const miner = await this.cosmjsInstace.getDelegatorAddress(
-          validatorOperatorAddress,
+          validatorOperatorAddress
         );
 
         const blockDetails = {
@@ -111,7 +111,7 @@ class ProcessHelper {
           "blockNumber : ",
           COLORS.cyan,
           blockDetails.blocknumber,
-          COLORS.yellow,
+          COLORS.yellow
         );
         /* emit the latest block data */
         // socketEventsHelper.emitMessage(
@@ -134,7 +134,7 @@ class ProcessHelper {
           url,
           FETCH_METHODS.GET,
           HEADERS.DEFAULT,
-          null,
+          null
         );
         if (!fetchRes.error) {
           const blockDataToSave: IBlock = {
@@ -144,7 +144,7 @@ class ProcessHelper {
 
           socketEventsHelper.emitMessage(
             SOCKET_EVENT.NATIVE_LATEST_BLOCK,
-            blockDataToSave,
+            blockDataToSave
           );
 
           const saveRes = await dbHelper.saveBlockData(blockDataToSave);
@@ -152,7 +152,7 @@ class ProcessHelper {
           if (saveRes) {
             // Retrieve the block count from Redis or the database
             let blockCount = await RedisService.getString(
-              REDIS_KEY.NATIVE_BLOCKS_COUNT,
+              REDIS_KEY.NATIVE_BLOCKS_COUNT
             );
 
             if (!blockCount) {
@@ -160,14 +160,14 @@ class ProcessHelper {
               blockCount = await prisma.blocks.count();
               await RedisService.setString(
                 REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                blockCount,
+                blockCount
               );
             } else {
               // Increment the block count
               blockCount = Number(blockCount) + 1;
               await RedisService.setString(
                 REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                blockCount,
+                blockCount
               );
               console.log("blockCount", blockCount);
             }
@@ -175,19 +175,19 @@ class ProcessHelper {
 
           await dbHelper.upsertValidatorsCount(
             blockDataToSave.validatorOperatorAddress,
-            blockDataToSave.miner,
+            blockDataToSave.miner
           );
 
           if (saveRes.error) throw new Error("Error while save block data");
 
           await RedisService.setString(
             REDIS_KEY.LATEST_BLOCK,
-            Number(blockDetails.blocknumber),
+            Number(blockDetails.blocknumber)
           );
         } else {
           console.log(
             "\x1b[32mSomething went wrong:\n\x1b[0m",
-            fetchRes?.errorStack,
+            fetchRes?.errorStack
           );
         }
       }
@@ -201,7 +201,7 @@ class ProcessHelper {
   async processDelegatorRewards(
     address: string,
     rewardEvent: string[],
-    timeStamp: string,
+    timeStamp: string
   ) {
     let rewardAmount = BigNumber(0);
 
@@ -232,7 +232,7 @@ class ProcessHelper {
           address,
           timeStamp,
           rewardAmount: rewardAmount.toString(),
-        },
+        }
       );
 
       await prisma.rewards.create({
@@ -256,7 +256,7 @@ class ProcessHelper {
         "Reward Found in DataBase..... and time not Matched ",
         new Date(timeStamp).getTime(),
         new Date(rewardData?.timeStamp).getTime(),
-        timeCondition,
+        timeCondition
       );
 
       if (timeCondition) {
@@ -316,7 +316,7 @@ class ProcessHelper {
         let method = "";
         let timeStamp = "";
         const blocknumber = Number(
-          message.result.data?.value?.TxResult?.height,
+          message.result.data?.value?.TxResult?.height
         );
 
         const url = `${environment.httpHost}/block?height=${blocknumber}`;
@@ -324,12 +324,12 @@ class ProcessHelper {
           url,
           FETCH_METHODS.GET,
           HEADERS.DEFAULT,
-          null,
+          null
         );
         if (!fetchRes.error) {
           console.log(
             "timestamp fromRPC : ",
-            fetchRes?.data.result.block?.header?.time,
+            fetchRes?.data.result.block?.header?.time
           );
           timeStamp = fetchRes?.data.result.block?.header?.time ?? "";
         }
@@ -337,173 +337,152 @@ class ProcessHelper {
         console.log("txEvent : ", txEvent);
 
         switch (txEvent) {
+          // ---------------------------------------------
+          // BANK TRANSFER
+          // ---------------------------------------------
           case "/cosmos.bank.v1beta1.MsgSend":
             type = TRANSACTION_TYPE.COIN_TRANSFER;
-            val = events["transfer.amount"][1] ?? events["transfer.amount"][0];
+            val =
+              events["transfer.amount"]?.[1] ??
+              events["transfer.amount"]?.[0] ??
+              0;
             toAddress =
-              events["transfer.recipient"][1] ??
-              events["transfer.recipient"][0];
-
+              events["transfer.recipient"]?.[1] ??
+              events["transfer.recipient"]?.[0] ??
+              "";
             break;
 
+          // ---------------------------------------------
+          // DELEGATION
+          // ---------------------------------------------
           case "/cosmos.staking.v1beta1.MsgDelegate":
-            if (
-              events["message.sender"] &&
-              events["message.sender"].length === 1
-            ) {
+            if (events["message.sender"]?.length === 1) {
               type = TRANSACTION_TYPE.CREATE_DELEGATOR;
             } else {
               type = TRANSACTION_TYPE.BOND_MORE;
             }
 
-            val = events["delegate.amount"] ? events["delegate.amount"][0] : 0;
+            val = events["delegate.amount"]?.[0] ?? 0;
             toAddress = "/cosmos.staking.v1beta1.MsgDelegate";
 
-            this.processDelegatorRewards(
-              fromAddress,
-              events["withdraw_rewards.amount"],
-              timeStamp,
-            );
+            // ✅ DO NOT process withdraw_rewards here — it doesn't appear in delegate messages
             break;
 
+          // ---------------------------------------------
+          // UNDELEGATION
+          // ---------------------------------------------
           case "/cosmos.staking.v1beta1.MsgUndelegate":
             type = TRANSACTION_TYPE.UNBOND_FUNDS;
-            val = events["unbond.amount"] ? events["unbond.amount"][0] : 0;
+            val = events["unbond.amount"]?.[0] ?? 0;
             toAddress = "/cosmos.staking.v1beta1.MsgUndelegate";
 
-            this.processDelegatorRewards(
-              fromAddress,
-              events["withdraw_rewards.amount"],
-              timeStamp,
-            );
+            // Sometimes undelegation auto-triggers reward withdrawal
+            if (events["withdraw_rewards.amount"]) {
+              this.processDelegatorRewards(
+                fromAddress,
+                events["withdraw_rewards.amount"],
+                timeStamp
+              );
+            }
             break;
 
+          // ---------------------------------------------
+          // CREATE VALIDATOR
+          // ---------------------------------------------
           case "/cosmos.staking.v1beta1.MsgCreateValidator":
             type = TRANSACTION_TYPE.CREATE_VALIDATOR;
-            val = events["create_validator.amount"]
-              ? events["create_validator.amount"][0]
-              : 0;
+            val = events["create_validator.amount"]?.[0] ?? 0;
             toAddress = "/cosmos.staking.v1beta1.MsgCreateValidator";
-
             break;
 
-          case "/ibc.applications.transfer.v1.MsgTransfer":
-            type = TRANSACTION_TYPE.IBC_TRANSFER_INITIATE;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
-            toAddress = events["ibc_transfer.receiver"]
-              ? events["ibc_transfer.receiver"][0]
-              : "";
-
-            break;
-
-          case "/cosmos.gov.v1beta1.MsgSubmitProposal":
-            type = TRANSACTION_TYPE.SUBMIT_PROPOSAL;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
-            toAddress = "/cosmos.gov.v1.MsgSubmitProposal";
-
-            break;
-
-          case "/cosmos.gov.v1beta1.MsgVote":
-            type = TRANSACTION_TYPE.VOTING;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
-            toAddress = "/cosmos.gov.v1.MsgVote";
-
-            break;
-
-          case "/ibc.core.client.v1.MsgUpdateClient":
-            txEvent = events?.["message.action"]
-              ? message?.result?.events?.["message.action"][1]
-              : "";
-
-            switch (txEvent) {
-              case "/ibc.core.channel.v1.MsgRecvPacket":
-                type = TRANSACTION_TYPE.IBC_TRANSFER_RECEIVE;
-                val = events["coin_spent.amount"]
-                  ? events["coin_spent.amount"][0]
-                  : 0;
-
-                toAddress = events["fungible_token_packet.receiver"]
-                  ? events["fungible_token_packet.receiver"][0]
-                  : "";
-                fromAddress = events["fungible_token_packet.sender"]
-                  ? events["fungible_token_packet.sender"][0]
-                  : "";
-
-                break;
-
-              case "/ibc.core.channel.v1.MsgAcknowledgement":
-                type = TRANSACTION_TYPE.IBC_TRANSFER_CONFIRM;
-                val = events["fungible_token_packet.amount"]
-                  ? events["fungible_token_packet.amount"][0]
-                  : 0;
-                toAddress = events["fungible_token_packet.receiver"]
-                  ? events["fungible_token_packet.receiver"][0]
-                  : "";
-                fromAddress = events["fungible_token_packet.sender"]
-                  ? events["fungible_token_packet.sender"][0]
-                  : "";
-
-                break;
-
-              default:
-                type = "UNKNOWN";
-                break;
-            }
-
-            break;
-
-          case "/cosmos.authz.v1beta1.MsgExec":
-            type = TRANSACTION_TYPE.RESTAKING_EXECUTION;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
-            toAddress = "/cosmos.authz.v1beta1.MsgExec";
-
-            break;
-
-          case "/cosmos.staking.v1beta1.MsgEditValidator":
-            type = TRANSACTION_TYPE.EDIT_VALIDATOR;
-            toAddress = "/cosmos.staking.v1beta1.MsgEditValidator";
-            break;
-
+          // ---------------------------------------------
+          // REDELEGATION
+          // ---------------------------------------------
           case "/cosmos.staking.v1beta1.MsgBeginRedelegate":
             type = TRANSACTION_TYPE.BEGIN_REDELEGATE;
             toAddress = "/cosmos.staking.v1beta1.MsgBeginRedelegate";
-            val = events["redelegate.amount"]
-              ? events["redelegate.amount"][0]
-              : 0;
+            val = events["redelegate.amount"]?.[0] ?? 0;
 
-            this.processDelegatorRewards(
-              fromAddress,
-              events["withdraw_rewards.amount"],
-              timeStamp,
-            );
+            // Sometimes redelegation includes rewards withdrawal
+            if (events["withdraw_rewards.amount"]) {
+              this.processDelegatorRewards(
+                fromAddress,
+                events["withdraw_rewards.amount"],
+                timeStamp
+              );
+            }
             break;
 
+          // ---------------------------------------------
+          // CANCEL UNBONDING
+          // ---------------------------------------------
           case "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation":
             type = TRANSACTION_TYPE.CANCEL_UNBONDING_DELEGATION;
-            val = events["cancel_unbonding_delegation.amount"]
-              ? events["cancel_unbonding_delegation.amount"][0]
-              : 0;
+            val = events["cancel_unbonding_delegation.amount"]?.[0] ?? 0;
             toAddress = "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation";
             break;
 
+          // ---------------------------------------------
+          // UNJAIL
+          // ---------------------------------------------
           case "/cosmos.slashing.v1beta1.MsgUnjail":
             type = TRANSACTION_TYPE.UNJAIL;
             toAddress = "/cosmos.slashing.v1beta1.MsgUnjail";
             break;
 
+          // ---------------------------------------------
+          // WITHDRAW REWARDS (Delegator)
+          // ---------------------------------------------
           case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
             type = TRANSACTION_TYPE.DELEGATOR_REWARD;
             toAddress =
               "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward";
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+            val = events["transfer.amount"]?.[0] ?? 0;
+
+            this.processDelegatorRewards(
+              fromAddress,
+              events["withdraw_rewards.amount"],
+              timeStamp
+            );
             break;
 
+          // ---------------------------------------------
+          // WITHDRAW COMMISSION (Validator)
+          // ---------------------------------------------
           case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission":
             type = TRANSACTION_TYPE.VALIDATOR_COMMISSION;
             toAddress =
               "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission";
+            val = events["withdraw_rewards.amount"]?.[0] ?? 0;
             break;
 
+          // ---------------------------------------------
+          // GOVERNANCE
+          // ---------------------------------------------
+          case "/cosmos.gov.v1beta1.MsgSubmitProposal":
+            type = TRANSACTION_TYPE.SUBMIT_PROPOSAL;
+            val = events["transfer.amount"]?.[0] ?? 0;
+            toAddress = "/cosmos.gov.v1.MsgSubmitProposal";
+            break;
+
+          case "/cosmos.gov.v1beta1.MsgVote":
+            type = TRANSACTION_TYPE.VOTING;
+            val = events["transfer.amount"]?.[0] ?? 0;
+            toAddress = "/cosmos.gov.v1.MsgVote";
+            break;
+
+          // ---------------------------------------------
+          // AUTHZ EXEC
+          // ---------------------------------------------
+          case "/cosmos.authz.v1beta1.MsgExec":
+            type = TRANSACTION_TYPE.RESTAKING_EXECUTION;
+            val = events["transfer.amount"]?.[0] ?? 0;
+            toAddress = "/cosmos.authz.v1beta1.MsgExec";
+            break;
+
+          // ---------------------------------------------
+          // COSMWASM CONTRACTS
+          // ---------------------------------------------
           case "/cosmwasm.wasm.v1.MsgStoreCode":
             type = TRANSACTION_TYPE.CONTRACT_UPLOAD;
             toAddress = "/cosmwasm.wasm.v1.MsgStoreCode";
@@ -511,34 +490,67 @@ class ProcessHelper {
 
           case "/cosmwasm.wasm.v1.MsgInstantiateContract":
             type = TRANSACTION_TYPE.CONTRACT_CREATION;
-            contractAddress = events["instantiate._contract_address"]
-              ? events["instantiate._contract_address"][0]
-              : "";
+            contractAddress =
+              events["instantiate._contract_address"]?.[0] ?? "";
             break;
 
           case "/cosmwasm.wasm.v1.MsgExecuteContract":
             type = TRANSACTION_TYPE.CONTRACT_EXECUTE;
-            contractAddress = events["execute._contract_address"]
-              ? events["execute._contract_address"][0]
-              : "";
-            val = events["wasm.amount"] ? events["wasm.amount"][0] : 0;
-            method = events["wasm.action"] ? events["wasm.action"][0] : 0;
+            contractAddress = events["execute._contract_address"]?.[0] ?? "";
+            val = events["wasm.amount"]?.[0] ?? 0;
+            method = events["wasm.action"]?.[0] ?? "";
             break;
 
+          // ---------------------------------------------
+          // IBC TRANSFERS
+          // ---------------------------------------------
+          case "/ibc.applications.transfer.v1.MsgTransfer":
+            type = TRANSACTION_TYPE.IBC_TRANSFER_INITIATE;
+            val = events["transfer.amount"]?.[0] ?? 0;
+            toAddress = events["ibc_transfer.receiver"]?.[0] ?? "";
+            break;
+
+          case "/ibc.core.client.v1.MsgUpdateClient":
+            txEvent = events?.["message.action"]?.[1] ?? "";
+
+            switch (txEvent) {
+              case "/ibc.core.channel.v1.MsgRecvPacket":
+                type = TRANSACTION_TYPE.IBC_TRANSFER_RECEIVE;
+                val = events["coin_spent.amount"]?.[0] ?? 0;
+                toAddress = events["fungible_token_packet.receiver"]?.[0] ?? "";
+                fromAddress = events["fungible_token_packet.sender"]?.[0] ?? "";
+                break;
+
+              case "/ibc.core.channel.v1.MsgAcknowledgement":
+                type = TRANSACTION_TYPE.IBC_TRANSFER_CONFIRM;
+                val = events["fungible_token_packet.amount"]?.[0] ?? 0;
+                toAddress = events["fungible_token_packet.receiver"]?.[0] ?? "";
+                fromAddress = events["fungible_token_packet.sender"]?.[0] ?? "";
+                break;
+
+              default:
+                type = "UNKNOWN";
+                break;
+            }
+            break;
+
+          // ---------------------------------------------
+          // EVM TX (Ethermint)
+          // ---------------------------------------------
           case "/ethermint.evm.v1.MsgEthereumTx":
             type = TRANSACTION_TYPE.COIN_RECEIVE;
-            val = events["coin_received.amount"]
-              ? events["coin_received.amount"][0]
-              : 0;
-            toAddress = events["transfer.recipient"]
-              ? events["transfer.recipient"][1]
-              : "";
+            val = events["coin_received.amount"]?.[0] ?? 0;
+            toAddress = events["transfer.recipient"]?.[1] ?? "";
             break;
 
+          // ---------------------------------------------
+          // DEFAULT / UNKNOWN
+          // ---------------------------------------------
           default:
             type = "UNKNOWN";
             break;
         }
+
         let amount;
         // console.log('val==---', val);
 
@@ -579,10 +591,10 @@ class ProcessHelper {
           fromAddress,
           txFee,
           gasWanted: Number(
-            message.result.data?.value?.TxResult?.result?.gas_wanted ?? "",
+            message.result.data?.value?.TxResult?.result?.gas_wanted ?? ""
           ),
           gasUsed: Number(
-            message.result.data?.value?.TxResult?.result?.gas_used ?? "",
+            message.result.data?.value?.TxResult?.result?.gas_used ?? ""
           ),
           contractAddress,
           burnedFee: Number(burnedFee),
@@ -591,7 +603,7 @@ class ProcessHelper {
 
         socketEventsHelper.emitMessage(
           SOCKET_EVENT.NATIVE_LATEST_TRANSACTIONS,
-          txData,
+          txData
         );
 
         console.log("txData : ", txData);
@@ -644,7 +656,7 @@ class ProcessHelper {
           // call the method to get the type of contract
           if (txData.contractAddress) {
             contractType = await this.cosmjsInstace.getContractType(
-              txData.contractAddress,
+              txData.contractAddress
             );
             if (contractType === null) {
               contractType = "UNKNOWN";
@@ -666,7 +678,7 @@ class ProcessHelper {
           };
 
           const contractName = await this.cosmjsInstace.getContractName(
-            contractDetails.address,
+            contractDetails.address
           );
 
           if (contractName !== null) {
@@ -677,7 +689,7 @@ class ProcessHelper {
           await dbHelper.saveContractDeployTx(contractDetails);
 
           const tokenInfo = await this.cosmjsInstace.getTokenInfo(
-            contractDetails.address,
+            contractDetails.address
           );
 
           if (tokenInfo !== null) {
@@ -722,17 +734,17 @@ class ProcessHelper {
           await dbHelper.updateContractExec(txData.contractAddress);
 
           const account = await this.cosmjsInstace.getAccountInfo(
-            txData.contractAddress,
+            txData.contractAddress
           );
 
           await this.cosmjsInstace.getTokenBalances(
             txData.contractAddress,
-            account,
+            account
           );
         }
 
         const getBurnedAmount = await RedisService.getString(
-          REDIS_KEY.TOTAL_BURNED_AMOUNT,
+          REDIS_KEY.TOTAL_BURNED_AMOUNT
         );
 
         if (!getBurnedAmount) {
@@ -748,12 +760,12 @@ class ProcessHelper {
 
           await RedisService.setString(
             REDIS_KEY.TOTAL_BURNED_AMOUNT,
-            setBurnedAmount,
+            setBurnedAmount
           );
         } else {
           await redisHelper.incrementValue(
             REDIS_KEY.TOTAL_BURNED_AMOUNT,
-            Number(burnedFee),
+            Number(burnedFee)
           );
         }
       }
@@ -776,12 +788,12 @@ class ProcessHelper {
         url,
         FETCH_METHODS.GET,
         HEADERS.DEFAULT,
-        null,
+        null
       );
       if (fetchRes?.data?.result && !fetchRes.error) {
         console.log(
           "tx Data inside missedTx : ",
-          JSON.stringify(fetchRes?.data),
+          JSON.stringify(fetchRes?.data)
         );
 
         const result = fetchRes?.data?.result;
@@ -814,11 +826,11 @@ class ProcessHelper {
         const filteredEvents = events.filter(
           (event: any) =>
             event.type === "message" &&
-            event?.attributes.some((attr: any) => attr.key === "action"),
+            event?.attributes.some((attr: any) => attr.key === "action")
         );
 
         const eventObj = filteredEvents[0]?.attributes.find(
-          (i: any) => i.key === "action",
+          (i: any) => i.key === "action"
         );
         const txEvent = eventObj?.value || "";
 
@@ -877,7 +889,7 @@ class ProcessHelper {
           url2,
           FETCH_METHODS.GET,
           HEADERS.DEFAULT,
-          null,
+          null
         );
         if (!fetchRes2.error) {
           txData.timestamp = fetchRes2?.data.result.block?.header?.time ?? "";
@@ -909,7 +921,7 @@ class ProcessHelper {
         url2,
         FETCH_METHODS.GET,
         HEADERS.DEFAULT,
-        null,
+        null
       );
 
       if (!fetchRes2?.data?.result) {
@@ -919,7 +931,7 @@ class ProcessHelper {
       const validatorOperatorAddress: string =
         <string>(
           await this.cosmjsInstace.tendermintValAddressToValoperAddress(
-            fetchRes2?.data.result.block?.header?.proposer_address,
+            fetchRes2?.data.result.block?.header?.proposer_address
           )
         ) ?? "";
 
@@ -978,13 +990,13 @@ class ProcessHelper {
   public async downTimeBlocks() {
     try {
       const lastBlockSaved = await RedisService.getString(
-        REDIS_KEY.LATEST_BLOCK,
+        REDIS_KEY.LATEST_BLOCK
       );
       const blockRes = await fetchRequest(
         `${environment.httpHost}/block`,
         FETCH_METHODS.GET,
         HEADERS.DEFAULT,
-        null,
+        null
       );
       const newBlock = blockRes?.data?.result?.block?.header?.height;
       console.log("newBlock: ", newBlock);
@@ -1003,7 +1015,7 @@ class ProcessHelper {
               `${environment.httpHost}/block`,
               FETCH_METHODS.GET,
               HEADERS.DEFAULT,
-              null,
+              null
             );
             const currentBlock =
               currentBlockRes?.data?.result?.block?.header?.height;
@@ -1011,7 +1023,7 @@ class ProcessHelper {
             if (i <= currentBlock) {
               RabbitMqService.inQueueData(
                 QUEUE_NAME.DOWNTIME_BLOCK,
-                i.toString(),
+                i.toString()
               );
             }
             // saving missed block to downtime block Queue
