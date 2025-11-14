@@ -88,6 +88,12 @@ class ProcessHelper {
    * @returns
    */
   public async processLatestBlock(message: any) {
+    console.log(
+      "Processing the Latest block",
+      message.result.data?.value?.block?.header?.height
+    );
+
+    const processingBlock = message.result.data?.value?.block?.header?.height;
     try {
       if (message?.result?.data) {
         const validatorOperatorAddress: string = <string>(
@@ -109,7 +115,7 @@ class ProcessHelper {
             message.result.data?.value?.block?.data?.txs?.length ?? 0,
         };
         log(
-          "blockNumber : ",
+          "Processing blockNumber : ",
           COLORS.cyan,
           blockDetails.blocknumber,
           COLORS.yellow
@@ -194,7 +200,11 @@ class ProcessHelper {
       }
       return true;
     } catch (error) {
-      console.log("Error while process latest block: ", error);
+      console.log(
+        "Error while process latest block: ",
+        message.result.data?.value?.block?.header?.height,
+        error
+      );
       return false;
     }
   }
@@ -300,7 +310,7 @@ class ProcessHelper {
   public async processTxs(message: any) {
     try {
       const events = message?.result?.events;
-      console.log("events : ", events);
+      // console.log("events : ", events);
       const data = message?.result?.data;
       if (data && events) {
         const code = data?.value?.TxResult?.result?.code;
@@ -814,7 +824,7 @@ class ProcessHelper {
           txData
         );
 
-        console.log("txData : ", txData);
+        // console.log("txData : ", txData);
 
         // save transation
         await dbHelper.saveTransactions(txData);
@@ -1244,11 +1254,11 @@ class ProcessHelper {
 
         dbHelper.saveBlockData(dataToSave);
       } else {
-        throw new Error("Error while getting block by number ");
+        throw new Error(`Error while getting block by number ${blockNumber}`);
       }
       return true;
     } catch (error) {
-      console.log("error while processing error blocks : ", error);
+      console.log("error while processing error blocks : ", blockNumber, error);
       return false;
     }
   }
@@ -1288,8 +1298,7 @@ class ProcessHelper {
         null
       );
       const newBlock = blockRes?.data?.result?.block?.header?.height;
-      console.log("newBlock: ", newBlock);
-      console.log("lastBlockSaved: ", lastBlockSaved);
+      console.log("downTimeBlock: ", newBlock);
 
       if (newBlock && lastBlockSaved) {
         const diff = Number(newBlock) - Number(lastBlockSaved);
