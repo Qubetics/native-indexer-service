@@ -761,7 +761,7 @@ class ProcessHelper {
           // ---------------------------------------------
           case "/ethermint.evm.v1.MsgEthereumTx":
             type = TRANSACTION_TYPE.COIN_RECEIVE;
-            val = events["coin_received.amount"]?.[0] ?? 0;
+            val = events["ethereum_tx.amount"]?.[0] ?? 0;
             toAddress = events["transfer.recipient"]?.[1] ?? "";
             break;
 
