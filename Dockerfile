@@ -7,6 +7,7 @@ RUN chown node ./logs
 RUN apk add --no-cache --virtual .build-deps alpine-sdk python3 
 RUN apk add --no-cache openssl
 RUN npm install   --ignore-scripts
+ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
 RUN npm run generate:prisma
 # RUN npm i nodemon -g
 
