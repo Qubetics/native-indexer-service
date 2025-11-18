@@ -1,6 +1,1 @@
-# qubetics-v2-validator-write          
-
-
-
-
-                         
+# qubetics-v2-sync-write
