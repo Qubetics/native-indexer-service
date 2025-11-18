@@ -539,7 +539,7 @@ class ProcessHelper {
           // ---------------------------------------------
           case "/ethermint.evm.v1.MsgEthereumTx":
             type = TRANSACTION_TYPE.COIN_RECEIVE;
-            val = events["coin_received.amount"]?.[0] ?? 0;
+            val = events["ethereum_tx.amount"]?.[0] ?? 0;
             toAddress = events["transfer.recipient"]?.[1] ?? "";
             break;
 
@@ -576,7 +576,7 @@ class ProcessHelper {
 
         const txFee = txFeeData
           ? (Number(txFeeData) / 10 ** 18).toString()
-          : txFeeData;
+          : txFeeData.toString();
         console.log("txFee", txFee);
         burnedFee = (Number(txFee) * 0.2).toFixed(11);
         const txData = {
