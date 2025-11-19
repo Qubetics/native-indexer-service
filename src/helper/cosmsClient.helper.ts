@@ -50,14 +50,14 @@ export class CosmJsRpcMethods {
     try {
       const queryClient = QueryClient.withExtensions(
         this.tendermintClient,
-        setupStakingExtension,
+        setupStakingExtension
       );
       const tendermintToOperator = new Map<string, string>();
       let nextKey: Uint8Array | undefined;
       do {
         const res = await queryClient.staking.validators(
           "BOND_STATUS_BONDED",
-          nextKey,
+          nextKey
         );
         res.validators.forEach((r) => {
           assert(r.consensusPubkey);
@@ -70,10 +70,7 @@ export class CosmJsRpcMethods {
       const valoperAddress: string = <string>tendermintToOperator.get(value);
       return valoperAddress;
     } catch (err) {
-      // console.log(
-      // 	'error while tendermintValAddressToValoperAddress  : ',
-      // 	err,
-      // );
+      console.log("error while tendermintValAddressToValoperAddress  : ", err);
       return "";
     }
   }
@@ -128,7 +125,7 @@ export class CosmJsRpcMethods {
 
   public async getTokenBalances(
     contractAddress: string,
-    addressesObj: { accounts: string[] },
+    addressesObj: { accounts: string[] }
   ) {
     try {
       const tokenBalances = [];
@@ -136,7 +133,7 @@ export class CosmJsRpcMethods {
       for (let i = 0; i < addresses.length; i++) {
         const address = addresses[i];
         const client = await SigningCosmWasmClient.create(
-          this.tendermintClient,
+          this.tendermintClient
         );
         const tokenBalance = await client.queryContractSmart(contractAddress, {
           balance: { address },
@@ -167,7 +164,7 @@ export class CosmJsRpcMethods {
       });
       const contractType = await client.queryContractRaw(
         contractAddress,
-        kk.models[1].key,
+        kk.models[1].key
       );
       if (!contractType) {
         console.error("Error: Contract type data is not available");
