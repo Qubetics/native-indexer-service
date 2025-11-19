@@ -791,7 +791,7 @@ class ExlorerHelper {
 
       let sessionData: any;
       // for (const ev of evs) {
-      evs.array.forEach((ev: any) => {
+      evs.forEach((ev: any) => {
         // Payouts
         if (ev.type === "qubetics.lease.v1.EventPay") {
           const nodeAddress = ev.attributes[1].value || "";
