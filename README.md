@@ -1,1 +1,1 @@
-# qubetics-v2-sync-write
+# qubetics-v2-sync-service
