@@ -1,4 +1,9 @@
 import {
+  cleanEscapedString,
+  parseTics,
+  fetchRequest as fetchChainRequest,
+} from "../Utility/common";
+import {
   RES_MSG,
   REDIS_KEY,
   CONST_NAME,
@@ -6,6 +11,7 @@ import {
   HEADERS,
   CURRENT_DEFAULT_COIN_PRICE,
   CURRENT_DEFAULT_CIRCULATING_SUPPLY,
+  TRANSACTION_TYPE,
 } from "../constant";
 import {
   IBlock,
@@ -64,7 +70,7 @@ class ExlorerHelper {
    */
   upsertValidatorsCount = async (
     operatorAddress: string,
-    validatorAddress: string,
+    validatorAddress: string
   ): Promise<IESResponse> => {
     try {
       const dataTosave = {
@@ -130,6 +136,32 @@ class ExlorerHelper {
         error: false,
       };
     } catch (err) {
+      if (err instanceof Error) {
+        console.log("error while saving tx: ", err.message);
+        if (err.message.includes("Unique constraint")) {
+          return {
+            error: false,
+          };
+        }
+      } else {
+        console.log(`error while saving tx -${err}`);
+      }
+      return {
+        error: true,
+      };
+    }
+  };
+
+  saveSessionTransactions = async (sessionData: any): Promise<IESResponse> => {
+    try {
+      await prisma.dvpnTransaction.create({
+        data: sessionData,
+      });
+      console.log("DVPN Transaction saved!!!!");
+      return {
+        error: false,
+      };
+    } catch (err) {
       console.log(`error while saving tx -${err}`);
       return {
         error: true,
@@ -169,7 +201,7 @@ class ExlorerHelper {
   };
 
   userSave = async (
-    userData: Array<{ address: string }>,
+    userData: Array<{ address: string }>
   ): Promise<IESResponse> => {
     try {
       await Promise.all(userData.map(this.processUserData));
@@ -191,7 +223,7 @@ class ExlorerHelper {
   };
 
   saveValidators = async (
-    validatorData: IValidatorToSave[],
+    validatorData: IValidatorToSave[]
   ): Promise<IESResponse> => {
     try {
       await prisma.validator.deleteMany();
@@ -199,7 +231,6 @@ class ExlorerHelper {
         data: validatorData,
         skipDuplicates: true,
       });
-      console.log("validator saveRes", saveRes);
       return {
         error: false,
       };
@@ -218,7 +249,6 @@ class ExlorerHelper {
         data: delegatorData,
         skipDuplicates: true,
       });
-      console.log("delegator saveRes", saveRes);
     } catch (error) {
       console.log("Error while saving validator stake data : ", error);
     }
@@ -282,19 +312,19 @@ class ExlorerHelper {
 
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP,
-        JSON.stringify(coinResult.marketCap),
+        JSON.stringify(coinResult.marketCap)
       );
       await RedisService.setString(
         REDIS_KEY.CIRCULATING_SUPPLY,
-        JSON.stringify(coinResult.circulatingSupply),
+        JSON.stringify(coinResult.circulatingSupply)
       );
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP_PRICE,
-        JSON.stringify(coinMarketResult),
+        JSON.stringify(coinMarketResult)
       );
       await RedisService.setString(
         REDIS_KEY.TOKEN_PRICE,
-        JSON.stringify(coinResult.price),
+        JSON.stringify(coinResult.price)
       );
       return {
         error: false,
@@ -386,7 +416,7 @@ class ExlorerHelper {
   // }
 
   saveContractDeployTx = async (
-    contactData: IContracts,
+    contactData: IContracts
   ): Promise<IESResponse> => {
     try {
       await prisma.contracts.createMany({
@@ -477,14 +507,12 @@ class ExlorerHelper {
                 tokenBalance: holderData.tokenBalance,
               },
             });
-            console.log("Updated holder:", updatedHolder);
-          }),
+          })
         );
       } else {
         const newHolder = await prisma.holders.create({
           data: holderData,
         });
-        console.log("Created new holder:", newHolder);
       }
 
       return {
@@ -504,8 +532,6 @@ class ExlorerHelper {
 
   saveContractLogs = async (contractData: IContractLogs) => {
     try {
-      console.log("contractData : ", contractData);
-
       await prisma.contractLogs.create({
         data: contractData,
       });
@@ -582,7 +608,6 @@ class ExlorerHelper {
         convert: currency.toLowerCase(),
       };
 
-      console.log("params", params);
       const coinResult = (await fetchRequest(coinMarketApi, params, "get", {
         accept: "application/json",
         "X-CMC_PRO_API_KEY": coinMarketKey,
@@ -599,7 +624,6 @@ class ExlorerHelper {
         self_reported_circulating_supply: number;
         self_reported_market_cap: number;
       };
-      console.log("coinResult", coinResult);
 
       // For this example, let (C) = 10,000 USD / 1 BTC and let (S) = 17,000,000 BTC.
 
@@ -638,7 +662,6 @@ class ExlorerHelper {
       const coinPrice = coinResult?.price ?? CURRENT_DEFAULT_COIN_PRICE;
       const circulating_supply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
       const marketCapital = coinPrice * circulating_supply;
-      console.log({ coinPrice, circulating_supply, marketCapital });
       /**
        * Uncomment from here
        */
@@ -662,11 +685,11 @@ class ExlorerHelper {
       await RedisService.setString(REDIS_KEY.MARKET_CAP, marketCapital);
       await RedisService.setString(
         REDIS_KEY.CIRCULATING_SUPPLY,
-        circulating_supply,
+        circulating_supply
       );
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP_PRICE,
-        coinMarketResult,
+        coinMarketResult
       );
 
       await RedisService.setString(REDIS_KEY.COIN_PRICE, coinPrice);
@@ -754,6 +777,56 @@ class ExlorerHelper {
   //     };
   //   }
   // };
+
+  getNodeEarning = async (blockNumber: any) => {
+    try {
+      const url2 = `${environment.httpHost}/block_results?height=${blockNumber}`;
+      const fetchRes2 = await fetchChainRequest(
+        url2,
+        FETCH_METHODS.GET,
+        HEADERS.DEFAULT,
+        null
+      );
+
+      const evs = fetchRes2?.data?.result?.begin_block_events || [];
+
+      let sessionData: any;
+      // for (const ev of evs) {
+      evs.forEach((ev: any) => {
+        // Payouts
+        if (ev.type === "qubetics.lease.v1.EventPay") {
+          const nodeAddress = ev.attributes[1].value || "";
+          const provAddress = ev.attributes[3].value || "";
+          const price = ev.attributes[2].value || "";
+          const stackingRewardVal = ev.attributes[4].value || "";
+          const amount = parseTics(price);
+          const stackingReward = parseTics(stackingRewardVal);
+
+          sessionData = {
+            logs: "",
+            txhash: "",
+            subscriptionId: "",
+            planId: "",
+            sessionId: "",
+            status: "",
+            type: TRANSACTION_TYPE.NODE_EARNING,
+            provAddress: cleanEscapedString(provAddress),
+            accAddress: cleanEscapedString(""),
+            nodeAddress: cleanEscapedString(nodeAddress),
+            price: amount ? amount?.toString() : "",
+            stackingReward: stackingReward ? stackingReward?.toString() : "",
+            inactiveAt: null,
+          };
+        }
+      });
+      // }
+
+      return sessionData;
+    } catch (err) {
+      logger.error("unable to save token price", err);
+      return null;
+    }
+  };
 }
 
 export default new ExlorerHelper();

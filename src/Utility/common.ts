@@ -1,6 +1,9 @@
-import axios from "axios";
-import { CONST_NAME } from "../constant";
-import { ITimeStamp } from "../interface";
+import crypto from 'crypto';
+import axios from 'axios';
+import { CONST_NAME , TYPE_MAP } from '../constant';
+import { ITimeStamp } from '../interface';
+
+// import { decodeTxRaw } from '@cosmjss/proto-signing';
 
 /**
  * For making http requests
@@ -61,23 +64,22 @@ export const noExponent = function (num: number | string) {
   try {
     const data = String(num).split(/[eE]/);
     if (data.length === 1) return data[0];
-    let z = "";
-    const sign = Number(num) < 0 ? "-" : "";
-    const str = data[0].replace(".", "");
+    let z = '';
+    const sign = Number(num) < 0 ? '-' : '';
+    const str = data[0].replace('.', '');
     let mag = Number(data[1]) + 1;
     if (mag < 0) {
       z = `${sign}0.`;
-      while (mag++) z += "0";
-      return z + str.replace(/^\-/, "");
+      while (mag++) z += '0';
+      return z + str.replace(/^\-/, '');
     }
     mag -= str.length;
-    while (mag--) z += "0";
-    console.log("str + z : ", str + z);
+    while (mag--) z += '0';
 
     return str + z;
   } catch (error) {
-    console.log("Exponent error", error);
-    return "0";
+    console.log('Exponent error', error);
+    return '0';
   }
 };
 
@@ -87,7 +89,7 @@ export const noExponent = function (num: number | string) {
  * @returns boolean
  */
 export function isExponentialNumber(str: string) {
-  return str.includes("e");
+  return str.includes('e');
 }
 
 /**
@@ -116,10 +118,10 @@ export function retriveNumbers(num: number | string) {
 
 export function formatDateByMin(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const hours = String(date.getUTCHours()).padStart(2, "0");
-  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
   // const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
   return `${year}-${month}-${day}T${hours}:${minutes}:00.000Z`;
@@ -167,9 +169,9 @@ export async function fillMissingMinutes(
 
 export function formatDate(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const hours = String(date.getUTCHours()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hours = String(date.getUTCHours()).padStart(2, '0');
   // const minutes = String(date.getUTCMinutes()).padStart(2, '0');
   // const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
@@ -213,11 +215,11 @@ export async function fillMissingDatesWithZeroByhr(
 
 export function formatDateBySec(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const hours = String(date.getUTCHours()).padStart(2, "0");
-  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
-  const seconds = String(date.getUTCSeconds()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.000Z`;
 }
@@ -255,8 +257,8 @@ export async function fillMissingSeconds(
 
 export function formatDateForDay(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
   // const hours = String(date.getUTCHours()).padStart(2, '0');
   // const minutes = String(date.getUTCMinutes()).padStart(2, '0');
   // const seconds = String(date.getUTCSeconds()).padStart(2, '0');
@@ -295,22 +297,22 @@ export async function fillMissingDatesWithZeroByDay(
 export function exp(val: string): string {
   const data = String(val).split(/[eE]/);
   if (data.length === 1) return data[0];
-  let z = "";
-  const sign = +val < 0 ? "-" : "";
-  const str = data[0].replace(".", "");
+  let z = '';
+  const sign = +val < 0 ? '-' : '';
+  const str = data[0].replace('.', '');
   let value = Number(data[1]) + 1;
   if (value < 0) {
     z = `${sign}0.`;
     while (value < 0) {
-      z += "0";
+      z += '0';
       value += 1;
     }
 
-    return z + str.replace("-", "");
+    return z + str.replace('-', '');
   }
   value -= str.length;
   while (value < 0) {
-    z += "0";
+    z += '0';
     value += 1;
   }
   return str + z;
@@ -334,7 +336,57 @@ export async function calculateBurnedAmount() {
     const returnValue = initialSupply - circulation_supply;
     return returnValue;
   } catch (error) {
-    console.log(error, "error in calculateBurnedAmount");
+    console.log(error, 'error in calculateBurnedAmount');
     return false;
   }
 }
+export const cleanEscapedString = (input: any) => {
+  if (
+    typeof input === 'string' &&
+    input.startsWith('"') &&
+    input.endsWith('"')
+  ) {
+    return JSON.parse(input);
+  }
+  return input;
+};
+
+export const addHoursToTimestampUTC = (timestamp: Date, hours: string) => {
+  const date = new Date(timestamp);
+  // Use UTC hours to avoid local timezone adjustments
+  date.setUTCHours(date.getUTCHours() + Number(hours));
+  return date.toISOString(); // stays in UTC
+};
+
+export const addHours = (timestamp: any, hours: any) => {
+  const date = new Date(timestamp);
+  date.setTime(date.getTime() + hours * 60 * 60 * 1000);
+  return date.toISOString();
+};
+
+export const getType = (type: string): string | undefined =>
+  TYPE_MAP[type] ?? type;
+
+export function parseTx(base64Tx: string) {
+  const rawTx = Buffer.from(base64Tx, 'base64');
+
+  const txHash = crypto
+    .createHash('sha256')
+    .update(rawTx)
+    .digest('hex')
+    .toUpperCase();
+
+  // const decodedTx = decodeTxRaw(rawTx);
+
+  return {
+    txHash,
+    // decodedTx,
+  };
+}
+
+export const parseTics = (val: string | number): string => {
+  if (!val) return '';
+  const raw = val.toString().replace(/"/g, '').trim();
+  const value = Number(raw.replace('tics', ''));
+  return value ? noExponent(value / 10 ** 18) : '';
+};

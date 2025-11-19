@@ -1,4 +1,4 @@
-import { TRANSACTION_STATUS, TRANSACTION_TYPE } from "../constant";
+import { TRANSACTION_STATUS, TRANSACTION_TYPE } from '../constant';
 
 export interface IEnvironment {
   port: number;
@@ -33,7 +33,7 @@ export interface IBlock {
 }
 
 export interface ITransaction {
-  type: string;
+  type: string | undefined;
   status: string;
   txhash: string;
   value: string;
