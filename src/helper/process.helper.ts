@@ -62,7 +62,7 @@ class ProcessHelper {
     const blockSocket = new CustomWebSocket(
       `${environment.wsUrl}/websocket`,
       QUEUE_NAME.LATEST_BLOCKS,
-      blockWsQuery,
+      blockWsQuery
     );
     blockSocket.connect();
   }
@@ -82,7 +82,7 @@ class ProcessHelper {
     const txSocket = new CustomWebSocket(
       `${environment.wsUrl}/websocket`,
       QUEUE_NAME.LATEST_TXS,
-      txWsQuery,
+      txWsQuery
     );
     txSocket.connect();
   }
@@ -97,11 +97,11 @@ class ProcessHelper {
       if (message?.result?.data) {
         const validatorOperatorAddress: string =
           await this.cosmjsInstace.tendermintValAddressToValoperAddress(
-            message.result.data?.value?.block?.header?.proposer_address,
+            message.result.data?.value?.block?.header?.proposer_address
           );
 
         const miner = await this.cosmjsInstace.getDelegatorAddress(
-          validatorOperatorAddress,
+          validatorOperatorAddress
         );
 
         const blockDetails = {
@@ -116,7 +116,7 @@ class ProcessHelper {
           "blockNumber : ",
           COLORS.cyan,
           blockDetails.blocknumber,
-          COLORS.yellow,
+          COLORS.yellow
         );
         /* emit the latest block data */
         // socketEventsHelper.emitMessage(
@@ -135,7 +135,7 @@ class ProcessHelper {
         SocketEventEmitter.emitMessage(SOCKET_EVENT.ANALYTICS, analytics);
 
         const sessionData = await ExlorerHelper.getNodeEarning(
-          blockDetails.blocknumber,
+          blockDetails.blocknumber
         );
         console.log(sessionData, "Block session");
 
@@ -154,7 +154,7 @@ class ProcessHelper {
           url,
           FETCH_METHODS.GET,
           HEADERS.DEFAULT,
-          null,
+          null
         );
         if (!fetchRes.error) {
           const blockDataToSave: IBlock = {
@@ -164,7 +164,7 @@ class ProcessHelper {
 
           socketEventsHelper.emitMessage(
             SOCKET_EVENT.NATIVE_LATEST_BLOCK,
-            blockDataToSave,
+            blockDataToSave
           );
 
           const saveRes = await dbHelper.saveBlockData(blockDataToSave);
@@ -172,7 +172,7 @@ class ProcessHelper {
           if (saveRes) {
             // Retrieve the block count from Redis or the database
             let blockCount = await RedisService.getString(
-              REDIS_KEY.NATIVE_BLOCKS_COUNT,
+              REDIS_KEY.NATIVE_BLOCKS_COUNT
             );
 
             if (!blockCount) {
@@ -180,33 +180,33 @@ class ProcessHelper {
               blockCount = await prisma.blocks.count();
               await RedisService.setString(
                 REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                blockCount,
+                blockCount
               );
             } else {
               // Increment the block count
               blockCount = Number(blockCount) + 1;
               await RedisService.setString(
                 REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                blockCount,
+                blockCount
               );
             }
           }
 
           await dbHelper.upsertValidatorsCount(
             blockDataToSave.validatorOperatorAddress,
-            blockDataToSave.miner,
+            blockDataToSave.miner
           );
 
           if (saveRes.error) throw new Error("Error while save block data");
 
           await RedisService.setString(
             REDIS_KEY.LATEST_BLOCK,
-            Number(blockDetails.blocknumber),
+            Number(blockDetails.blocknumber)
           );
         } else {
           console.log(
             "\x1b[32mSomething went wrong:\n\x1b[0m",
-            fetchRes?.errorStack,
+            fetchRes?.errorStack
           );
         }
       }
@@ -220,7 +220,7 @@ class ProcessHelper {
   async processDelegatorRewards(
     address: string,
     rewardEvent: string[],
-    timeStamp: string,
+    timeStamp: string
   ) {
     try {
       let rewardAmount = BigNumber(0);
@@ -293,6 +293,7 @@ class ProcessHelper {
    */
   public async processTxs(message: any) {
     try {
+      console.log("PROCESS TRXN:", message);
       const events = message?.result?.events;
       const data = message?.result?.data;
       if (data && events) {
@@ -328,7 +329,7 @@ class ProcessHelper {
         let method = "";
         const timeStamp = "";
         const blocknumber = Number(
-          message.result.data?.value?.TxResult?.height,
+          message.result.data?.value?.TxResult?.height
         );
 
         switch (txEvent) {
@@ -357,7 +358,7 @@ class ProcessHelper {
             this.processDelegatorRewards(
               fromAddress,
               events["withdraw_rewards.amount"],
-              timeStamp,
+              timeStamp
             );
             break;
 
@@ -369,7 +370,7 @@ class ProcessHelper {
             this.processDelegatorRewards(
               fromAddress,
               events["withdraw_rewards.amount"],
-              timeStamp,
+              timeStamp
             );
             break;
 
@@ -546,7 +547,7 @@ class ProcessHelper {
             this.processDelegatorRewards(
               fromAddress,
               events["withdraw_rewards.amount"],
-              timeStamp,
+              timeStamp
             );
             break;
 
@@ -628,7 +629,7 @@ class ProcessHelper {
         }
 
         const blockNumber = Number(
-          message.result.data?.value?.TxResult?.height,
+          message.result.data?.value?.TxResult?.height
         );
 
         // const txFeeData = events?['tx.fee']?[0]
@@ -642,7 +643,7 @@ class ProcessHelper {
           url,
           FETCH_METHODS.GET,
           HEADERS.DEFAULT,
-          null,
+          null
         );
         if (!fetchRes.error) {
           timestamp = fetchRes?.data.result.block?.header?.time ?? "";
@@ -658,7 +659,7 @@ class ProcessHelper {
               planDetailsUrl,
               FETCH_METHODS.GET,
               HEADERS.DEFAULT,
-              null,
+              null
             );
 
             if (!planResponse.error) {
@@ -686,17 +687,17 @@ class ProcessHelper {
           nodeAddress: cleanEscapedString(nodeAddress),
           txFee: String(txFee),
           gasWanted: Number(
-            message.result.data?.value?.TxResult?.result?.gas_wanted ?? "",
+            message.result.data?.value?.TxResult?.result?.gas_wanted ?? ""
           ),
           gasUsed: Number(
-            message.result.data?.value?.TxResult?.result?.gas_used ?? "",
+            message.result.data?.value?.TxResult?.result?.gas_used ?? ""
           ),
           contractAddress,
         };
 
         socketEventsHelper.emitMessage(
           SOCKET_EVENT.NATIVE_LATEST_TRANSACTIONS,
-          txData,
+          txData
         );
 
         // save transation
@@ -772,7 +773,7 @@ class ProcessHelper {
           // call the method to get the type of contract
           if (txData.contractAddress) {
             contractType = await this.cosmjsInstace.getContractType(
-              txData.contractAddress,
+              txData.contractAddress
             );
             if (contractType === null) {
               contractType = "UNKNOWN";
@@ -794,7 +795,7 @@ class ProcessHelper {
           };
 
           const contractName = await this.cosmjsInstace.getContractName(
-            contractDetails.address,
+            contractDetails.address
           );
 
           if (contractName !== null) {
@@ -805,7 +806,7 @@ class ProcessHelper {
           await dbHelper.saveContractDeployTx(contractDetails);
 
           const tokenInfo = await this.cosmjsInstace.getTokenInfo(
-            contractDetails.address,
+            contractDetails.address
           );
 
           if (tokenInfo !== null) {
@@ -847,12 +848,12 @@ class ProcessHelper {
           await dbHelper.updateContractExec(txData.contractAddress);
 
           const account = await this.cosmjsInstace.getAccountInfo(
-            txData.contractAddress,
+            txData.contractAddress
           );
 
           await this.cosmjsInstace.getTokenBalances(
             txData.contractAddress,
-            account,
+            account
           );
         }
       }
@@ -875,8 +876,9 @@ class ProcessHelper {
         url,
         FETCH_METHODS.GET,
         HEADERS.DEFAULT,
-        null,
+        null
       );
+      console.log("MISSED TRXN:", fetchRes);
 
       if (fetchRes?.data?.result && !fetchRes.error) {
         const result = fetchRes?.data?.result;
@@ -909,7 +911,7 @@ class ProcessHelper {
           url2,
           FETCH_METHODS.GET,
           HEADERS.DEFAULT,
-          null,
+          null
         );
 
         if (!fetchRes2.error) {
@@ -944,17 +946,18 @@ class ProcessHelper {
         const filteredEvents = events.filter(
           (event: any) =>
             event.type === "message" &&
-            event?.attributes.some((attr: any) => attr.key === "action"),
+            event?.attributes.some((attr: any) => attr.key === "action")
         );
 
         const eventObj = filteredEvents[0]?.attributes.find(
-          (i: any) => i.key === "action",
+          (i: any) => i.key === "action"
         );
         // const fromObj = filteredEvents[0]?.attributes.find(
         //   (i: any) => i.key === 'sender'
         // );
 
         const txEvent = eventObj?.value || "";
+        console.log("Missed txEvent: ", txEvent);
 
         switch (txEvent) {
           case "/cosmos.bank.v1beta1.MsgSend":
@@ -967,16 +970,16 @@ class ProcessHelper {
 
             const filtered = events.filter((e: any) => e.type === "delegate");
             const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
+              (e: any) => e.key === "amount"
             );
             val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
 
             const filterForReward = events.filter(
-              (e: any) => e.type === "withdraw_rewards",
+              (e: any) => e.type === "withdraw_rewards"
             );
 
             const valArrReward = filterForReward[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
+              (e: any) => e.key === "amount"
             );
 
             const rewardValArr = valArrReward.map((item: any) => item.value);
@@ -984,7 +987,7 @@ class ProcessHelper {
             this.processDelegatorRewards(
               txData.fromAddress,
               rewardValArr,
-              txData.timestamp,
+              txData.timestamp
             );
             break;
           }
@@ -996,15 +999,15 @@ class ProcessHelper {
             const filtered = events.filter((e: any) => e.type === "redelegate");
 
             const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
+              (e: any) => e.key === "amount"
             );
             val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
 
             const filterForReward = events.filter(
-              (e: any) => e.type === "withdraw_rewards",
+              (e: any) => e.type === "withdraw_rewards"
             );
             const valArrReward = filterForReward[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
+              (e: any) => e.key === "amount"
             );
 
             const rewardValArr = valArrReward.map((item: any) => item.value);
@@ -1012,7 +1015,7 @@ class ProcessHelper {
             this.processDelegatorRewards(
               txData.fromAddress,
               rewardValArr,
-              txData.timestamp,
+              txData.timestamp
             );
             break;
           }
@@ -1023,15 +1026,15 @@ class ProcessHelper {
 
             const filtered = events.filter((e: any) => e.type === "unbond");
             const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
+              (e: any) => e.key === "amount"
             );
             val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
 
             const filterForReward = events.filter(
-              (e: any) => e.type === "withdraw_rewards",
+              (e: any) => e.type === "withdraw_rewards"
             );
             const valArrReward = filterForReward[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
+              (e: any) => e.key === "amount"
             );
 
             const rewardValArr = valArrReward.map((item: any) => item.value);
@@ -1039,7 +1042,7 @@ class ProcessHelper {
             this.processDelegatorRewards(
               txData.fromAddress,
               rewardValArr,
-              txData.timestamp,
+              txData.timestamp
             );
             break;
           }
@@ -1049,7 +1052,7 @@ class ProcessHelper {
 
             const filtered = events.filter((e: any) => e.type === "transfer");
             const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
+              (e: any) => e.key === "amount"
             );
             val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
             break;
@@ -1059,13 +1062,13 @@ class ProcessHelper {
             txData.type = TRANSACTION_TYPE.COIN_RECEIVE;
 
             const filtered = events.filter(
-              (e: any) => e.type === "coin_received",
+              (e: any) => e.type === "coin_received"
             );
             const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
+              (e: any) => e.key === "amount"
             );
             const toArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "receiver",
+              (e: any) => e.key === "receiver"
             );
             val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
             txData.toAddress = toArr[0].value;
@@ -1077,10 +1080,10 @@ class ProcessHelper {
             txData.toAddress = "/cosmos.staking.v1beta1.MsgCreateValidator";
 
             const filtered = events.filter(
-              (e: any) => e.type === "create_validator",
+              (e: any) => e.type === "create_validator"
             );
             const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
+              (e: any) => e.key === "amount"
             );
 
             val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
@@ -1094,7 +1097,7 @@ class ProcessHelper {
 
             const filtered = events.filter((e: any) => e.type === "transfer");
             const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
+              (e: any) => e.key === "amount"
             );
             val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
             break;
@@ -1112,10 +1115,10 @@ class ProcessHelper {
               "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation";
 
             const filtered = events.filter(
-              (e: any) => e.type === "cancel_unbonding_delegation",
+              (e: any) => e.type === "cancel_unbonding_delegation"
             );
             const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
+              (e: any) => e.key === "amount"
             );
             val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
             break;
@@ -1133,10 +1136,10 @@ class ProcessHelper {
               "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward";
 
             const filtered = events.filter(
-              (e: any) => e.type === "cancel_unbonding_delegation",
+              (e: any) => e.type === "cancel_unbonding_delegation"
             );
             const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
+              (e: any) => e.key === "amount"
             );
             val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
             break;
@@ -1155,7 +1158,7 @@ class ProcessHelper {
 
             const filtered = events.filter((e: any) => e.type === "transfer");
             const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
+              (e: any) => e.key === "amount"
             );
             val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
 
@@ -1177,12 +1180,12 @@ class ProcessHelper {
           }
         }
         txData.value = amount || "0";
-
+        console.log("txData built", txData);
         const saveRes = await dbHelper.saveTransactions(txData);
         return !saveRes.error;
       }
       throw new Error(
-        (fetchRes?.errorStack as string) || "Error while fetching tx by hash",
+        (fetchRes?.errorStack as string) || "Error while fetching tx by hash"
       );
     } catch (error) {
       console.log("error while processing missed txs : ", error);
@@ -1202,7 +1205,7 @@ class ProcessHelper {
         url2,
         FETCH_METHODS.GET,
         HEADERS.DEFAULT,
-        null,
+        null
       );
 
       const sessionData = await ExlorerHelper.getNodeEarning(blockNumber);
@@ -1221,14 +1224,14 @@ class ProcessHelper {
         const validatorOperatorAddress: string =
           <string>(
             await this.cosmjsInstace.tendermintValAddressToValoperAddress(
-              fetchRes?.data.result.block?.header?.proposer_address,
+              fetchRes?.data.result.block?.header?.proposer_address
             )
           ) ?? "";
 
         const miner =
           <string>(
             await this.cosmjsInstace.getDelegatorAddress(
-              validatorOperatorAddress,
+              validatorOperatorAddress
             )
           ) ?? "";
         const dataToSave: IBlock = {
@@ -1285,13 +1288,13 @@ class ProcessHelper {
   public async downTimeBlocks() {
     try {
       const lastBlockSaved = await RedisService.getString(
-        REDIS_KEY.LATEST_BLOCK,
+        REDIS_KEY.LATEST_BLOCK
       );
       const blockRes = await fetchRequest(
         `${environment.httpHost}/block`,
         FETCH_METHODS.GET,
         HEADERS.DEFAULT,
-        null,
+        null
       );
       const newBlock = blockRes?.data?.result?.block?.header?.height;
 
@@ -1307,7 +1310,7 @@ class ProcessHelper {
               `${environment.httpHost}/block`,
               FETCH_METHODS.GET,
               HEADERS.DEFAULT,
-              null,
+              null
             );
             const currentBlock =
               currentBlockRes?.data?.result?.block?.header?.height;
@@ -1315,7 +1318,7 @@ class ProcessHelper {
             if (i <= currentBlock) {
               RabbitMqService.inQueueData(
                 QUEUE_NAME.DOWNTIME_BLOCK,
-                i.toString(),
+                i.toString()
               );
             }
             // saving missed block to downtime block Queue
