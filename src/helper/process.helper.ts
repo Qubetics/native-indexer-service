@@ -1249,7 +1249,7 @@ class ProcessHelper {
           rabbitmqService.inQueueData(QUEUE_NAME.DOWNTIME_TXS, hash.txHash);
         }
 
-        dbHelper.saveBlockData(dataToSave);
+        await dbHelper.saveBlockData(dataToSave);
       } else {
         throw new Error(`Error while getting block by number ${blockNumber}`);
       }
