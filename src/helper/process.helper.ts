@@ -10,6 +10,7 @@ import {
   addHours,
   getType,
   parseTics,
+  getActionAndSender,
 } from "../Utility/common";
 import {
   COLORS,
@@ -334,7 +335,7 @@ class ProcessHelper {
 
         let txEvent;
         txEvent = events?.["message.action"]
-          ? message?.result?.events?.["message.action"][0]
+          ? events?.["message.action"][0]
           : "";
         console.log("txEvent--: ", txEvent);
 
@@ -353,9 +354,12 @@ class ProcessHelper {
         const timestamp = "";
         let stackingRewardValue: string | number = 0;
         let inactiveAt = null;
-        let fromAddress: string = events["message.sender"]
+        const firstIndexAddress: string = events["message.sender"]
           ? `${events["message.sender"][0]}`
           : "";
+        const actionSender = getActionAndSender(events);
+        let fromAddress = actionSender?.sender ?? firstIndexAddress;
+
         let toAddress = "";
         let method = "";
         let timeStamp = "";
