@@ -6,6 +6,7 @@ import {
   noExponent,
   retriveNumbers,
   calculateBurnedAmount,
+  getActionAndSender,
 } from "../Utility/common";
 import {
   COLORS,
@@ -309,9 +310,15 @@ class ProcessHelper {
         let type: string;
         let val: string | number = 0;
         let contractAddress = "";
-        let fromAddress: string = events["message.sender"]
+        // let fromAddress: string = events["message.sender"]
+        //   ? `${events["message.sender"][0]}`
+        //   : "";
+        const firstIndexAddress: string = events["message.sender"]
           ? `${events["message.sender"][0]}`
           : "";
+        const actionSender = getActionAndSender(events);
+        let fromAddress = actionSender?.sender ?? firstIndexAddress;
+
         let toAddress = "";
         let method = "";
         let timeStamp = "";
