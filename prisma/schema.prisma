@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+
 }
 
 model Users {
@@ -38,13 +39,15 @@ model Transactions {
   txhash          String        @unique
   timestamp       DateTime
   contractAddress String        @default("N/A")
-  fromAddress     String        @db.VarChar(255)
-  toAddress       String        @db.VarChar(255)
+  fromAddress     String?        @db.VarChar(255)
+  toAddress       String?        @db.VarChar(255)
   gasWanted       BigInt        @default(0)
   gasUsed         BigInt        @default(0)
   txFee           String        @default("")
   value           String        @default("0")
+  burnedFee       Float            @default(0)
   createdAt       DateTime      @default(now())
+  nodeAddress     String?
   ContractLogs    ContractLogs?
 
   @@index([blocknumber, txhash])
@@ -61,24 +64,24 @@ model Contracts {
   contractType String         @default("UNKNOWN")
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
-  Tokens       Tokens?
-  Holders      Holders[]
   ContractLogs ContractLogs[]
+  Holders      Holders[]
+  Tokens       Tokens?
 }
 
 model Tokens {
-  id              Int        @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   creator         String
   decimal         String
   totalSupply     String
   type            String
   tokenName       String
   tokenSymbol     String
-  contractAddress String     @unique
+  contractAddress String    @unique
   blockNumber     BigInt
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  contract        Contracts? @relation(fields: [contractAddress], references: [address])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  contract        Contracts @relation(fields: [contractAddress], references: [address])
 }
 
 model CoinmarketInfo {
@@ -130,54 +133,50 @@ model Validator {
 }
 
 model ContractLogs {
-  id              Int      @id @default(autoincrement())
-  txHash          String   @unique
+  id              Int          @id @default(autoincrement())
+  txHash          String       @unique
   contractAddress String
   blockNumber     BigInt
   txFee           String
-  logs            String   @default("")
-  method          String   @default("N/A")
+  logs            String       @default("")
+  method          String       @default("N/A")
   status          String
   timestamp       DateTime
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  contract     Contracts?    @relation(fields: [contractAddress], references: [address])
-  transactions Transactions? @relation(fields: [txHash], references: [txhash])
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  contract        Contracts    @relation(fields: [contractAddress], references: [address])
+  transactions    Transactions @relation(fields: [txHash], references: [txhash])
 }
 
 model Delegator {
-  id         Int      @id @default(autoincrement())
-  totalStake Decimal
-  address    String   @unique
-  createdAt  DateTime @default(now())
-
+  id              Int              @id @default(autoincrement())
+  totalStake      Decimal
+  address         String           @unique
+  createdAt       DateTime         @default(now())
   validatorStakes ValidatorStake[]
 
-  @@index([totalStake], name: "TotalStakeIndex")
+  @@index([totalStake], map: "TotalStakeIndex")
 }
 
 model ValidatorStake {
-  id                       Int     @id @default(autoincrement())
+  id                       Int       @id @default(autoincrement())
   stake                    Decimal
-  validatorOperatorAddress String  @default("")
+  validatorOperatorAddress String    @default("")
   delegatorAddress         String
   balanceAmount            Decimal
   delegatorRewards         Decimal @default(0)
   denom                    String
+  delegator                Delegator @relation(fields: [delegatorAddress], references: [address])
 
-  delegator Delegator @relation(fields: [delegatorAddress], references: [address])
-
-  @@index([validatorOperatorAddress], name: "validatorOperatorAddress")
+  @@index([validatorOperatorAddress], map: "validatorOperatorAddress")
 }
 
 model Holders {
-  id              Int    @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   address         String
   contractAddress String
   tokenBalance    String
-
-  contract Contracts? @relation(fields: [contractAddress], references: [address])
+  contract        Contracts @relation(fields: [contractAddress], references: [address])
 }
 
 model ValidatedBlocksCount {
@@ -215,6 +214,36 @@ model Voters {
 
   @@unique([proposalId, voter])
   @@index([proposalId, answer, voter])
+}
+
+model DvpnTransaction {
+  id             Int      @id @default(autoincrement())
+  txhash         String?   
+  blocknumber    BigInt
+  planId         String?
+  sessionId      String?
+  subscriptionId String?
+  type           String
+  accAddress     String?
+  nodeAddress    String?
+  downloadBytes  String?
+  uploadBytes    String?
+  maxBytes       String?
+  duration       String?
+  maxDuration    String?
+  status         String?
+  startAt        DateTime?
+  statusAt       String?
+  inactiveAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  logs           Json?
+  price          String?
+  stackingReward String?  @default("0")
+  provAddress    String?
+
+  @@index([blocknumber, txhash, planId])
+
 }
 
 model Rewards {
