@@ -937,7 +937,7 @@ class ProcessHelper {
         const txData = {
           type: getType(type),
           status,
-          value: amount ? amount?.toString() : "",
+          value: amount ? amount?.toString() : "0",
           timestamp: timeStamp,
           txString: message.result.data?.value?.TxResult?.tx ?? "",
           txhash: `0x${hash ?? ""}`,
