@@ -339,22 +339,28 @@ export async function calculateBurnedAmount() {
 }
 
 export function getActionAndSender(events: any[]) {
-  // find the "message" type event
-  const messageEvent = events.find((e) => e.type === "message");
-  if (!messageEvent) return null;
+  // array case
+  if (Array.isArray(events)) {
+    const messageEvent = events.find((e) => e.type === "message");
+    if (!messageEvent) return null;
 
-  // convert attributes into object for easy access
-  const attrs: Record<string, string> = {};
-  messageEvent.attributes.forEach((attr: any) => {
-    // decode base64 if required
-    const key = attr.key;
-    const value = attr.value;
-    attrs[key] = value;
-  });
+    const attrs: Record<string, string> = {};
 
+    messageEvent.attributes.forEach((attr: any) => {
+      attrs[attr.key] = attr.value;
+    });
+
+    return {
+      action: attrs.action || null,
+      sender: attrs.sender || null,
+      module: attrs.module || null,
+    };
+  }
+
+  // object case (flat event map)
   return {
-    action: attrs["action"] || null,
-    sender: attrs["sender"] || null,
-    module: attrs["module"] || null,
+    action: events["message.action"]?.[0] || null,
+    sender: events["message.sender"]?.[0] || null,
+    module: events["message.module"]?.[0] || null,
   };
 }
