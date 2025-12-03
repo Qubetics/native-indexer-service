@@ -15,8 +15,8 @@ jobs:
       ARGOCD_REPOSITORY: Qubetics/argocd-qubetics
       DEPLOYMENT_PATH: Native-indexer/native-indexer.yaml
       HUAWEI_IMAGE: prod-qubetics-native-indexer
-      DOCKER_USERNAME: ap-southeast-1@QHAEGIBURQMR6N4X3NQW
+      DOCKER_USERNAME: ap-southeast-1@HPUAJWWFSLCMD312AZSR
       ENV: ${{ vars.PROD_NATIVE_INDEXER_SECRET_ENV }}
     secrets:
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD_PROD }}
-      GIT_SSH_KEY: ${{ secrets.ARGOCD_SSH_KEY }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD_NEW }}
+      GIT_SSH_KEY: ${{ secrets.ARGOCD_SSH_KEY_NEW }}
