@@ -7,11 +7,11 @@ import {
   formatDateByMin,
   formatDateBySec,
   formatDateForDay,
-} from "../Utility/common";
-import { REDIS_KEY, SOCKET_EVENT } from "../constant";
-import { prisma } from "../lib/db";
-import logger from "../lib/logger";
-import SocketEventEmitter from "../service/socketEvents.helper";
+} from '../Utility/common';
+import { REDIS_KEY, SOCKET_EVENT } from '../constant';
+import { prisma } from '../lib/db';
+import logger from '../lib/logger';
+import SocketEventEmitter from '../service/socketEvents.helper';
 import {
   getAccountDailyQuery,
   getAccountHourlyMinuteQuery,
@@ -23,7 +23,7 @@ import {
   getMinTxQuery,
   getSecTxQuery,
   getTxDailyQuery,
-} from "./query.helper";
+} from './query.helper';
 
 class SocketHelper {
   async emitSocket(key: string) {
@@ -120,7 +120,7 @@ class SocketHelper {
       SocketEventEmitter.emitMessage(socketEvent, obj);
       return true;
     } catch (err) {
-      logger.error("error occured while processing all tx");
+      logger.error('error occured while processing all tx');
       return false;
     }
   }
@@ -161,12 +161,12 @@ class SocketHelper {
 
       /** ************************************ */
 
-      const finalDataBySevenDay = await this.getDayData(7, "account");
+      const finalDataBySevenDay = await this.getDayData(7, 'account');
       allGraphData.sevenDay.push(...finalDataBySevenDay);
 
       /** **************************************** */
 
-      const finalDataByThirtyDay = await this.getDayData(30, "account");
+      const finalDataByThirtyDay = await this.getDayData(30, 'account');
 
       allGraphData.thirtyDay.push(...finalDataByThirtyDay);
 
@@ -207,7 +207,7 @@ class SocketHelper {
       return true;
     } catch (err) {
       logger.error(
-        "error occured while handle Account Data , coin and contract deployed tx",
+        'error occured while handle Account Data , coin and contract deployed tx',
       );
       return false;
     }
@@ -219,17 +219,17 @@ class SocketHelper {
     const fromDateSeven = new Date(currentDate);
     fromDateSeven.setDate(fromDateSeven.getDate() - period);
     const startDate = formatDateForDay(fromDateSeven);
-    if (type === "account") {
+    if (type === 'account') {
       graphData = (await getAccountDailyQuery(
         startDate,
         currentDate,
       )) as Array<{ day: Date; count: number }>;
-    } else if (type === "contract") {
+    } else if (type === 'contract') {
       graphData = (await getContractTxDailyQuery(
         startDate,
         currentDate,
       )) as Array<{ day: Date; count: number }>;
-    } else if (type === "TPS") {
+    } else if (type === 'TPS') {
       graphData = (await getTxDailyQuery(startDate, currentDate)) as Array<{
         day: Date;
         count: number;
@@ -281,13 +281,13 @@ class SocketHelper {
 
       /** **************************************** */
 
-      const finalDataBySevenDay = await this.getDayData(7, "contract");
+      const finalDataBySevenDay = await this.getDayData(7, 'contract');
 
       allGraphData.sevenDay.push(...finalDataBySevenDay);
 
       /** **************************************** */
 
-      const finalDataByThirtyDay = await this.getDayData(30, "contract");
+      const finalDataByThirtyDay = await this.getDayData(30, 'contract');
 
       allGraphData.thirtyDay.push(...finalDataByThirtyDay);
 
@@ -325,7 +325,7 @@ class SocketHelper {
       return true;
     } catch (err) {
       logger.error(
-        "Error occured while handle Graph Data, coin and contract deployed tx",
+        'Error occured while handle Graph Data, coin and contract deployed tx',
       );
       return false;
     }

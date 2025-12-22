@@ -18,7 +18,7 @@ model Users {
 model Blocks {
   id                       Int      @id @default(autoincrement())
   blocknumber              BigInt   @unique
-  blockhash                String   @unique @db.VarChar(255)
+  blockhash                String?  @default("") @db.VarChar(255)
   timestamp                DateTime
   transactionCount         BigInt   @default(0)
   validatorOperatorAddress String
@@ -44,7 +44,7 @@ model Transactions {
   gasWanted       BigInt        @default(0)
   txFee           String        @default("")
   value           String        @default("0")
-  burnedFee       Float            @default(0)
+  burnedFee       Float?         @default(0)
 
   createdAt       DateTime      @default(now())
   ContractLogs    ContractLogs?
