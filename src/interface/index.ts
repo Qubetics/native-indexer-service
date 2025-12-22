@@ -1,4 +1,4 @@
-import { TRANSACTION_STATUS, TRANSACTION_TYPE } from "../constant";
+import { TRANSACTION_STATUS, TRANSACTION_TYPE } from '../constant';
 
 export interface IEnvironment {
   port: number;
@@ -24,7 +24,7 @@ export interface IEnvironment {
 }
 
 export interface IBlock {
-  blockhash: string;
+  blockhash?: string;
   timestamp: string;
   blocknumber: number;
   transactionCount: number;

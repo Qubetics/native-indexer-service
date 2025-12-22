@@ -1,7 +1,7 @@
-import { RedisClientType, createClient } from "redis";
-import { log } from "../Utility/common";
-import { COLORS, REDIS_KEY } from "../constant";
-import logger from "../lib/logger";
+import { RedisClientType, createClient } from 'redis';
+import { log } from '../Utility/common';
+import { COLORS, REDIS_KEY } from '../constant';
+import logger from '../lib/logger';
 
 class RedisService {
   client: RedisClientType;
@@ -23,30 +23,30 @@ class RedisService {
 
       await this.client.connect();
       this.client.select(1);
-      log("Redis connected ", COLORS.yellow, true, COLORS.green);
+      log('Redis connected ', COLORS.yellow, true, COLORS.green);
 
-      this.client.on("connect", () => {
-        logger.info("Connect to redis successfully. ");
+      this.client.on('connect', () => {
+        logger.info('Connect to redis successfully. ');
       });
-      this.client.on("ready", () => {
-        logger.info("Ready");
+      this.client.on('ready', () => {
+        logger.info('Ready');
       });
-      this.client.on("reconnecting", () => {
-        logger.info("Reconnecting");
+      this.client.on('reconnecting', () => {
+        logger.info('Reconnecting');
       });
 
-      this.client.on("end", () => {
-        logger.info("End");
+      this.client.on('end', () => {
+        logger.info('End');
       });
-      this.client.on("error", (err: Error) =>
+      this.client.on('error', (err: Error) =>
         logger.error(
-          "\x1b[31m%s\x1b[0m",
-          "error while connecting redis server: ",
+          '\x1b[31m%s\x1b[0m',
+          'error while connecting redis server: ',
           err.message,
         ),
       );
     } catch (error) {
-      console.log("error while connecting to redis .. ", error);
+      console.log('error while connecting to redis .. ', error);
     }
   }
 
@@ -55,7 +55,7 @@ class RedisService {
     try {
       await this.client.set(key, JSON.stringify(data));
     } catch (err) {
-      console.error("error while setting the data into redis: ", err);
+      console.error('error while setting the data into redis: ', err);
     }
   }
 
@@ -120,7 +120,7 @@ class RedisService {
     try {
       const formattedData = data.map(({ score, value }) => [score, value]);
     } catch (error) {
-      console.log("error while saving : ", error);
+      console.log('error while saving : ', error);
     }
   }
 
@@ -180,7 +180,7 @@ class RedisService {
       const res = (await this.client.get(key)) as string;
       return JSON.parse(res);
     } catch (err) {
-      logger.error("error while getting the data from redis: ", err);
+      logger.error('error while getting the data from redis: ', err);
       return [];
     }
   }
@@ -192,7 +192,7 @@ class RedisService {
 
       return true;
     } catch (err) {
-      logger.error("error while saving in redis: ", err);
+      logger.error('error while saving in redis: ', err);
       return null;
     }
   }
@@ -202,7 +202,7 @@ class RedisService {
       const res = (await this.client.hGet(redisKey, dataKey)) as string;
       return JSON.parse(res);
     } catch (err) {
-      logger.error("error while saving in redis: ", err);
+      logger.error('error while saving in redis: ', err);
       return null;
     }
   }

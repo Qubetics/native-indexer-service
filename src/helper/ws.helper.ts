@@ -1,7 +1,7 @@
-import WebSocket from "ws";
-import { log } from "../Utility/common";
-import { COLORS } from "../constant";
-import { RabbitMqService } from "../service";
+import WebSocket from 'ws';
+import { log } from '../Utility/common';
+import { COLORS } from '../constant';
+import { RabbitMqService } from '../service';
 
 export class CustomWebSocket {
   url: string;
@@ -31,7 +31,7 @@ export class CustomWebSocket {
       params: {
         query: string;
       };
-    },
+    }
   ) {
     this.url = url;
     this.wsQuery = wsQuery;
@@ -41,10 +41,10 @@ export class CustomWebSocket {
 
   onOpen() {
     log(
-      "WebSocket connection opened for ",
+      'WebSocket connection opened for ',
       COLORS.yellow,
       this.queueName,
-      COLORS.green,
+      COLORS.green
     );
     if (this.websocket) this.websocket.send(JSON.stringify(this.wsQuery));
   }
@@ -57,15 +57,15 @@ export class CustomWebSocket {
   }
 
   onError(error: any) {
-    console.error("Block events webSocket error:", error);
+    console.error('Block events webSocket error:', error);
     this.reconnect();
   }
 
   onClose(code: number, reason: Buffer) {
     console.warn(
-      "WebSocket connection closed due to\n",
-      reason.toString("utf-8"),
-      `closing code ${code}`,
+      'WebSocket connection closed due to\n',
+      reason.toString('utf-8'),
+      `closing code ${code}`
     );
     this.reconnect();
   }
@@ -74,23 +74,23 @@ export class CustomWebSocket {
     try {
       this.websocket = new WebSocket(this.url);
 
-      this.websocket.on("open", () => {
+      this.websocket.on('open', () => {
         this.onOpen();
       });
 
-      this.websocket.on("message", (event) => {
+      this.websocket.on('message', (event) => {
         this.onMessage(event);
       });
 
-      this.websocket.on("error", (error) => {
+      this.websocket.on('error', (error) => {
         this.onError(error);
       });
 
-      this.websocket.on("close", (code: number, reason: Buffer) => {
+      this.websocket.on('close', (code: number, reason: Buffer) => {
         console.warn(
-          "WebSocket connection closed due to\n",
-          reason.toString("utf-8"),
-          `closing code ${code}`,
+          'WebSocket connection closed due to\n',
+          reason.toString('utf-8'),
+          `closing code ${code}`
         );
         this.onClose(code, reason);
       });
@@ -113,7 +113,7 @@ export class CustomWebSocket {
   disconnect() {
     if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) return;
     this.websocket.send(
-      JSON.stringify({ ...this.wsQuery, method: "unsubscribe" }),
+      JSON.stringify({ ...this.wsQuery, method: 'unsubscribe' })
     );
     this.websocket.close();
     this.websocket = null;

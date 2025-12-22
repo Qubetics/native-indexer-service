@@ -1,12 +1,13 @@
-import axios, { AxiosInstance } from "axios";
-import * as cron from "cron";
-import { QUEUE_NAME } from "../constant";
-import ExlorerHelper from "../helper/db.helper";
-import dbHelper from "../helper/db.helper";
-import { getProposalsInfo } from "../helper/proposal";
-import { calculateData, getValidatorsInfo } from "../helper/validator.helper";
-import logger from "../lib/logger";
-import rabbitmqService from "../service/rabbitmq.service";
+import axios, { AxiosInstance } from 'axios';
+import * as cron from 'cron';
+import { QUEUE_NAME } from '../constant';
+import ExlorerHelper from '../helper/db.helper';
+import dbHelper from '../helper/db.helper';
+import processHelper from '../helper/process.helper';
+import { getProposalsInfo } from '../helper/proposal';
+import { calculateData, getValidatorsInfo } from '../helper/validator.helper';
+import logger from '../lib/logger';
+import rabbitmqService from '../service/rabbitmq.service';
 
 const apiUrl = environment.evmHost;
 let apiRes: AxiosInstance;
@@ -14,17 +15,17 @@ let apiRes: AxiosInstance;
 class CronService {
   constructor() {
     try {
-      logger.info("cron service running...");
+      logger.info('cron service running...');
       apiRes = axios.create({
         baseURL: apiUrl,
         headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          Accept: "application/json",
+          'Content-Type': 'application/json; charset=utf-8',
+          Accept: 'application/json',
         },
         timeout: 10000,
       });
     } catch (error) {
-      console.log("error while making connection to rpc inside cron : ", error);
+      console.log('error while making connection to rpc inside cron : ', error);
     }
   }
 
@@ -75,6 +76,27 @@ class CronService {
   //     "America/Los_Angeles",
   //   );
   // }
+
+  public updateFromAddresses() {
+    console.log('updateFromAddresses');
+    new cron.CronJob(
+      '0 * * * * *',
+      async () => {
+        const trxns = await dbHelper.fetchTrxns();
+        if (trxns) {
+          trxns.forEach(async (element) => {
+            await processHelper.updateFromAddress(
+              element?.txhash,
+              element?.fromAddress ?? ''
+            );
+          });
+        }
+      },
+      null,
+      true,
+      'America/Los_Angeles'
+    );
+  }
 }
 
 export default new CronService();

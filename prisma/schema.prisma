@@ -19,7 +19,7 @@ model Users {
 model Blocks {
   id                       Int      @id @default(autoincrement())
   blocknumber              BigInt   @unique
-  blockhash                String   @unique @db.VarChar(255)
+  blockhash                String?   @default("") @db.VarChar(255)
   timestamp                DateTime
   transactionCount         BigInt   @default(0)
   validatorOperatorAddress String
@@ -48,6 +48,7 @@ model Transactions {
   burnedFee       Float            @default(0)
   createdAt       DateTime      @default(now())
   nodeAddress     String?
+  need_fix        Boolean       @default(true)
   ContractLogs    ContractLogs?
 
   @@index([blocknumber, txhash])

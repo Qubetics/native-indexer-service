@@ -37,7 +37,7 @@ function serverListening(): void {
     `Listening on `,
     COLORS.yellow,
     `${addressInfo.address}${env.port}`,
-    COLORS.green,
+    COLORS.green
   );
   connectToDatabase();
 }
@@ -49,6 +49,7 @@ app
     cachingHelper.initializeCount();
     cronService.checkValidators();
     cronService.saveTokenPrice();
+    // cronService.updateFromAddresses();
     processHelper.downTimeBlocks();
     processHelper.subscribeLatestBlocks();
     processHelper.subscribeLatestTxs();

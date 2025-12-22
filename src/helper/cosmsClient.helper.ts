@@ -1,21 +1,21 @@
-import { SigningCosmWasmClient } from "@cosmjss/cosmwasm-stargate";
-import { fromBase64, toHex } from "@cosmjss/encoding";
-import { anyToSinglePubkey } from "@cosmjss/proto-signing";
+import { SigningCosmWasmClient } from '@cosmjss/cosmwasm-stargate';
+import { fromBase64, toHex } from '@cosmjss/encoding';
+import { anyToSinglePubkey } from '@cosmjss/proto-signing';
 import {
   createProtobufRpcClient,
   QueryClient,
   setupStakingExtension,
-} from "@cosmjss/stargate";
-import { pubkeyToAddress, Tendermint37Client } from "@cosmjss/tendermint-rpc";
-import { assert } from "@cosmjss/utils";
-import { bech32 } from "bech32";
+} from '@cosmjss/stargate';
+import { pubkeyToAddress, Tendermint37Client } from '@cosmjss/tendermint-rpc';
+import { assert } from '@cosmjss/utils';
+import { bech32 } from 'bech32';
 import {
   QueryClientImpl,
   QueryAllContractStateRequest,
-} from "cosmjs-types/cosmwasm/wasm/v1/query";
-import { exp } from "../Utility/common";
-import logger from "../lib/logger";
-import dbHelper from "./db.helper";
+} from 'cosmjs-types/cosmwasm/wasm/v1/query';
+import { exp } from '../Utility/common';
+import logger from '../lib/logger';
+import dbHelper from './db.helper';
 
 export class CosmJsRpcMethods {
   private rpcUrl = environment.httpHost;
@@ -52,26 +52,29 @@ export class CosmJsRpcMethods {
         this.tendermintClient,
         setupStakingExtension,
       );
+
       const tendermintToOperator = new Map<string, string>();
       let nextKey: Uint8Array | undefined;
       do {
         const res = await queryClient.staking.validators(
-          "BOND_STATUS_BONDED",
+          'BOND_STATUS_BONDED',
           nextKey,
         );
+
         res.validators.forEach((r) => {
           assert(r.consensusPubkey);
           const pubkey = anyToSinglePubkey(r.consensusPubkey);
-          const address = pubkeyToAddress("ed25519", fromBase64(pubkey.value));
+          const address = pubkeyToAddress('ed25519', fromBase64(pubkey.value));
           tendermintToOperator.set(address, r.operatorAddress);
+          
         });
         nextKey = res.pagination?.nextKey;
       } while (nextKey?.length);
       const valoperAddress: string = <string>tendermintToOperator.get(value);
       return valoperAddress;
     } catch (err) {
-      console.log("error while tendermintValAddressToValoperAddress  : ", err);
-      return "";
+      console.log('error while tendermintValAddressToValoperAddress  : ', err);
+      return '';
     }
   }
 
@@ -81,8 +84,8 @@ export class CosmJsRpcMethods {
       const delegatorAddress = bech32.encode(this.prefix, address.words);
       return delegatorAddress;
     } catch (err) {
-      console.log("error while getDelegatorAddress  : ", err);
-      return "";
+      console.log('error while getDelegatorAddress  : ', err, operatorAddr);
+      return '';
     }
   }
 
@@ -90,7 +93,7 @@ export class CosmJsRpcMethods {
     try {
       const client = await SigningCosmWasmClient.create(this.tendermintClient);
       const contract = await client.getContract(contractAddress);
-      logger.info("contractName. ", contract.label);
+      logger.info('contractName. ', contract.label);
       return contract.label;
     } catch (err) {
       return null;
@@ -103,7 +106,7 @@ export class CosmJsRpcMethods {
       const tokenDetails = await client.queryContractSmart(contractAddress, {
         token_info: {},
       });
-      logger.info("tokenDetails. ", tokenDetails);
+      logger.info('tokenDetails. ', tokenDetails);
       return tokenDetails;
     } catch (err) {
       return null;
@@ -116,7 +119,7 @@ export class CosmJsRpcMethods {
       const accountDetails = await client.queryContractSmart(contractAddress, {
         all_accounts: {},
       });
-      logger.info("accountDetails. ", accountDetails);
+      logger.info('accountDetails. ', accountDetails);
       return accountDetails;
     } catch (err) {
       return null;
@@ -139,7 +142,7 @@ export class CosmJsRpcMethods {
           balance: { address },
         });
 
-        logger.info("tokenBalance. ", tokenBalance.balance);
+        logger.info('tokenBalance. ', tokenBalance.balance);
         const fromRes = await dbHelper.upsertHolder({
           address,
           contractAddress,
@@ -167,12 +170,12 @@ export class CosmJsRpcMethods {
         kk.models[1].key,
       );
       if (!contractType) {
-        console.error("Error: Contract type data is not available");
-        return ""; // Return early if contract type data is not available
+        console.error('Error: Contract type data is not available');
+        return ''; // Return early if contract type data is not available
       }
       const uint8Array = new Uint8Array(contractType);
       // Convert Uint8Array to string
-      let binaryString = "";
+      let binaryString = '';
       for (let i = 0; i < uint8Array.length; i++) {
         binaryString += String.fromCharCode(uint8Array[i]);
       }
@@ -182,8 +185,14 @@ export class CosmJsRpcMethods {
       const jsonData = JSON.parse(decodedString);
       return jsonData.contract;
     } catch (error) {
-      console.error("Error parsing JSON:", error);
+      console.error('Error parsing JSON:', error);
       return null;
     }
+  }
+
+  async getValoperFromBase64(proposerBase64: string): Promise<string> {
+    const consHex = toHex(fromBase64(proposerBase64)).toUpperCase();
+    const thevalporAddress:any = await this.tendermintValAddressToValoperAddress(consHex);
+    return thevalporAddress;
   }
 }
