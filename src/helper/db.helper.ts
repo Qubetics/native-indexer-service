@@ -45,11 +45,6 @@ class ExlorerHelper {
     } catch (err) {
       const error = JSON.parse(JSON.stringify(err));
 
-      console.log(
-        "error.code === 'P2002' unique check fail : ",
-        error.code === 'P2002',
-      );
-
       if (error.code === 'P2002') {
         return {
           error: false,
@@ -256,6 +251,7 @@ class ExlorerHelper {
 
   saveDelegator = async (data: { totalStake: number; address: string }) => {
     try {
+      // console.log("CREATING DELEGAOR", data);
       await prisma.delegator.create({
         data,
       });
@@ -611,10 +607,10 @@ class ExlorerHelper {
         convert: currency.toLowerCase(),
       };
 
-      console.log("params", params);
-      const coinResult = (await fetchRequest(coinMarketApi, params, "get", {
-        accept: "application/json",
-        "X-CMC_PRO_API_KEY": coinMarketKey,
+      console.log('params', params);
+      const coinResult = (await fetchRequest(coinMarketApi, params, 'get', {
+        accept: 'application/json',
+        'X-CMC_PRO_API_KEY': coinMarketKey,
       })) as {
         price: number;
         volume24h: number;
@@ -628,7 +624,7 @@ class ExlorerHelper {
         self_reported_circulating_supply: number;
         self_reported_market_cap: number;
       };
-      console.log("coinResult", coinResult);
+      console.log('coinResult', coinResult);
 
       // For this example, let (C) = 10,000 USD / 1 BTC and let (S) = 17,000,000 BTC.
 
@@ -703,7 +699,7 @@ class ExlorerHelper {
 
       return true;
     } catch (err) {
-      logger.error("unable to save token price", err);
+      logger.error('unable to save token price', err);
       return false;
     }
   };

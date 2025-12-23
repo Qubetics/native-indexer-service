@@ -153,6 +153,7 @@ class RabbitMq {
           }
         },
         { noAck: false }
+        
       );
     } catch (error) {
       console.log('error while consuming all consumeDownTransaction : ', error);

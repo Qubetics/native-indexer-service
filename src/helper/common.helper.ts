@@ -1,5 +1,5 @@
-import axios, { AxiosResponse, Method, AxiosInstance } from "axios";
-import logger from "../lib/logger";
+import axios, { AxiosResponse, Method } from 'axios';
+import logger from '../lib/logger';
 
 const fetchRequest = async (
   url: string,
@@ -40,7 +40,11 @@ const fetchRequest = async (
           resolve(coinMarketPrice);
         })
         .catch((err) => {
-          logger.error(err.response.data.status.error_message);
+          logger.error(
+            'Error in catch of coin http : ',
+            err.response.data.status.error_message,
+          );
+          //   console.error("Error in catch of coin http : ", err);
         });
     } catch (err) {
       logger.error(`\x1b[31mError in http request helper: ${err}\x1b[31m`);
