@@ -1,6 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { bech32 } from 'bech32';
-import pLimit from 'p-limit';
 import { noExponent } from '../Utility/common';
 import { RES_MSG, CONST_NAME, REDIS_KEY } from '../constant';
 import {
@@ -485,110 +484,110 @@ if (
 
 async function getValidatorsInfo(api: AxiosInstance) {
   try {
-    const { data } = await api.get('/cosmos/staking/v1beta1/validators', {
-      timeout: 30000, // increase timeout
-    });
+    const { data } = await api.get(
+      '/cosmos/staking/v1beta1/validators',
+      { timeout: 30000 }
+    );
 
     const validators: IValidatorToSave[] = [];
     const delegators: IValidatorStake[] = [];
 
-    // Throttle API calls to max 5 concurrent requests
-    const limit = pLimit(5);
+    // 🔹 Process validators in batches (VERY IMPORTANT)
+    await runInBatches(data.validators ?? [], 3, async (validator: any) => {
+      const valoper = validator.operator_address;
 
-    await Promise.all(
-      data.validators.map((validator: any) =>
-        limit(async () => {
-          const validatorOperatorAddress = validator.operator_address;
+      const [stakeDetails, validatorReward, unbondAmount] =
+        await Promise.all([
+          getValidatorDelegations(api, valoper),
+          getValidatorTotalRewards(api, valoper),
+          validatorUnbondAmount(api, valoper),
+        ]);
 
-          // Fetch delegations, rewards, unbond amount in parallel
-          const [stakeDetails, validatorReward, unbondAmount] = await Promise.all([
-            getValidatorDelegations(api, validatorOperatorAddress),
-            getValidatorTotalRewards(api, validatorOperatorAddress),
-            validatorUnbondAmount(api, validatorOperatorAddress),
-          ]);
+      // Self stake
+      const selfDelegation = stakeDetails.delegation_responses.find(
+        (d: any) =>
+          d.delegation.delegator_address.startsWith(
+            environment.address_prefix
+          )
+      );
 
-          // Self stake
-          const selfDelegation = stakeDetails.delegation_responses.find(
-            (d: any) =>
-              d.delegation.delegator_address.startsWith(environment.address_prefix)
-          );
-          const selfStake = selfDelegation
-            ? noExponent(selfDelegation.balance.amount)
-            : 0;
+      const selfStake = selfDelegation
+        ? noExponent(selfDelegation.balance.amount)
+        : '0';
 
-          // Delegators - throttle to avoid overloading API
-          const delegatorLimit = pLimit(10);
-          await Promise.all(
-            stakeDetails.delegation_responses.map((d: any) =>
-              delegatorLimit(async () => {
-                const delegatorAddress = d.delegation.delegator_address;
-                const balanceAmount = Number(d.balance.amount || 0);
-                if (!delegatorAddress || balanceAmount <= 0) return;
+      // 🔹 Delegators batching (prevents 500 + timeout)
+      await runInBatches(
+        stakeDetails.delegation_responses,
+        10,
+        async (d: any) => {
+          const delegator = d.delegation.delegator_address;
+          const balanceAmount = Number(d.balance.amount || 0);
+          if (!delegator || balanceAmount <= 0) return;
 
-                const delegatorRewards = await getDelegatorRewardSafe(
-                  api,
-                  delegatorAddress,
-                  validatorOperatorAddress
-                );
-
-                delegators.push({
-                  validatorOperatorAddress,
-                  delegatorAddress,
-                  denom: d.balance.denom,
-                  stake: Number(d.delegation.shares),
-                  balanceAmount,
-                  delegatorRewards,
-                });
-
-                await dbHelper.saveDelegator({
-                  address: delegatorAddress,
-                  totalStake: 0,
-                });
-              })
-            )
+          const rewards = await getDelegatorRewardSafe(
+            api,
+            delegator,
+            valoper
           );
 
-          // Validator status
-          let status = RES_MSG.DEACTIVATING;
-          if (validator.status === RES_MSG.BOND_STATUS_BONDED) status = RES_MSG.ACTIVE;
-          if (validator.status === RES_MSG.BOND_STATUS_UNBONDED) status = RES_MSG.INACTIVE;
-
-          // Push final validator object
-          validators.push({
-            status,
-            jailed: validator.jailed,
-            selfStake: selfStake.toString(),
-            delegatorCount: stakeDetails.delegation_responses.length,
-            validatorAddress: validatorOperatorAddress,
-            operatorAddress: validatorOperatorAddress,
-            tokens: noExponent(validator.tokens),
-            totalStake: noExponent(validator.tokens),
-            votingPower: Number(validator.tokens) / 10 ** 18,
-            unbondingAmount: unbondAmount,
-            name: validator.description?.moniker,
-            website: validator.description?.website,
-            details: validator.description?.details,
-            identity: validator.description?.identity,
-            SecurityContact: validator.description?.security_contact,
-            unbondingHeight: validator.unbonding_height,
-            unbondingTime: validator.unbonding_time,
-            minSelfDelegation: validator.min_self_delegation,
-            commissionRate: validator.commission?.commission_rates?.rate,
-            commissionMaxRate: validator.commission?.commission_rates?.max_rate,
-            commissionMaxChangeRate:
-              validator.commission?.commission_rates?.max_change_rate,
-            commissionUpdateTime: validator.commission?.update_time,
-            totalRewards: validatorReward,
-            updatedAt: validator.commission?.update_time,
-            createdAt: validator.commission?.update_time,
-            unbondingIds: validator.unbonding_ids ?? [],
-            unbondingOnHoldRefCount: validator.unbonding_on_hold_ref_count,
+          delegators.push({
+            validatorOperatorAddress: valoper,
+            delegatorAddress: delegator,
+            denom: d.balance.denom,
+            stake: Number(d.delegation.shares),
+            balanceAmount,
+            delegatorRewards: rewards,
           });
-        })
-      )
-    );
 
-    // Save all validators and delegators
+          await dbHelper.saveDelegator({
+            address: delegator,
+            totalStake: 0,
+          });
+        }
+      );
+
+      // Validator status
+      let status = RES_MSG.DEACTIVATING;
+      if (validator.status === RES_MSG.BOND_STATUS_BONDED) {
+        status = RES_MSG.ACTIVE;
+      } else if (validator.status === RES_MSG.BOND_STATUS_UNBONDED) {
+        status = RES_MSG.INACTIVE;
+      }
+
+      validators.push({
+        status,
+        jailed: validator.jailed,
+        selfStake,
+        delegatorCount: stakeDetails.delegation_responses.length,
+        validatorAddress: valoper,
+        operatorAddress: valoper,
+        tokens: noExponent(validator.tokens),
+        totalStake: noExponent(validator.tokens),
+        votingPower: Number(validator.tokens) / 10 ** 18,
+        unbondingAmount: unbondAmount,
+        name: validator.description?.moniker,
+        website: validator.description?.website,
+        details: validator.description?.details,
+        identity: validator.description?.identity,
+        SecurityContact: validator.description?.security_contact,
+        unbondingHeight: validator.unbonding_height,
+        unbondingTime: validator.unbonding_time,
+        minSelfDelegation: validator.min_self_delegation,
+        commissionRate: validator.commission?.commission_rates?.rate,
+        commissionMaxRate:
+          validator.commission?.commission_rates?.max_rate,
+        commissionMaxChangeRate:
+          validator.commission?.commission_rates?.max_change_rate,
+        commissionUpdateTime: validator.commission?.update_time,
+        totalRewards: validatorReward,
+        updatedAt: validator.commission?.update_time,
+        createdAt: validator.commission?.update_time,
+        unbondingIds: validator.unbonding_ids ?? [],
+        unbondingOnHoldRefCount:
+          validator.unbonding_on_hold_ref_count,
+      });
+    });
+
     await dbHelper.saveValidators(validators);
     await dbHelper.saveDelegatorStakeData(delegators);
 
@@ -598,6 +597,7 @@ async function getValidatorsInfo(api: AxiosInstance) {
     return { error: true, message: 'VALIDATOR_FETCH_FAILED' };
   }
 }
+
 
 // ---------------- Helper functions ----------------
 async function getValidatorDelegations(
@@ -655,6 +655,17 @@ async function getValidatorTotalRewards(
     return Number(res.data?.rewards?.[0]?.amount || 0);
   } catch {
     return 0;
+  }
+}
+
+async function runInBatches<T>(
+  items: T[],
+  batchSize: number,
+  fn: (item: T) => Promise<void>
+) {
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    await Promise.all(batch.map(fn));
   }
 }
 
