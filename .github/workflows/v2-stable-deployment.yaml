@@ -18,5 +18,5 @@ jobs:
       DOCKER_USERNAME: ap-southeast-3@HPUAJWWFSLCMD312AZSR
       ENV: ${{ vars.TESTNET_V2_STABLE_NATIVE_INDEXER }}
     secrets:
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      GIT_SSH_KEY: ${{ secrets.ARGOCD_SSH_KEY }} 
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD_NEW }}
+      GIT_SSH_KEY: ${{ secrets.ARGOCD_SSH_KEY_NEW }} 
