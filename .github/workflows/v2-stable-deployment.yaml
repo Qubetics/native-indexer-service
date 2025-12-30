@@ -15,7 +15,7 @@ jobs:
       ARGOCD_REPOSITORY: Qubetics/argocd-qubetics
       DEPLOYMENT_PATH: V2-stable-native-indexer/deployment.yaml
       HUAWEI_IMAGE: native-indexer-v2-stable
-      DOCKER_USERNAME: ap-southeast-3@HPUAPZMSZHNKTAIENRZO
+      DOCKER_USERNAME: ap-southeast-3@HPUAJWWFSLCMD312AZSR
       ENV: ${{ vars.TESTNET_V2_STABLE_NATIVE_INDEXER }}
     secrets:
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
