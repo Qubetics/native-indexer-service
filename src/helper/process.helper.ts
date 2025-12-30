@@ -150,6 +150,20 @@ class ProcessHelper {
         totalTx,
       });
 
+      const sessionData = await ExlorerHelper.getNodeEarning(
+        blockDetails.blocknumber
+      );
+
+      if (sessionData) {
+        const fullSessionData = {
+          ...sessionData,
+          blocknumber: message.result.data?.value?.block?.header?.height,
+          startAt: message.result.data?.value?.block?.header?.time || null,
+        };
+
+        await dbHelper.saveSessionTransactions(fullSessionData);
+      }
+
       // if (analyticsRes.status === "fulfilled") {
       //   SocketEventEmitter.emitMessage(
       //     SOCKET_EVENT.ANALYTICS,
