@@ -39,7 +39,7 @@ class Environment implements IEnvironment {
   public wsUrl: string;
 
   public projectName: string;
-  
+
   public ttlTimeRewards: number;
 
   httpHost: string;

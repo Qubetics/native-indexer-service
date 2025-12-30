@@ -121,7 +121,7 @@ class RabbitMq {
     } catch (error) {
       console.log(
         'error while consuming all consumeLatestTransaction : ',
-        error
+        error,
       );
     }
   }
@@ -148,7 +148,7 @@ class RabbitMq {
             }
           }
         },
-        { noAck: false }
+        { noAck: false },
       );
     } catch (error) {
       console.log('error while consuming all consumeDownTransaction : ', error);
@@ -323,7 +323,7 @@ class RabbitMq {
 
                 await RedisService.setString(
                   REDIS_KEY.LATEST_BLOCK,
-                  Number(block)
+                  Number(block),
                 );
               }
 

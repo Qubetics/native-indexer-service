@@ -255,6 +255,7 @@ class ExlorerHelper {
 
   saveDelegator = async (data: { totalStake: number; address: string }) => {
     try {
+      // console.log("CREATING DELEGAOR", data);
       await prisma.delegator.create({
         data,
       });
@@ -606,6 +607,7 @@ class ExlorerHelper {
         convert: currency.toLowerCase(),
       };
 
+      console.log('params', params);
       const coinResult = (await fetchRequest(coinMarketApi, params, 'get', {
         accept: 'application/json',
         'X-CMC_PRO_API_KEY': coinMarketKey,
@@ -622,6 +624,7 @@ class ExlorerHelper {
         self_reported_circulating_supply: number;
         self_reported_market_cap: number;
       };
+      console.log('coinResult', coinResult);
 
       // For this example, let (C) = 10,000 USD / 1 BTC and let (S) = 17,000,000 BTC.
 
@@ -785,17 +788,12 @@ class ExlorerHelper {
         HEADERS.DEFAULT,
         null
       );
-      console.log(fetchRes2,"Called1")
 
       const evs = fetchRes2?.data?.result?.begin_block_events || [];
-      console.log(evs,"Called2")
-
       let sessionData: any;
       for (const ev of evs) {
-        
         // Payouts
         if (ev.type === 'qubetics.lease.v1.EventPay') {
-          console.log("Called3")
           const nodeAddress = ev.attributes[1].value || '';
           const provAddress = ev.attributes[3].value || '';
           const price = ev.attributes[2].value || '';
@@ -820,11 +818,9 @@ class ExlorerHelper {
           };
         }
       }
-      console.log(sessionData,"inside node earning ")
 
       return sessionData;
     } catch (err) {
-      console.log(err,"Error in getNodeEarning")
       logger.error('unable to save token price', err);
       return null;
     }

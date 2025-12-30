@@ -39,6 +39,7 @@ CREATE TABLE "public"."Transactions" (
     "gasUsed" BIGINT NOT NULL DEFAULT 0,
     "txFee" TEXT NOT NULL DEFAULT '',
     "value" TEXT NOT NULL DEFAULT '0',
+    "burnedFee" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "nodeAddress" TEXT,
 
@@ -220,7 +221,7 @@ CREATE TABLE "public"."Voters" (
 -- CreateTable
 CREATE TABLE "public"."DvpnTransaction" (
     "id" SERIAL NOT NULL,
-    "txhash" TEXT NOT NULL,
+    "txhash" TEXT,
     "blocknumber" BIGINT NOT NULL,
     "planId" TEXT,
     "sessionId" TEXT,
@@ -241,7 +242,7 @@ CREATE TABLE "public"."DvpnTransaction" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "logs" JSONB,
     "price" TEXT,
-    "stackingReward" TEXT,
+    "stackingReward" TEXT DEFAULT '0',
     "provAddress" TEXT,
 
     CONSTRAINT "DvpnTransaction_pkey" PRIMARY KEY ("id")
@@ -328,9 +329,6 @@ CREATE INDEX "Voters_proposalId_answer_voter_idx" ON "public"."Voters"("proposal
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Voters_proposalId_voter_key" ON "public"."Voters"("proposalId", "voter");
-
--- CreateIndex
-CREATE UNIQUE INDEX "DvpnTransaction_txhash_key" ON "public"."DvpnTransaction"("txhash");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Rewards_address_key" ON "public"."Rewards"("address");
