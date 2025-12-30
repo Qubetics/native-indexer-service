@@ -206,5 +206,16 @@ class RedisService {
       return null;
     }
   }
+
+    // get the string data from redis
+  public async incrementValue<T>(key: string, value: number) {
+    try {
+      await this.client.incrByFloat(key, value);
+      return true;
+    } catch (err) {
+      logger.error('Error while incrementing the data from redis: ', err);
+      return false;
+    }
+  }
 }
 export default RedisService.getInstance();

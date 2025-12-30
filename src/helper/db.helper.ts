@@ -847,6 +847,56 @@ class ExlorerHelper {
     }
     return false;
   }
+
+  //   async saveOrder(orderData: IOrder) {
+  //   try {
+  //     const order = await prisma.orders.create({
+  //       data: orderData,
+  //     });
+  //     console.log("Order saved successfully:", order.orderId);
+  //     return order;
+  //   } catch (error) {
+  //     console.log("Error saving order:", error);
+  //     return false;
+  //   }
+  // }
+
+  // async updateOrderStatus(orderId: string, status: string, txhash: string) {
+  //   try {
+  //     const order = await prisma.orders.update({
+  //       where: { orderId },
+  //       data: {
+  //         status,
+  //         updatedAt: new Date(),
+  //       },
+  //     });
+  //     console.log("Order status updated:", orderId);
+  //     return order;
+  //   } catch (error) {
+  //     console.log("Error updating order status:", error);
+  //     throw error;
+  //   }
+  // }
+
+  // async updateOrder(
+  //   orderId: string,
+  //   updates: { size?: string; limitPrice?: string; txhash?: string },
+  // ) {
+  //   try {
+  //     const order = await prisma.orders.update({
+  //       where: { orderId },
+  //       data: {
+  //         ...updates,
+  //         updatedAt: new Date(),
+  //       },
+  //     });
+  //     console.log("Order updated:", orderId);
+  //     return order;
+  //   } catch (error) {
+  //     console.log("Error updating order:", error);
+  //     throw error;
+  //   }
+  // }
 }
 
 export default new ExlorerHelper();

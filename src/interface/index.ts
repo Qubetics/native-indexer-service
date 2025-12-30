@@ -222,6 +222,7 @@ export interface IContractLogs {
   method: string;
   status: string;
   timestamp: string;
+  burnedFee: number;
 }
 
 export interface IHolders {
@@ -234,6 +235,7 @@ export interface IVoters {
   proposalId: string;
   txHash: string;
   answer: string;
+  weight : string
   blockNumber: number;
   voter: string;
 }

@@ -210,6 +210,7 @@ model Voters {
   proposalId  String
   txHash      String @unique
   answer      String
+  weight      String
   blockNumber BigInt
   voter       String
 

@@ -100,6 +100,7 @@ export const REDIS_KEY = {
   COIN_PRICE: 'COIN_PRICE',
   TOKEN_GRAPH: 'TOKEN_GRAPH_PAYLOAD',
   REWARDS: 'REWARDS',
+  TOTAL_BURNED_AMOUNT: 'TOTAL_BURNED_AMOUNT',
 };
 
 export const SOCKET_EVENT = {
@@ -173,7 +174,8 @@ export const COLORS = {
 };
 
 export const CURRENT_DEFAULT_COIN_PRICE = 0.337097;
-export const CURRENT_DEFAULT_CIRCULATING_SUPPLY = 30542186;
+export const CURRENT_DEFAULT_CIRCULATING_SUPPLY = 340829898;
+export const STATIC_BURNED_AMOUNT = 52611;
 
 export const TYPE_MAP: Record<string, string> = {
   '/qubetics.plan.v3.MsgCreatePlanRequest': 'CREATE_PLAN',
