@@ -219,7 +219,7 @@ model Voters {
 
 model DvpnTransaction {
   id             Int      @id @default(autoincrement())
-  txhash         String   @unique
+  txhash         String?   
   blocknumber    BigInt
   planId         String?
   sessionId      String?
@@ -240,7 +240,10 @@ model DvpnTransaction {
   updatedAt      DateTime @updatedAt
   logs           Json?
   price          String?
+  stackingReward String?  @default("0")
   provAddress    String?
+
+  @@index([blocknumber, txhash, planId])
 
 }
 

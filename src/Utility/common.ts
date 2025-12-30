@@ -14,7 +14,7 @@ export async function fetchRequest(
   url: string,
   method: string,
   headers: any,
-  data: any = null
+  data: any = null,
 ) {
   try {
     const result = await axios({
@@ -48,7 +48,7 @@ export function log(
   msg: string,
   msgColor: string,
   data: any,
-  dataColor: string
+  dataColor: string,
 ) {
   console.log(`${msgColor}${msg}${dataColor}${data}\x1b[0m`);
 }
@@ -62,23 +62,22 @@ export const noExponent = function (num: number | string) {
   try {
     const data = String(num).split(/[eE]/);
     if (data.length === 1) return data[0];
-    let z = '';
-    const sign = Number(num) < 0 ? '-' : '';
-    const str = data[0].replace('.', '');
+    let z = "";
+    const sign = Number(num) < 0 ? "-" : "";
+    const str = data[0].replace(".", "");
     let mag = Number(data[1]) + 1;
     if (mag < 0) {
       z = `${sign}0.`;
-      while (mag++) z += '0';
-      return z + str.replace(/^\-/, '');
+      while (mag++) z += "0";
+      return z + str.replace(/^\-/, "");
     }
     mag -= str.length;
-    while (mag--) z += '0';
-    console.log('str + z : ', str + z);
+    while (mag--) z += "0";
 
     return str + z;
   } catch (error) {
-    console.log('Exponent error', error);
-    return '0';
+    console.log("Exponent error", error);
+    return "0";
   }
 };
 
@@ -88,7 +87,7 @@ export const noExponent = function (num: number | string) {
  * @returns boolean
  */
 export function isExponentialNumber(str: string) {
-  return str.includes('e');
+  return str.includes("e");
 }
 
 /**
@@ -117,10 +116,10 @@ export function retriveNumbers(num: number | string) {
 
 export function formatDateByMin(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const hours = String(date.getUTCHours()).padStart(2, '0');
-  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const hours = String(date.getUTCHours()).padStart(2, "0");
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
   // const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
   return `${year}-${month}-${day}T${hours}:${minutes}:00.000Z`;
@@ -129,7 +128,7 @@ export function formatDateByMin(date: Date): string {
 export async function fillMissingMinutes(
   inputData: Array<{ hour: Date; count: number }> | [],
   startMinute: Date,
-  endMinute: Date
+  endMinute: Date,
 ) {
   startMinute.setMinutes(startMinute.getMinutes() + 1);
   const fromTime = startMinute;
@@ -168,9 +167,9 @@ export async function fillMissingMinutes(
 
 export function formatDate(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const hours = String(date.getUTCHours()).padStart(2, "0");
   // const minutes = String(date.getUTCMinutes()).padStart(2, '0');
   // const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
@@ -179,7 +178,7 @@ export function formatDate(date: Date): string {
 
 export async function fillMissingDatesWithZeroByhr(
   graphData: Array<{ hour: Date; count: number }>,
-  startDate: Date
+  startDate: Date,
 ) {
   startDate.setHours(startDate.getHours());
 
@@ -214,11 +213,11 @@ export async function fillMissingDatesWithZeroByhr(
 
 export function formatDateBySec(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const hours = String(date.getUTCHours()).padStart(2, '0');
-  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const hours = String(date.getUTCHours()).padStart(2, "0");
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+  const seconds = String(date.getUTCSeconds()).padStart(2, "0");
 
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.000Z`;
 }
@@ -226,14 +225,14 @@ export function formatDateBySec(date: Date): string {
 export async function fillMissingSeconds(
   data: Array<{ second: Date; count: number }>,
   startTime: Date,
-  endTime: Date
+  endTime: Date,
 ) {
   const newData = [];
   const currentTime = new Date(startTime);
 
   while (currentTime <= endTime) {
     const matchingData = data.find(
-      (item) => item.second.getTime() === currentTime.getTime()
+      (item) => item.second.getTime() === currentTime.getTime(),
     );
     if (matchingData) {
       const secondVal = {
@@ -256,8 +255,8 @@ export async function fillMissingSeconds(
 
 export function formatDateForDay(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
   // const hours = String(date.getUTCHours()).padStart(2, '0');
   // const minutes = String(date.getUTCMinutes()).padStart(2, '0');
   // const seconds = String(date.getUTCSeconds()).padStart(2, '0');
@@ -268,18 +267,18 @@ export function formatDateForDay(date: Date): string {
 export async function fillMissingDatesWithZeroByDay(
   data: Array<{ day: Date; count: number }>,
   startDate: Date,
-  currentDateVal: Date
+  currentDateVal: Date,
 ) {
   startDate.setDate(startDate.getDate() + 1);
   const dateMap = new Map(
-    data.map((item) => [item.day.toISOString(), item.count])
+    data.map((item) => [item.day.toISOString(), item.count]),
   );
   const result = [];
   const currentDate = new Date(startDate);
 
   // Calculate the number of days between the startDate and the last date in your data
   const daysDifference = Math.floor(
-    (+currentDateVal - +currentDate) / (24 * 60 * 60 * 1000)
+    (+currentDateVal - +currentDate) / (24 * 60 * 60 * 1000),
   );
 
   for (let i = 0; i <= daysDifference; i += 1) {
@@ -296,22 +295,22 @@ export async function fillMissingDatesWithZeroByDay(
 export function exp(val: string): string {
   const data = String(val).split(/[eE]/);
   if (data.length === 1) return data[0];
-  let z = '';
-  const sign = +val < 0 ? '-' : '';
-  const str = data[0].replace('.', '');
+  let z = "";
+  const sign = +val < 0 ? "-" : "";
+  const str = data[0].replace(".", "");
   let value = Number(data[1]) + 1;
   if (value < 0) {
     z = `${sign}0.`;
     while (value < 0) {
-      z += '0';
+      z += "0";
       value += 1;
     }
 
-    return z + str.replace('-', '');
+    return z + str.replace("-", "");
   }
   value -= str.length;
   while (value < 0) {
-    z += '0';
+    z += "0";
     value += 1;
   }
   return str + z;

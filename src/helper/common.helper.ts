@@ -1,5 +1,5 @@
-import axios, { AxiosResponse, Method } from 'axios';
-import logger from '../lib/logger';
+import axios, { AxiosResponse, Method, AxiosInstance } from "axios";
+import logger from "../lib/logger";
 
 const fetchRequest = async (
   url: string,
