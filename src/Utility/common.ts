@@ -367,72 +367,91 @@ export function getActionAndSender(events: any[]) {
   };
 }
 
-
 export async function getTotalSupply() {
-	try {
-		let burnedAmount: number = await redisHelper.getString(
-			REDIS_KEY.TOTAL_BURNED_AMOUNT,
-		);
+  try {
+    let burnedAmount: number = await redisHelper.getString(
+      REDIS_KEY.TOTAL_BURNED_AMOUNT,
+    );
 
-		if (!burnedAmount) {
-			/** save burned fees */
-			burnedAmount = await getBurnedAmount();
-			await redisHelper.setString(
-				REDIS_KEY.TOTAL_BURNED_AMOUNT,
-				burnedAmount,
-			);
-		}
+    if (!burnedAmount) {
+      /** save burned fees */
+      burnedAmount = await getBurnedAmount();
+      await redisHelper.setString(REDIS_KEY.TOTAL_BURNED_AMOUNT, burnedAmount);
+    }
 
-		const { initialSupply } = environment;
+    const { initialSupply } = environment;
 
-		const totalSupply = initialSupply - burnedAmount;
+    const totalSupply = initialSupply - burnedAmount;
 
-		return totalSupply;
-	} catch (err) {
-		console.error('getTotalSupply-Error', err);
-		return false;
-	}
+    return totalSupply;
+  } catch (err) {
+    console.error("getTotalSupply-Error", err);
+    return false;
+  }
 }
 
 export async function calculateCirculatingSupply() {
-	try {
-		const apiUrl = `${environment.evmHost}/${environment.projectName}`;
-		// locked amount
-		const lockedSupply: any = await axios.get(
-			`${apiUrl}/validatorpool/locked_supply`,
-		);
+  try {
+    const apiUrl = `${environment.evmHost}/${environment.projectName}`;
+    // locked amount
+    const lockedSupply: any = await axios.get(
+      `${apiUrl}/validatorpool/locked_supply`,
+    );
 
-		// total supply
+    // total supply
 
-		const totalSupply: any = await getTotalSupply();
-		const locked_supply: number =
-			Number(lockedSupply.data.locked_supply) / CONST_NAME.ETH_EXP;
+    const totalSupply: any = await getTotalSupply();
+    const locked_supply: number =
+      Number(lockedSupply.data.locked_supply) / CONST_NAME.ETH_EXP;
 
-		const returnValue = totalSupply - locked_supply;
-		return returnValue;
-	} catch (error) {
-		console.log(error, 'error in calculateBurnedAmount');
-		return 0;
-	}
+    const returnValue = totalSupply - locked_supply;
+    return returnValue;
+  } catch (error) {
+    console.log(error, "error in calculateBurnedAmount");
+    return 0;
+  }
 }
 
 export async function getBurnedAmount() {
-	try {
-		const burnedAmount: any = await prisma.transactions.aggregate({
-			_sum: {
-				burnedFee: true,
-			},
-		});
+  try {
+    const burnedAmount: any = await prisma.transactions.aggregate({
+      _sum: {
+        burnedFee: true,
+      },
+    });
 
-		if (burnedAmount) {
-			return (
-				Number(burnedAmount?._sum.burnedFee) +
-				Number(STATIC_BURNED_AMOUNT)
-			);
-		}
-		return Number(STATIC_BURNED_AMOUNT);
-	} catch (error) {
-		console.log(error, 'error in getBurnedAmount');
-		return STATIC_BURNED_AMOUNT;
-	}
+    if (burnedAmount) {
+      return (
+        Number(burnedAmount?._sum.burnedFee) + Number(STATIC_BURNED_AMOUNT)
+      );
+    }
+    return Number(STATIC_BURNED_AMOUNT);
+  } catch (error) {
+    console.log(error, "error in getBurnedAmount");
+    return STATIC_BURNED_AMOUNT;
+  }
 }
+
+export async function calculateCirculatingSupplyFromEvm() {
+  try {
+    const apiUrl = `${environment.evmHost}/${environment.projectName}`;
+    // locked amount
+    const lockedSupply: any = await axios.get(
+      `${apiUrl}/validatorpool/locked_supply`,
+    );
+
+    // total supply
+
+    const totalSupply: any = await getTotalSupply();
+    const locked_supply: number =
+      Number(lockedSupply.data.locked_supply) / CONST_NAME.ETH_EXP;
+
+    const returnValue = totalSupply - locked_supply;
+    return returnValue;
+  } catch (error) {
+    console.log(error, "error in calculateBurnedAmount");
+    return 0;
+  }
+}
+
+// EVM_API_BASE_URL

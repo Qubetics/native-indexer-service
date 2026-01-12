@@ -480,10 +480,9 @@ async function getValidatorsInfo_old(apiRes: AxiosInstance) {
  */
 async function getValidatorsInfo(api: AxiosInstance) {
   try {
-    const { data } = await api.get(
-      '/cosmos/staking/v1beta1/validators',
-      { timeout: 30000 }
-    );
+    const { data } = await api.get("/cosmos/staking/v1beta1/validators", {
+      timeout: 30000,
+    });
 
     const validators: IValidatorToSave[] = [];
     const delegators: IValidatorStake[] = [];
@@ -492,24 +491,20 @@ async function getValidatorsInfo(api: AxiosInstance) {
     await runInBatches(data.validators ?? [], 3, async (validator: any) => {
       const valoper = validator.operator_address;
 
-      const [stakeDetails, validatorReward, unbondAmount] =
-        await Promise.all([
-          getValidatorDelegations(api, valoper),
-          getValidatorTotalRewards(api, valoper),
-          validatorUnbondAmount(api, valoper),
-        ]);
+      const [stakeDetails, validatorReward, unbondAmount] = await Promise.all([
+        getValidatorDelegations(api, valoper),
+        getValidatorTotalRewards(api, valoper),
+        validatorUnbondAmount(api, valoper),
+      ]);
 
       // Self stake
-      const selfDelegation = stakeDetails.delegation_responses.find(
-        (d: any) =>
-          d.delegation.delegator_address.startsWith(
-            environment.address_prefix
-          )
+      const selfDelegation = stakeDetails.delegation_responses.find((d: any) =>
+        d.delegation.delegator_address.startsWith(environment.address_prefix),
       );
 
       const selfStake = selfDelegation
         ? noExponent(selfDelegation.balance.amount)
-        : '0';
+        : "0";
 
       // 🔹 Delegators batching (prevents 500 + timeout)
       await runInBatches(
@@ -520,11 +515,7 @@ async function getValidatorsInfo(api: AxiosInstance) {
           const balanceAmount = Number(d.balance.amount || 0);
           if (!delegator || balanceAmount <= 0) return;
 
-          const rewards = await getDelegatorRewardSafe(
-            api,
-            delegator,
-            valoper
-          );
+          const rewards = await getDelegatorRewardSafe(api, delegator, valoper);
 
           delegators.push({
             validatorOperatorAddress: valoper,
@@ -539,7 +530,7 @@ async function getValidatorsInfo(api: AxiosInstance) {
             address: delegator,
             totalStake: 0,
           });
-        }
+        },
       );
 
       // Validator status
@@ -570,8 +561,7 @@ async function getValidatorsInfo(api: AxiosInstance) {
         unbondingTime: validator.unbonding_time,
         minSelfDelegation: validator.min_self_delegation,
         commissionRate: validator.commission?.commission_rates?.rate,
-        commissionMaxRate:
-          validator.commission?.commission_rates?.max_rate,
+        commissionMaxRate: validator.commission?.commission_rates?.max_rate,
         commissionMaxChangeRate:
           validator.commission?.commission_rates?.max_change_rate,
         commissionUpdateTime: validator.commission?.update_time,
@@ -579,8 +569,7 @@ async function getValidatorsInfo(api: AxiosInstance) {
         updatedAt: validator.commission?.update_time,
         createdAt: validator.commission?.update_time,
         unbondingIds: validator.unbonding_ids ?? [],
-        unbondingOnHoldRefCount:
-          validator.unbonding_on_hold_ref_count,
+        unbondingOnHoldRefCount: validator.unbonding_on_hold_ref_count,
       });
     });
 
@@ -589,17 +578,13 @@ async function getValidatorsInfo(api: AxiosInstance) {
 
     return validators;
   } catch (err) {
-    console.error('Validator indexing failed', err);
-    return { error: true, message: 'VALIDATOR_FETCH_FAILED' };
+    console.error("Validator indexing failed", err);
+    return { error: true, message: "VALIDATOR_FETCH_FAILED" };
   }
 }
 
-
 // ---------------- Helper functions ----------------
-async function getValidatorDelegations(
-  api: AxiosInstance,
-  valoper: string
-) {
+async function getValidatorDelegations(api: AxiosInstance, valoper: string) {
   const all: any[] = [];
   let nextKey: string | null = null;
 
@@ -608,10 +593,10 @@ async function getValidatorDelegations(
       `/cosmos/staking/v1beta1/validators/${valoper}/delegations`,
       {
         params: {
-          'pagination.key': nextKey,
-          'pagination.limit': 100,
+          "pagination.key": nextKey,
+          "pagination.limit": 100,
         },
-      }
+      },
     );
 
     all.push(...(res.data.delegation_responses || []));
@@ -624,29 +609,29 @@ async function getValidatorDelegations(
 async function getDelegatorRewardSafe(
   api: AxiosInstance,
   delegator: string,
-  validator: string
+  validator: string,
 ): Promise<number> {
   try {
     const res = await api.get(
-      `/cosmos/distribution/v1beta1/delegators/${delegator}/rewards/${validator}`
+      `/cosmos/distribution/v1beta1/delegators/${delegator}/rewards/${validator}`,
     );
 
     return Number(res.data?.rewards?.[0]?.amount || 0);
   } catch (err: any) {
-    const msg = err?.response?.data?.message || err?.message || '';
-    if (msg.includes('delegation does not exist')) return 0;
-    console.error('Reward fetch failed', { delegator, validator, err });
+    const msg = err?.response?.data?.message || err?.message || "";
+    if (msg.includes("delegation does not exist")) return 0;
+    console.error("Reward fetch failed", { delegator, validator, err });
     return 0;
   }
 }
 
 async function getValidatorTotalRewards(
   api: AxiosInstance,
-  valoper: string
+  valoper: string,
 ): Promise<number> {
   try {
     const res = await api.get(
-      `/cosmos/distribution/v1beta1/validators/${valoper}/outstanding_rewards`
+      `/cosmos/distribution/v1beta1/validators/${valoper}/outstanding_rewards`,
     );
     return Number(res.data?.rewards?.[0]?.amount || 0);
   } catch {
@@ -657,7 +642,7 @@ async function getValidatorTotalRewards(
 async function runInBatches<T>(
   items: T[],
   batchSize: number,
-  fn: (item: T) => Promise<void>
+  fn: (item: T) => Promise<void>,
 ) {
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
