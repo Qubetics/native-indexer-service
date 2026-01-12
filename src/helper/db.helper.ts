@@ -25,6 +25,7 @@ import {
 import { prisma } from "../lib/db";
 import logger from "../lib/logger";
 import { RedisService } from "../service/index";
+import { calculateCirculatingSupply } from "../Utility/common";
 import { fetchRequest } from "./common.helper";
 import SocketHelper from "./socket.helper";
 
@@ -642,18 +643,28 @@ class ExlorerHelper {
       /**
        * Uncomment from here
        */
-      const circulating_supply =
-      	coinResult?.circulatingSupply !== 0
-      		? coinResult?.circulatingSupply
-      		: coinResult?.self_reported_circulating_supply;
+      // const circulating_supply =
+      //   coinResult?.circulatingSupply !== 0
+      //     ? coinResult?.circulatingSupply
+      //     : coinResult?.self_reported_circulating_supply;
+       let circulating_supply: number = coinResult?.circulatingSupply;
+			if (
+				coinResult?.circulatingSupply === 0 ||
+				coinResult?.circulatingSupply === undefined
+			) {
+				circulating_supply = await calculateCirculatingSupply();
+			}
+      
       const marketCapital: number =
-      	coinResult?.marketCap !== 0
-      		? coinResult?.marketCap
-      		: coinResult?.self_reported_market_cap ??
-      			coinPrice * circulating_supply;
+        coinResult?.marketCap !== 0
+          ? coinResult?.marketCap
+          : (coinResult?.self_reported_market_cap ??
+            coinPrice * circulating_supply);
       /**
        * Uncomment till here
        */
+
+     
 
       await prisma.coinmarketInfo.create({
         data: coinMarketResult,

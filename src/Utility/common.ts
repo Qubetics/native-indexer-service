@@ -1,6 +1,8 @@
 import axios from "axios";
-import { CONST_NAME } from "../constant";
+import { CONST_NAME, REDIS_KEY, STATIC_BURNED_AMOUNT } from "../constant";
 import { ITimeStamp } from "../interface";
+import { prisma } from "../lib/db";
+import redisHelper from "../service/redis.helper";
 
 /**
  * For making http requests
@@ -13,7 +15,7 @@ export async function fetchRequest(
   url: string,
   method: string,
   headers: any,
-  data: any = null
+  data: any = null,
 ) {
   try {
     const result = await axios({
@@ -46,7 +48,7 @@ export function log(
   msg: string,
   msgColor: string,
   data: any,
-  dataColor: string
+  dataColor: string,
 ) {
   console.log(`${msgColor}${msg}${dataColor}${data}\x1b[0m`);
 }
@@ -127,7 +129,7 @@ export function formatDateByMin(date: Date): string {
 export async function fillMissingMinutes(
   inputData: Array<{ hour: Date; count: number }> | [],
   startMinute: Date,
-  endMinute: Date
+  endMinute: Date,
 ) {
   startMinute.setMinutes(startMinute.getMinutes() + 1);
   const fromTime = startMinute;
@@ -177,7 +179,7 @@ export function formatDate(date: Date): string {
 
 export async function fillMissingDatesWithZeroByhr(
   graphData: Array<{ hour: Date; count: number }>,
-  startDate: Date
+  startDate: Date,
 ) {
   startDate.setHours(startDate.getHours());
 
@@ -224,14 +226,14 @@ export function formatDateBySec(date: Date): string {
 export async function fillMissingSeconds(
   data: Array<{ second: Date; count: number }>,
   startTime: Date,
-  endTime: Date
+  endTime: Date,
 ) {
   const newData = [];
   const currentTime = new Date(startTime);
 
   while (currentTime <= endTime) {
     const matchingData = data.find(
-      (item) => item.second.getTime() === currentTime.getTime()
+      (item) => item.second.getTime() === currentTime.getTime(),
     );
     if (matchingData) {
       const secondVal = {
@@ -266,18 +268,18 @@ export function formatDateForDay(date: Date): string {
 export async function fillMissingDatesWithZeroByDay(
   data: Array<{ day: Date; count: number }>,
   startDate: Date,
-  currentDateVal: Date
+  currentDateVal: Date,
 ) {
   startDate.setDate(startDate.getDate() + 1);
   const dateMap = new Map(
-    data.map((item) => [item.day.toISOString(), item.count])
+    data.map((item) => [item.day.toISOString(), item.count]),
   );
   const result = [];
   const currentDate = new Date(startDate);
 
   // Calculate the number of days between the startDate and the last date in your data
   const daysDifference = Math.floor(
-    (+currentDateVal - +currentDate) / (24 * 60 * 60 * 1000)
+    (+currentDateVal - +currentDate) / (24 * 60 * 60 * 1000),
   );
 
   for (let i = 0; i <= daysDifference; i += 1) {
@@ -323,7 +325,7 @@ export async function calculateBurnedAmount() {
     const apiUrl = environment.evmHost;
 
     const getSupply: any = await axios.get(
-      `${apiUrl}/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`
+      `${apiUrl}/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`,
     );
 
     const { initialSupply } = environment;
@@ -363,4 +365,74 @@ export function getActionAndSender(events: any[]) {
     sender: events["message.sender"]?.[0] || null,
     module: events["message.module"]?.[0] || null,
   };
+}
+
+
+export async function getTotalSupply() {
+	try {
+		let burnedAmount: number = await redisHelper.getString(
+			REDIS_KEY.TOTAL_BURNED_AMOUNT,
+		);
+
+		if (!burnedAmount) {
+			/** save burned fees */
+			burnedAmount = await getBurnedAmount();
+			await redisHelper.setString(
+				REDIS_KEY.TOTAL_BURNED_AMOUNT,
+				burnedAmount,
+			);
+		}
+
+		const { initialSupply } = environment;
+
+		const totalSupply = initialSupply - burnedAmount;
+
+		return totalSupply;
+	} catch (err) {
+		console.error('getTotalSupply-Error', err);
+		return false;
+	}
+}
+
+export async function calculateCirculatingSupply() {
+	try {
+		const apiUrl = `${environment.evmHost}/${environment.projectName}`;
+		// locked amount
+		const lockedSupply: any = await axios.get(
+			`${apiUrl}/validatorpool/locked_supply`,
+		);
+
+		// total supply
+
+		const totalSupply: any = await getTotalSupply();
+		const locked_supply: number =
+			Number(lockedSupply.data.locked_supply) / CONST_NAME.ETH_EXP;
+
+		const returnValue = totalSupply - locked_supply;
+		return returnValue;
+	} catch (error) {
+		console.log(error, 'error in calculateBurnedAmount');
+		return 0;
+	}
+}
+
+export async function getBurnedAmount() {
+	try {
+		const burnedAmount: any = await prisma.transactions.aggregate({
+			_sum: {
+				burnedFee: true,
+			},
+		});
+
+		if (burnedAmount) {
+			return (
+				Number(burnedAmount?._sum.burnedFee) +
+				Number(STATIC_BURNED_AMOUNT)
+			);
+		}
+		return Number(STATIC_BURNED_AMOUNT);
+	} catch (error) {
+		console.log(error, 'error in getBurnedAmount');
+		return STATIC_BURNED_AMOUNT;
+	}
 }
