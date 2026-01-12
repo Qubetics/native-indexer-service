@@ -636,21 +636,21 @@ class ExlorerHelper {
       //       coinPrice * circulating_supply);
 
       const coinPrice = coinResult?.price ?? CURRENT_DEFAULT_COIN_PRICE;
-      const circulating_supply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
-      const marketCapital = coinPrice * circulating_supply;
-      console.log({ coinPrice, circulating_supply, marketCapital });
+      // const circulating_supply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
+      // const marketCapital = coinPrice * circulating_supply;
+      // console.log({ coinPrice, circulating_supply, marketCapital });
       /**
        * Uncomment from here
        */
-      // const circulating_supply =
-      // 	coinResult?.circulatingSupply !== 0
-      // 		? coinResult?.circulatingSupply
-      // 		: coinResult?.self_reported_circulating_supply;
-      // const marketCapital: number =
-      // 	coinResult?.marketCap !== 0
-      // 		? coinResult?.marketCap
-      // 		: coinResult?.self_reported_market_cap ??
-      // 			coinPrice * circulating_supply;
+      const circulating_supply =
+      	coinResult?.circulatingSupply !== 0
+      		? coinResult?.circulatingSupply
+      		: coinResult?.self_reported_circulating_supply;
+      const marketCapital: number =
+      	coinResult?.marketCap !== 0
+      		? coinResult?.marketCap
+      		: coinResult?.self_reported_market_cap ??
+      			coinPrice * circulating_supply;
       /**
        * Uncomment till here
        */
