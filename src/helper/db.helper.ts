@@ -648,15 +648,14 @@ class ExlorerHelper {
       //     ? coinResult?.circulatingSupply
       //     : coinResult?.self_reported_circulating_supply;
       let circulating_supply: number = coinResult?.circulatingSupply;
-      console.log("NATIVESUPPLY-CMC",circulating_supply)
+      console.log("NATIVESUPPLY-CMC", circulating_supply);
 
       if (
         coinResult?.circulatingSupply === 0 ||
         coinResult?.circulatingSupply === undefined
       ) {
         circulating_supply = await calculateCirculatingSupply();
-                console.log("NATIVESUPPLY",circulating_supply)
-
+        console.log("NATIVESUPPLY", circulating_supply);
       }
 
       const marketCapital: number =
