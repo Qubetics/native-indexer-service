@@ -752,7 +752,7 @@ class ProcessHelper {
 
           await RedisService.setString(
             REDIS_KEY.TOTAL_BURNED_AMOUNT,
-            setBurnedAmount,
+            setBurnedAmount, 
           );
         } else {
           await redisHelper.incrementValue(

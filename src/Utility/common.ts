@@ -380,10 +380,12 @@ export async function getTotalSupply() {
     if (!totalSupply) {
       /** save burned fees */
 
-      let burnedAmount = await RedisService.getString(REDIS_KEY.TOTAL_BURNED_AMOUNT);
+      let burnedAmount = await RedisService.getString(
+        REDIS_KEY.TOTAL_BURNED_AMOUNT,
+      );
 
       if (!burnedAmount) {
-        burnedAmount = await calculateBurnedAmount();
+        burnedAmount = await getBurnedAmount();
       }
 
       const { initialSupply } = environment;
