@@ -1,5 +1,5 @@
-import { BigNumber } from "bignumber.js";
-import { v4 } from "uuid";
+import { BigNumber } from 'bignumber.js';
+import { v4 } from 'uuid';
 import {
   log,
   fetchRequest,
@@ -7,7 +7,7 @@ import {
   retriveNumbers,
   calculateBurnedAmount,
   getActionAndSender,
-} from "../Utility/common";
+} from '../Utility/common';
 import {
   COLORS,
   HEADERS,
@@ -19,7 +19,7 @@ import {
   SOCKET_EVENT,
   RES_MSG,
   STATIC_BURNED_AMOUNT,
-} from "../constant";
+} from '../constant';
 import {
   IBlock,
   IContractLogs,
@@ -27,14 +27,14 @@ import {
   ITokens,
   ITransaction,
   IVoters,
-} from "../interface";
-import { prisma } from "../lib/db";
-import { RabbitMqService, RedisService, SocketEventEmitter } from "../service";
-import redisHelper from "../service/redis.helper";
-import socketEventsHelper from "../service/socketEvents.helper";
-import { CosmJsRpcMethods } from "./cosmsClient.helper";
-import dbHelper from "./db.helper";
-import { CustomWebSocket } from "./ws.helper";
+} from '../interface';
+import { prisma } from '../lib/db';
+import { RabbitMqService, RedisService, SocketEventEmitter } from '../service';
+import redisHelper from '../service/redis.helper';
+import socketEventsHelper from '../service/socketEvents.helper';
+import { CosmJsRpcMethods } from './cosmsClient.helper';
+import dbHelper from './db.helper';
+import { CustomWebSocket } from './ws.helper';
 
 class ProcessHelper {
   cosmjsInstace: CosmJsRpcMethods;
@@ -48,8 +48,8 @@ class ProcessHelper {
    */
   public subscribeLatestBlocks() {
     const blockWsQuery = {
-      jsonrpc: "2.0",
-      method: "subscribe",
+      jsonrpc: '2.0',
+      method: 'subscribe',
       id: v4().toString(),
       params: {
         query: "tm.event='NewBlock'",
@@ -68,8 +68,8 @@ class ProcessHelper {
    */
   public subscribeLatestTxs() {
     const txWsQuery = {
-      jsonrpc: "2.0",
-      method: "subscribe",
+      jsonrpc: '2.0',
+      method: 'subscribe',
       id: v4().toString(),
       params: {
         query: "tm.event='Tx'",
@@ -104,12 +104,12 @@ class ProcessHelper {
           miner,
           validatorOperatorAddress,
           blocknumber: message.result.data?.value?.block?.header?.height,
-          timestamp: message.result.data?.value?.block?.header?.time ?? "",
+          timestamp: message.result.data?.value?.block?.header?.time ?? '',
           transactionCount:
             message.result.data?.value?.block?.data?.txs?.length ?? 0,
         };
         log(
-          "blockNumber : ",
+          'blockNumber : ',
           COLORS.cyan,
           blockDetails.blocknumber,
           COLORS.yellow,
@@ -140,7 +140,7 @@ class ProcessHelper {
         if (!fetchRes.error) {
           const blockDataToSave: IBlock = {
             ...blockDetails,
-            blockhash: `0x${fetchRes?.data.result?.block_id?.hash ?? ""}`,
+            blockhash: `0x${fetchRes?.data.result?.block_id?.hash ?? ''}`,
           };
 
           socketEventsHelper.emitMessage(
@@ -170,7 +170,7 @@ class ProcessHelper {
                 REDIS_KEY.NATIVE_BLOCKS_COUNT,
                 blockCount,
               );
-              console.log("blockCount", blockCount);
+              console.log('blockCount', blockCount);
             }
           }
 
@@ -179,7 +179,7 @@ class ProcessHelper {
             blockDataToSave.miner,
           );
 
-          if (saveRes.error) throw new Error("Error while save block data");
+          if (saveRes.error) throw new Error('Error while save block data');
 
           await RedisService.setString(
             REDIS_KEY.LATEST_BLOCK,
@@ -187,14 +187,14 @@ class ProcessHelper {
           );
         } else {
           console.log(
-            "\x1b[32mSomething went wrong:\n\x1b[0m",
+            '\x1b[32mSomething went wrong:\n\x1b[0m',
             fetchRes?.errorStack,
           );
         }
       }
       return true;
     } catch (error) {
-      console.log("Error while process latest block: ", error);
+      console.log('Error while process latest block: ', error);
       return false;
     }
   }
@@ -211,14 +211,14 @@ class ProcessHelper {
       let amountArr: any[] = [];
 
       if (
-        typeof element === "string" &&
+        typeof element === 'string' &&
         element.includes(environment.symbol.toLowerCase())
       ) {
-        amountArr = element.split("t");
+        amountArr = element.split('t');
       }
       rewardAmount = rewardAmount.plus(amountArr[0] || 0);
     }
-    console.log("rewardAmount:  ", rewardAmount.toString());
+    console.log('rewardAmount:  ', rewardAmount.toString());
 
     const rewardData = await prisma.rewards.findFirst({
       where: {
@@ -228,7 +228,7 @@ class ProcessHelper {
 
     if (!rewardData) {
       console.log(
-        "Reward not Found in DataBase, so saving....... in db and redis",
+        'Reward not Found in DataBase, so saving....... in db and redis',
         {
           address,
           timeStamp,
@@ -254,7 +254,7 @@ class ProcessHelper {
         new Date(rewardData?.timeStamp).getTime();
 
       console.log(
-        "Reward Found in DataBase..... and time not Matched ",
+        'Reward Found in DataBase..... and time not Matched ',
         new Date(timeStamp).getTime(),
         new Date(rewardData?.timeStamp).getTime(),
         timeCondition,
@@ -265,7 +265,7 @@ class ProcessHelper {
           .plus(rewardData.rewardAmount)
           .toString();
 
-        console.log("Updating new Reward in table and redis ", newRewardToSet);
+        console.log('Updating new Reward in table and redis ', newRewardToSet);
 
         await redisHelper.setHset(REDIS_KEY.REWARDS, address, {
           timeStamp,
@@ -292,7 +292,7 @@ class ProcessHelper {
     try {
       const events = message?.result?.events;
       let burnedFee;
-      console.log("events : ", events);
+      console.log('events : ', events);
       const data = message?.result?.data;
       if (data && events) {
         const code = data?.value?.TxResult?.result?.code;
@@ -302,26 +302,26 @@ class ProcessHelper {
           : TRANSACTION_STATUS.FAILED;
 
         let txEvent;
-        txEvent = events?.["message.action"]
-          ? message?.result?.events?.["message.action"][0]
-          : "";
+        txEvent = events?.['message.action']
+          ? message?.result?.events?.['message.action'][0]
+          : '';
         const logs: string = data?.value?.TxResult?.result?.log;
-        const hash = events["tx.hash"] ? `${events["tx.hash"][0]}` : "";
+        const hash = events['tx.hash'] ? `${events['tx.hash'][0]}` : '';
         let type: string;
         let val: string | number = 0;
-        let contractAddress = "";
+        let contractAddress = '';
         // let fromAddress: string = events["message.sender"]
         //   ? `${events["message.sender"][0]}`
         //   : "";
-        const firstIndexAddress: string = events["message.sender"]
-          ? `${events["message.sender"][0]}`
-          : "";
+        const firstIndexAddress: string = events['message.sender']
+          ? `${events['message.sender'][0]}`
+          : '';
         const actionSender = getActionAndSender(events);
         let fromAddress = actionSender?.sender ?? firstIndexAddress;
 
-        let toAddress = "";
-        let method = "";
-        let timeStamp = "";
+        let toAddress = '';
+        let method = '';
+        let timeStamp = '';
         const blocknumber = Number(
           message.result.data?.value?.TxResult?.height,
         );
@@ -335,215 +335,215 @@ class ProcessHelper {
         );
         if (!fetchRes.error) {
           console.log(
-            "timestamp fromRPC : ",
+            'timestamp fromRPC : ',
             fetchRes?.data.result.block?.header?.time,
           );
-          timeStamp = fetchRes?.data.result.block?.header?.time ?? "";
+          timeStamp = fetchRes?.data.result.block?.header?.time ?? '';
         }
 
-        console.log("txEvent : ", txEvent);
+        console.log('txEvent : ', txEvent);
 
         switch (txEvent) {
-          case "/cosmos.bank.v1beta1.MsgSend":
+          case '/cosmos.bank.v1beta1.MsgSend':
             type = TRANSACTION_TYPE.COIN_TRANSFER;
-            val = events["transfer.amount"][1] ?? events["transfer.amount"][0];
+            val = events['transfer.amount'][1] ?? events['transfer.amount'][0];
             toAddress =
-              events["transfer.recipient"][1] ??
-              events["transfer.recipient"][0];
+              events['transfer.recipient'][1] ??
+              events['transfer.recipient'][0];
 
             break;
 
-          case "/cosmos.staking.v1beta1.MsgDelegate":
+          case '/cosmos.staking.v1beta1.MsgDelegate':
             if (
-              events["message.sender"] &&
-              events["message.sender"].length === 1
+              events['message.sender'] &&
+              events['message.sender'].length === 1
             ) {
               type = TRANSACTION_TYPE.CREATE_DELEGATOR;
             } else {
               type = TRANSACTION_TYPE.BOND_MORE;
             }
 
-            val = events["delegate.amount"] ? events["delegate.amount"][0] : 0;
-            toAddress = "/cosmos.staking.v1beta1.MsgDelegate";
+            val = events['delegate.amount'] ? events['delegate.amount'][0] : 0;
+            toAddress = '/cosmos.staking.v1beta1.MsgDelegate';
 
             this.processDelegatorRewards(
               fromAddress,
-              events["withdraw_rewards.amount"],
+              events['withdraw_rewards.amount'],
               timeStamp,
             );
             break;
 
-          case "/cosmos.staking.v1beta1.MsgUndelegate":
+          case '/cosmos.staking.v1beta1.MsgUndelegate':
             type = TRANSACTION_TYPE.UNBOND_FUNDS;
-            val = events["unbond.amount"] ? events["unbond.amount"][0] : 0;
-            toAddress = "/cosmos.staking.v1beta1.MsgUndelegate";
+            val = events['unbond.amount'] ? events['unbond.amount'][0] : 0;
+            toAddress = '/cosmos.staking.v1beta1.MsgUndelegate';
 
             this.processDelegatorRewards(
               fromAddress,
-              events["withdraw_rewards.amount"],
+              events['withdraw_rewards.amount'],
               timeStamp,
             );
             break;
 
-          case "/cosmos.staking.v1beta1.MsgCreateValidator":
+          case '/cosmos.staking.v1beta1.MsgCreateValidator':
             type = TRANSACTION_TYPE.CREATE_VALIDATOR;
-            val = events["create_validator.amount"]
-              ? events["create_validator.amount"][0]
+            val = events['create_validator.amount']
+              ? events['create_validator.amount'][0]
               : 0;
-            toAddress = "/cosmos.staking.v1beta1.MsgCreateValidator";
+            toAddress = '/cosmos.staking.v1beta1.MsgCreateValidator';
 
             break;
 
-          case "/ibc.applications.transfer.v1.MsgTransfer":
+          case '/ibc.applications.transfer.v1.MsgTransfer':
             type = TRANSACTION_TYPE.IBC_TRANSFER_INITIATE;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
-            toAddress = events["ibc_transfer.receiver"]
-              ? events["ibc_transfer.receiver"][0]
-              : "";
+            val = events['transfer.amount'] ? events['transfer.amount'][0] : 0;
+            toAddress = events['ibc_transfer.receiver']
+              ? events['ibc_transfer.receiver'][0]
+              : '';
 
             break;
 
-          case "/cosmos.gov.v1beta1.MsgSubmitProposal":
+          case '/cosmos.gov.v1beta1.MsgSubmitProposal':
             type = TRANSACTION_TYPE.SUBMIT_PROPOSAL;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
-            toAddress = "/cosmos.gov.v1.MsgSubmitProposal";
+            val = events['transfer.amount'] ? events['transfer.amount'][0] : 0;
+            toAddress = '/cosmos.gov.v1.MsgSubmitProposal';
 
             break;
 
-          case "/cosmos.gov.v1beta1.MsgVote":
+          case '/cosmos.gov.v1beta1.MsgVote':
             type = TRANSACTION_TYPE.VOTING;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
-            toAddress = "/cosmos.gov.v1.MsgVote";
+            val = events['transfer.amount'] ? events['transfer.amount'][0] : 0;
+            toAddress = '/cosmos.gov.v1.MsgVote';
 
             break;
 
-          case "/ibc.core.client.v1.MsgUpdateClient":
-            txEvent = events?.["message.action"]
-              ? message?.result?.events?.["message.action"][1]
-              : "";
+          case '/ibc.core.client.v1.MsgUpdateClient':
+            txEvent = events?.['message.action']
+              ? message?.result?.events?.['message.action'][1]
+              : '';
 
             switch (txEvent) {
-              case "/ibc.core.channel.v1.MsgRecvPacket":
+              case '/ibc.core.channel.v1.MsgRecvPacket':
                 type = TRANSACTION_TYPE.IBC_TRANSFER_RECEIVE;
-                val = events["coin_spent.amount"]
-                  ? events["coin_spent.amount"][0]
+                val = events['coin_spent.amount']
+                  ? events['coin_spent.amount'][0]
                   : 0;
 
-                toAddress = events["fungible_token_packet.receiver"]
-                  ? events["fungible_token_packet.receiver"][0]
-                  : "";
-                fromAddress = events["fungible_token_packet.sender"]
-                  ? events["fungible_token_packet.sender"][0]
-                  : "";
+                toAddress = events['fungible_token_packet.receiver']
+                  ? events['fungible_token_packet.receiver'][0]
+                  : '';
+                fromAddress = events['fungible_token_packet.sender']
+                  ? events['fungible_token_packet.sender'][0]
+                  : '';
 
                 break;
 
-              case "/ibc.core.channel.v1.MsgAcknowledgement":
+              case '/ibc.core.channel.v1.MsgAcknowledgement':
                 type = TRANSACTION_TYPE.IBC_TRANSFER_CONFIRM;
-                val = events["fungible_token_packet.amount"]
-                  ? events["fungible_token_packet.amount"][0]
+                val = events['fungible_token_packet.amount']
+                  ? events['fungible_token_packet.amount'][0]
                   : 0;
-                toAddress = events["fungible_token_packet.receiver"]
-                  ? events["fungible_token_packet.receiver"][0]
-                  : "";
-                fromAddress = events["fungible_token_packet.sender"]
-                  ? events["fungible_token_packet.sender"][0]
-                  : "";
+                toAddress = events['fungible_token_packet.receiver']
+                  ? events['fungible_token_packet.receiver'][0]
+                  : '';
+                fromAddress = events['fungible_token_packet.sender']
+                  ? events['fungible_token_packet.sender'][0]
+                  : '';
 
                 break;
 
               default:
-                type = "UNKNOWN";
+                type = 'UNKNOWN';
                 break;
             }
 
             break;
 
-          case "/cosmos.authz.v1beta1.MsgExec":
+          case '/cosmos.authz.v1beta1.MsgExec':
             type = TRANSACTION_TYPE.RESTAKING_EXECUTION;
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
-            toAddress = "/cosmos.authz.v1beta1.MsgExec";
+            val = events['transfer.amount'] ? events['transfer.amount'][0] : 0;
+            toAddress = '/cosmos.authz.v1beta1.MsgExec';
 
             break;
 
-          case "/cosmos.staking.v1beta1.MsgEditValidator":
+          case '/cosmos.staking.v1beta1.MsgEditValidator':
             type = TRANSACTION_TYPE.EDIT_VALIDATOR;
-            toAddress = "/cosmos.staking.v1beta1.MsgEditValidator";
+            toAddress = '/cosmos.staking.v1beta1.MsgEditValidator';
             break;
 
-          case "/cosmos.staking.v1beta1.MsgBeginRedelegate":
+          case '/cosmos.staking.v1beta1.MsgBeginRedelegate':
             type = TRANSACTION_TYPE.BEGIN_REDELEGATE;
-            toAddress = "/cosmos.staking.v1beta1.MsgBeginRedelegate";
-            val = events["redelegate.amount"]
-              ? events["redelegate.amount"][0]
+            toAddress = '/cosmos.staking.v1beta1.MsgBeginRedelegate';
+            val = events['redelegate.amount']
+              ? events['redelegate.amount'][0]
               : 0;
 
             this.processDelegatorRewards(
               fromAddress,
-              events["withdraw_rewards.amount"],
+              events['withdraw_rewards.amount'],
               timeStamp,
             );
             break;
 
-          case "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation":
+          case '/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation':
             type = TRANSACTION_TYPE.CANCEL_UNBONDING_DELEGATION;
-            val = events["cancel_unbonding_delegation.amount"]
-              ? events["cancel_unbonding_delegation.amount"][0]
+            val = events['cancel_unbonding_delegation.amount']
+              ? events['cancel_unbonding_delegation.amount'][0]
               : 0;
-            toAddress = "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation";
+            toAddress = '/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation';
             break;
 
-          case "/cosmos.slashing.v1beta1.MsgUnjail":
+          case '/cosmos.slashing.v1beta1.MsgUnjail':
             type = TRANSACTION_TYPE.UNJAIL;
-            toAddress = "/cosmos.slashing.v1beta1.MsgUnjail";
+            toAddress = '/cosmos.slashing.v1beta1.MsgUnjail';
             break;
 
-          case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
+          case '/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward':
             type = TRANSACTION_TYPE.DELEGATOR_REWARD;
             toAddress =
-              "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward";
-            val = events["transfer.amount"] ? events["transfer.amount"][0] : 0;
+              '/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward';
+            val = events['transfer.amount'] ? events['transfer.amount'][0] : 0;
             break;
 
-          case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission":
+          case '/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission':
             type = TRANSACTION_TYPE.VALIDATOR_COMMISSION;
             toAddress =
-              "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission";
+              '/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission';
             break;
 
-          case "/cosmwasm.wasm.v1.MsgStoreCode":
+          case '/cosmwasm.wasm.v1.MsgStoreCode':
             type = TRANSACTION_TYPE.CONTRACT_UPLOAD;
-            toAddress = "/cosmwasm.wasm.v1.MsgStoreCode";
+            toAddress = '/cosmwasm.wasm.v1.MsgStoreCode';
             break;
 
-          case "/cosmwasm.wasm.v1.MsgInstantiateContract":
+          case '/cosmwasm.wasm.v1.MsgInstantiateContract':
             type = TRANSACTION_TYPE.CONTRACT_CREATION;
-            contractAddress = events["instantiate._contract_address"]
-              ? events["instantiate._contract_address"][0]
-              : "";
+            contractAddress = events['instantiate._contract_address']
+              ? events['instantiate._contract_address'][0]
+              : '';
             break;
 
-          case "/cosmwasm.wasm.v1.MsgExecuteContract":
+          case '/cosmwasm.wasm.v1.MsgExecuteContract':
             type = TRANSACTION_TYPE.CONTRACT_EXECUTE;
-            contractAddress = events["execute._contract_address"]
-              ? events["execute._contract_address"][0]
-              : "";
-            val = events["wasm.amount"] ? events["wasm.amount"][0] : 0;
-            method = events["wasm.action"] ? events["wasm.action"][0] : 0;
+            contractAddress = events['execute._contract_address']
+              ? events['execute._contract_address'][0]
+              : '';
+            val = events['wasm.amount'] ? events['wasm.amount'][0] : 0;
+            method = events['wasm.action'] ? events['wasm.action'][0] : 0;
             break;
 
-          case "/ethermint.evm.v1.MsgEthereumTx":
+          case '/ethermint.evm.v1.MsgEthereumTx':
             type = TRANSACTION_TYPE.COIN_RECEIVE;
-            val = events["coin_received.amount"]
-              ? events["coin_received.amount"][0]
+            val = events['coin_received.amount']
+              ? events['coin_received.amount'][0]
               : 0;
-            toAddress = events["transfer.recipient"]
-              ? events["transfer.recipient"][1]
-              : "";
+            toAddress = events['transfer.recipient']
+              ? events['transfer.recipient'][1]
+              : '';
             break;
 
           default:
-            type = "UNKNOWN";
+            type = 'UNKNOWN';
             break;
         }
         let amount;
@@ -559,37 +559,37 @@ class ProcessHelper {
           amount = val;
         }
 
-        console.log("txFeeData", events["tx.fee"]);
+        console.log('txFeeData', events['tx.fee']);
 
         // const txFeeData = events["tx.fee"][0]
         //   ? events["tx.fee"][0].match(/[\d.]+/g)[0]
         //   : "";
 
-        const txFeeData = events?.["tx.fee"]?.[0]?.match(/[\d.]+/g)?.[0] ?? 0;
+        const txFeeData = events?.['tx.fee']?.[0]?.match(/[\d.]+/g)?.[0] ?? 0;
 
-        console.log("txFeeData", txFeeData);
+        console.log('txFeeData', txFeeData);
 
         const txFee = txFeeData
           ? (Number(txFeeData) / 10 ** 18).toString()
           : txFeeData.toString();
-        console.log("txFee", txFee);
+        console.log('txFee', txFee);
         burnedFee = (Number(txFee) * 0.2).toFixed(11);
         const txData = {
           type,
           status,
           value: amount.toString(),
           timestamp: timeStamp,
-          txString: message.result.data?.value?.TxResult?.tx ?? "",
+          txString: message.result.data?.value?.TxResult?.tx ?? '',
           txhash: `0x${hash}`,
           toAddress,
           blocknumber: Number(message.result.data?.value?.TxResult?.height),
           fromAddress,
           txFee,
           gasWanted: Number(
-            message.result.data?.value?.TxResult?.result?.gas_wanted ?? "",
+            message.result.data?.value?.TxResult?.result?.gas_wanted ?? '',
           ),
           gasUsed: Number(
-            message.result.data?.value?.TxResult?.result?.gas_used ?? "",
+            message.result.data?.value?.TxResult?.result?.gas_used ?? '',
           ),
           contractAddress,
           burnedFee: Number(burnedFee),
@@ -604,9 +604,9 @@ class ProcessHelper {
         await dbHelper.saveTransactions(txData);
 
         if (txData.type === TRANSACTION_TYPE.VOTING) {
-          let answer = events["proposal_vote.option"]
-            ? events["proposal_vote.option"][0].split(" ")[0].split(":")[1]
-            : "";
+          let answer = events['proposal_vote.option']
+            ? events['proposal_vote.option'][0].split(' ')[0].split(':')[1]
+            : '';
 
           switch (answer) {
             case RES_MSG.VOTE_OPTION_YES:
@@ -625,24 +625,24 @@ class ProcessHelper {
               break;
           }
           const voters: IVoters = {
-            proposalId: events["proposal_vote.proposal_id"]
-              ? events["proposal_vote.proposal_id"][0]
-              : "",
+            proposalId: events['proposal_vote.proposal_id']
+              ? events['proposal_vote.proposal_id'][0]
+              : '',
             answer,
             txHash: txData.txhash,
-            blockNumber: events["tx.height"] ? events["tx.height"][0] : "",
-            voter: events["message.sender"]
-              ? `${events["message.sender"][0]}`
-              : "",
+            blockNumber: events['tx.height'] ? events['tx.height'][0] : '',
+            voter: events['message.sender']
+              ? `${events['message.sender'][0]}`
+              : '',
           };
 
           // save the details of voters
           const voterSaveRes = await dbHelper.saveVoters(voters);
 
-          console.log("voterSaveRes : ", voterSaveRes);
+          console.log('voterSaveRes : ', voterSaveRes);
         }
 
-        let contractType = "UNKNOWN";
+        let contractType = 'UNKNOWN';
 
         if (txData.type === TRANSACTION_TYPE.CONTRACT_CREATION) {
           // call the method to get the type of contract
@@ -651,22 +651,22 @@ class ProcessHelper {
               txData.contractAddress,
             );
             if (contractType === null) {
-              contractType = "UNKNOWN";
+              contractType = 'UNKNOWN';
             }
           }
 
           const contractDetails: IContracts = {
-            contractName: "",
+            contractName: '',
             txHash: txData.txhash,
-            blockNumber: events["tx.height"] ? events["tx.height"][0] : "",
-            address: events["instantiate._contract_address"]
-              ? events["instantiate._contract_address"][0]
-              : "",
+            blockNumber: events['tx.height'] ? events['tx.height'][0] : '',
+            address: events['instantiate._contract_address']
+              ? events['instantiate._contract_address'][0]
+              : '',
             contractType,
             timestamp: txData.timestamp,
-            creator: events["message.sender"]
-              ? events["message.sender"][0]
-              : "",
+            creator: events['message.sender']
+              ? events['message.sender'][0]
+              : '',
           };
 
           const contractName = await this.cosmjsInstace.getContractName(
@@ -763,7 +763,7 @@ class ProcessHelper {
       }
       return true;
     } catch (error) {
-      console.log("error while processing tranactions ", error);
+      console.log('error while processing tranactions ', error);
       return false;
     }
   }
@@ -784,7 +784,7 @@ class ProcessHelper {
       );
       if (fetchRes?.data?.result && !fetchRes.error) {
         console.log(
-          "tx Data inside missedTx : ",
+          'tx Data inside missedTx : ',
           JSON.stringify(fetchRes?.data),
         );
 
@@ -801,48 +801,48 @@ class ProcessHelper {
         const txData: ITransaction = {
           status,
           txhash: `0x${txHash}`,
-          txString: fetchRes.data?.result?.tx ?? "",
+          txString: fetchRes.data?.result?.tx ?? '',
           blocknumber: Number(fetchRes.data?.result?.height ?? 0),
-          txFee: fetchRes.data.result?.tx_result?.gas_used ?? "",
-          gasWanted: fetchRes.data.result?.tx_result?.gas_wanted ?? "",
-          gasUsed: fetchRes.data.result?.tx_result?.gas_used ?? "",
-          type: "",
-          toAddress: "",
-          fromAddress: "",
-          value: "",
-          timestamp: "",
-          contractAddress: "",
+          txFee: fetchRes.data.result?.tx_result?.gas_used ?? '',
+          gasWanted: fetchRes.data.result?.tx_result?.gas_wanted ?? '',
+          gasUsed: fetchRes.data.result?.tx_result?.gas_used ?? '',
+          type: '',
+          toAddress: '',
+          fromAddress: '',
+          value: '',
+          timestamp: '',
+          contractAddress: '',
           burnedFee: Number(burnedFee),
         };
 
         const filteredEvents = events.filter(
           (event: any) =>
-            event.type === "message" &&
-            event?.attributes.some((attr: any) => attr.key === "action"),
+            event.type === 'message' &&
+            event?.attributes.some((attr: any) => attr.key === 'action'),
         );
 
         const eventObj = filteredEvents[0]?.attributes.find(
-          (i: any) => i.key === "action",
+          (i: any) => i.key === 'action',
         );
-        const txEvent = eventObj?.value || "";
+        const txEvent = eventObj?.value || '';
 
         switch (txEvent) {
-          case "/cosmos.bank.v1beta1.MsgSend":
+          case '/cosmos.bank.v1beta1.MsgSend':
             txData.type = TRANSACTION_TYPE.COIN_TRANSFER;
             break;
-          case "/cosmos.staking.v1beta1.MsgDelegate":
+          case '/cosmos.staking.v1beta1.MsgDelegate':
             txData.type = TRANSACTION_TYPE.BOND_MORE;
             break;
 
-          case "/cosmos.staking.v1beta1.MsgUndelegate":
+          case '/cosmos.staking.v1beta1.MsgUndelegate':
             txData.type = TRANSACTION_TYPE.UNBOND_FUNDS;
             break;
 
-          case "/cosmwasm.wasm.v1.MsgInstantiateContract":
+          case '/cosmwasm.wasm.v1.MsgInstantiateContract':
             txData.type = TRANSACTION_TYPE.CONTRACT_CREATION;
             break;
 
-          case "/cosmwasm.wasm.v1.MsgExecuteContract":
+          case '/cosmwasm.wasm.v1.MsgExecuteContract':
             txData.type = TRANSACTION_TYPE.CONTRACT_EXECUTE;
             break;
 
@@ -850,19 +850,19 @@ class ProcessHelper {
             break;
         }
 
-        const transferEvent = events.find((i: any) => i.type === "transfer");
+        const transferEvent = events.find((i: any) => i.type === 'transfer');
 
         transferEvent?.attributes?.forEach((i: any) => {
           switch (i.key) {
-            case "recipient":
-              txData.toAddress = i?.value || "";
+            case 'recipient':
+              txData.toAddress = i?.value || '';
               break;
 
-            case "sender":
-              txData.fromAddress = i?.value || "";
+            case 'sender':
+              txData.fromAddress = i?.value || '';
               break;
 
-            case "amount": {
+            case 'amount': {
               const val = i?.value ?? 0;
               const amount = val
                 ? noExponent(Number(retriveNumbers(val)) / 10 ** 18)
@@ -884,18 +884,18 @@ class ProcessHelper {
           null,
         );
         if (!fetchRes2.error) {
-          txData.timestamp = fetchRes2?.data.result.block?.header?.time ?? "";
+          txData.timestamp = fetchRes2?.data.result.block?.header?.time ?? '';
         }
 
-        console.log("start missed tx+++++++++++++", Date.now());
+        console.log('start missed tx+++++++++++++', Date.now());
         const saveRes = await dbHelper.saveTransactions(txData);
-        console.log("end missed tx+++++++++++++", Date.now());
-        console.log("txData: ", saveRes, txData);
+        console.log('end missed tx+++++++++++++', Date.now());
+        console.log('txData: ', saveRes, txData);
         return !saveRes.error;
       }
-      throw new Error("Error while getting TX by hash ");
+      throw new Error('Error while getting TX by hash ');
     } catch (error) {
-      console.log("error while processing missed txs : ", error);
+      console.log('error while processing missed txs : ', error);
       return false;
     }
   }
@@ -907,7 +907,7 @@ class ProcessHelper {
    */
   public async processErrorBlock(blockNumber: string) {
     try {
-      console.log("block Number", blockNumber);
+      console.log('block Number', blockNumber);
       const url2 = `${environment.httpHost}/block?height=${blockNumber}`;
       const fetchRes2 = await fetchRequest(
         url2,
@@ -917,7 +917,7 @@ class ProcessHelper {
       );
 
       if (!fetchRes2?.data?.result) {
-        console.log("fetchRes2?.data ", fetchRes2);
+        console.log('fetchRes2?.data ', fetchRes2);
       }
 
       const validatorOperatorAddress: string =
@@ -925,20 +925,20 @@ class ProcessHelper {
           await this.cosmjsInstace.tendermintValAddressToValoperAddress(
             fetchRes2?.data.result.block?.header?.proposer_address,
           )
-        ) ?? "";
+        ) ?? '';
 
       const miner =
         <string>(
           await this.cosmjsInstace.getDelegatorAddress(validatorOperatorAddress)
-        ) ?? "";
+        ) ?? '';
 
       if (!fetchRes2.error) {
         const dataToSave: IBlock = {
           miner,
           validatorOperatorAddress,
           blocknumber: Number(blockNumber),
-          blockhash: `0x${fetchRes2?.data?.result?.block_id?.hash ?? ""}`,
-          timestamp: fetchRes2?.data.result.block?.header?.time ?? "",
+          blockhash: `0x${fetchRes2?.data?.result?.block_id?.hash ?? ''}`,
+          timestamp: fetchRes2?.data.result.block?.header?.time ?? '',
           transactionCount:
             fetchRes2?.data.result.block?.data?.txs?.length ?? 0,
         };
@@ -947,11 +947,11 @@ class ProcessHelper {
 
         dbHelper.saveBlockData(dataToSave);
       } else {
-        throw new Error("Error while getting block by number ");
+        throw new Error('Error while getting block by number ');
       }
       return true;
     } catch (error) {
-      console.log("error while processing error blocks : ", error);
+      console.log('error while processing error blocks : ', error);
       return false;
     }
   }
@@ -969,9 +969,9 @@ class ProcessHelper {
         const saveRes = await dbHelper.saveBlockData(blockData);
         return !saveRes.error;
       }
-      throw new Error("Error while saving missed blocks");
+      throw new Error('Error while saving missed blocks');
     } catch (error) {
-      console.log("error while processing missed blocks : ", error);
+      console.log('error while processing missed blocks : ', error);
       return false;
     }
   }
@@ -991,12 +991,12 @@ class ProcessHelper {
         null,
       );
       const newBlock = blockRes?.data?.result?.block?.header?.height;
-      console.log("newBlock: ", newBlock);
-      console.log("lastBlockSaved: ", lastBlockSaved);
+      console.log('newBlock: ', newBlock);
+      console.log('lastBlockSaved: ', lastBlockSaved);
 
       if (newBlock && lastBlockSaved) {
         const diff = Number(newBlock) - Number(lastBlockSaved);
-        console.log("diff : ", diff);
+        console.log('diff : ', diff);
         if (diff > 1) {
           for (
             let i = Number(lastBlockSaved) + 1;
@@ -1020,10 +1020,10 @@ class ProcessHelper {
             }
             // saving missed block to downtime block Queue
           }
-        } else console.log("socket service is upto date.");
+        } else console.log('socket service is upto date.');
       }
     } catch (error) {
-      console.log("error while getting downtimeblocks : ", error);
+      console.log('error while getting downtimeblocks : ', error);
     }
   }
 
@@ -1035,9 +1035,9 @@ class ProcessHelper {
         const saveRes = await dbHelper.saveBlockData(blockData);
         return !saveRes.error;
       }
-      throw new Error("Error while saving missed blocks");
+      throw new Error('Error while saving missed blocks');
     } catch (error) {
-      console.log("error while processing missed blocks : ", error);
+      console.log('error while processing missed blocks : ', error);
       return false;
     }
   }
