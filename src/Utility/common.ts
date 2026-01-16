@@ -407,7 +407,7 @@ export async function getTotalSupply() {
   }
 }
 
-export async function calculateCirculatingSupply() {
+export async function calculateCirculatingSupply_v2() {
   try {
     const apiUrl = `${environment.evmHost}/${environment.projectName}`;
     // locked amount
@@ -450,4 +450,28 @@ export async function getBurnedAmount() {
   }
 }
 
-// EVM_API_BASE_URL
+export async function calculateCirculatingSupply() {
+	try {
+		let circulationSupply = await RedisService.getString(
+			REDIS_KEY.CIRCULATING_SUPPLY,
+		);
+		if (!circulationSupply) {
+			const circulationSupplyUrl = environment.evmApiUrl;
+			const result = await axios.get(
+				`${circulationSupplyUrl}/explorer/circulation-supply`,
+			);
+
+			console.log(result.data.data.circulationSupply, 'CRCLFRMNATIVE');
+			circulationSupply = result?.data?.data?.circulationSupply;
+			await RedisService.setString(
+				REDIS_KEY.CIRCULATING_SUPPLY,
+				circulationSupply,
+			);
+		}
+
+		return circulationSupply;
+	} catch (err) {
+		console.log(err, 'dashboard-Error');
+		return 0;
+	}
+}
