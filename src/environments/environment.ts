@@ -46,7 +46,7 @@ class Environment implements IEnvironment {
 
   public initialSupply: number;
 
-  public evmApiUrl:string
+  public evmApiUrl: string;
 
   /**
    *
@@ -74,8 +74,7 @@ class Environment implements IEnvironment {
     this.initialSupply = Number(process.env.INITIAL_SUPPLY);
     this.projectName = <string>process.env.PROJECT_NAME || "qubetics";
     this.ttlTimeRewards = <number>Number(process.env.TTL_TIME_FOR_REWARDS || 1);
-        this.evmApiUrl = <string>process.env.EVM_API_BASE_URL;
-
+    this.evmApiUrl = <string>process.env.EVM_API_BASE_URL;
   }
 
   /**

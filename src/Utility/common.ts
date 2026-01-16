@@ -451,27 +451,27 @@ export async function getBurnedAmount() {
 }
 
 export async function calculateCirculatingSupply() {
-	try {
-		let circulationSupply = await RedisService.getString(
-			REDIS_KEY.CIRCULATING_SUPPLY,
-		);
-		if (!circulationSupply) {
-			const circulationSupplyUrl = environment.evmApiUrl;
-			const result = await axios.get(
-				`${circulationSupplyUrl}/explorer/circulation-supply`,
-			);
+  try {
+    let circulationSupply = await RedisService.getString(
+      REDIS_KEY.CIRCULATING_SUPPLY,
+    );
+    if (!circulationSupply) {
+      const circulationSupplyUrl = environment.evmApiUrl;
+      const result = await axios.get(
+        `${circulationSupplyUrl}/explorer/circulation-supply`,
+      );
 
-			console.log(result.data.data.circulationSupply, 'CRCLFRMNATIVE');
-			circulationSupply = result?.data?.data?.circulationSupply;
-			await RedisService.setString(
-				REDIS_KEY.CIRCULATING_SUPPLY,
-				circulationSupply,
-			);
-		}
+      console.log(result.data.data.circulationSupply, "CRCLFRMNATIVE");
+      circulationSupply = result?.data?.data?.circulationSupply;
+      await RedisService.setString(
+        REDIS_KEY.CIRCULATING_SUPPLY,
+        circulationSupply,
+      );
+    }
 
-		return circulationSupply;
-	} catch (err) {
-		console.log(err, 'dashboard-Error');
-		return 0;
-	}
+    return circulationSupply;
+  } catch (err) {
+    console.log(err, "dashboard-Error");
+    return 0;
+  }
 }
