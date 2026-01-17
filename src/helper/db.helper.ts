@@ -241,72 +241,7 @@ class ExlorerHelper {
   /**
    * save token price by date
    */
-  saveTokenPriceByDate_1 = async () => {
-    try {
-      const { symbol, currency, coinMarketApi, coinMarketKey } = environment;
 
-      const params = {
-        symbol,
-        convert: currency,
-      };
-
-      const coinResult = (await fetchRequest(coinMarketApi, params, "get", {
-        accept: "application/json",
-        "X-CMC_PRO_API_KEY": coinMarketKey,
-      })) as {
-        price: number;
-        volume24h: number;
-        marketCap: number;
-        circulatingSupply: number;
-        volumeChange24h: number;
-        percentChange1h: number;
-        percentChange24h: number;
-        percentChange7d: number;
-        percentChange30d: number;
-      };
-
-      const coinMarketResult = {
-        price: coinResult.price.toString(),
-        volume24h: coinResult.volume24h.toString(),
-        volumeChange24h: coinResult.volumeChange24h.toString(),
-        percentChange1h: coinResult.percentChange1h.toString(),
-        percentChange24h: coinResult.percentChange24h.toString(),
-        percentChange7d: coinResult.percentChange7d.toString(),
-        percentChange30d: coinResult.percentChange30d.toString(),
-        symbol,
-        currency,
-      };
-
-      await prisma.coinmarketInfo.create({
-        data: coinMarketResult,
-      });
-
-      await RedisService.setString(
-        REDIS_KEY.MARKET_CAP,
-        JSON.stringify(coinResult.marketCap),
-      );
-      await RedisService.setString(
-        REDIS_KEY.CIRCULATING_SUPPLY,
-        JSON.stringify(coinResult.circulatingSupply),
-      );
-      await RedisService.setString(
-        REDIS_KEY.MARKET_CAP_PRICE,
-        JSON.stringify(coinMarketResult),
-      );
-      await RedisService.setString(
-        REDIS_KEY.TOKEN_PRICE,
-        JSON.stringify(coinResult.price),
-      );
-      return {
-        error: false,
-      };
-    } catch (err) {
-      logger.error("unable to save token price", err);
-      return {
-        error: true,
-      };
-    }
-  };
 
   getRedisValue = async (): Promise<
     | {
@@ -661,8 +596,7 @@ class ExlorerHelper {
       const marketCapital: number =
         coinResult?.marketCap !== 0
           ? coinResult?.marketCap
-          : (coinResult?.self_reported_market_cap ??
-            coinPrice * circulating_supply);
+          : coinPrice * circulating_supply;
       /**
        * Uncomment till here
        */
