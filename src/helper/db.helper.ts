@@ -242,7 +242,6 @@ class ExlorerHelper {
    * save token price by date
    */
 
-
   getRedisValue = async (): Promise<
     | {
         supply: number;
