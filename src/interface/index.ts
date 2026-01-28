@@ -1,4 +1,4 @@
-import { TRANSACTION_STATUS, TRANSACTION_TYPE } from "../constant";
+import { TRANSACTION_STATUS, TRANSACTION_TYPE } from '../constant';
 
 export interface IEnvironment {
   port: number;
@@ -239,4 +239,40 @@ export interface IVoters {
   answer: string;
   blockNumber: number;
   voter: string;
+}
+
+/**
+ * Type Definitions for TICS Circulating Supply Calculator
+ */
+
+export interface Allocation {
+	total: number;
+	tge: number;
+	cliff: number | null;
+	vest: number;
+	delay: Date | null;
+}
+
+export interface Allocations {
+	[key: string]: Allocation;
+}
+
+export interface BreakdownItem {
+	unlocked: number;
+	total: number;
+	percentage: number;
+}
+
+export interface Breakdown {
+	[key: string]: BreakdownItem;
+}
+
+export interface SupplyResult {
+	timestamp: string;
+	circulating_supply: number;
+	total_supply: number;
+	max_supply: number;
+	circulating_percentage: number;
+	locked_supply: number;
+	breakdown: Breakdown;
 }
