@@ -251,9 +251,8 @@ class ExlorerHelper {
     | false
   > => {
     try {
-      let supply;
-      supply = await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY);
-      supply = supply || 0;
+      const circulating_supply = await calculateCirculatingSupply();
+      const supply = circulating_supply;
 
       let marketCap;
       marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
@@ -551,7 +550,7 @@ class ExlorerHelper {
       const coinPrice = coinResult?.price ?? CURRENT_DEFAULT_COIN_PRICE;
 
       const circulating_supply = await calculateCirculatingSupply();
-			console.log(circulating_supply, 'Calculated Circulation Supply-latest');
+      console.log(circulating_supply, 'Calculated Circulation Supply-latest');
       // if (
       //   coinResult?.circulatingSupply === 0 ||
       //   coinResult?.circulatingSupply === undefined
@@ -570,10 +569,7 @@ class ExlorerHelper {
       });
 
       await RedisService.setString(REDIS_KEY.MARKET_CAP, marketCapital);
-      await RedisService.setString(
-        REDIS_KEY.CIRCULATING_SUPPLY,
-        circulating_supply,
-      );
+      
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP_PRICE,
         coinMarketResult,

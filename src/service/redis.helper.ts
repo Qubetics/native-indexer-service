@@ -50,24 +50,20 @@ class RedisService {
     }
   }
 
-// set the string data to redis with optional TTL (in seconds)
-public async setString<T>(
-  key: string,
-  data: T,
-  ttl?: number
-) {
-  try {
-    if (ttl) {
-      await this.client.set(key, JSON.stringify(data), {
-        EX: ttl, // TTL in seconds
-      });
-    } else {
-      await this.client.set(key, JSON.stringify(data));
+  // set the string data to redis with optional TTL (in seconds)
+  public async setString<T>(key: string, data: T, ttl?: number) {
+    try {
+      if (ttl) {
+        await this.client.set(key, JSON.stringify(data), {
+          EX: ttl, // TTL in seconds
+        });
+      } else {
+        await this.client.set(key, JSON.stringify(data));
+      }
+    } catch (err) {
+      console.error('error while setting the data into redis: ', err);
     }
-  } catch (err) {
-    console.error('error while setting the data into redis: ', err);
   }
-}
 
   /**
    * save validator Data in set type of redis

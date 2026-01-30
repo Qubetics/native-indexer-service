@@ -174,10 +174,7 @@ const calculateData = async (): Promise<
       JSON.stringify(validatorData),
     );
 
-    // await RedisService.setString(
-    //   REDIS_KEY.CIRCULATING_SUPPLY,
-    //   JSON.stringify(params?.circulation_supply),
-    // );
+    
 
     await RedisService.setString(
       REDIS_KEY.VALIDATOR_DATA,

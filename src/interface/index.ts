@@ -246,33 +246,33 @@ export interface IVoters {
  */
 
 export interface Allocation {
-	total: number;
-	tge: number;
-	cliff: number | null;
-	vest: number;
-	delay: Date | null;
+  total: number;
+  tge: number;
+  cliff: number | null;
+  vest: number;
+  delay: Date | null;
 }
 
 export interface Allocations {
-	[key: string]: Allocation;
+  [key: string]: Allocation;
 }
 
 export interface BreakdownItem {
-	unlocked: number;
-	total: number;
-	percentage: number;
+  unlocked: number;
+  total: number;
+  percentage: number;
 }
 
 export interface Breakdown {
-	[key: string]: BreakdownItem;
+  [key: string]: BreakdownItem;
 }
 
 export interface SupplyResult {
-	timestamp: string;
-	circulating_supply: number;
-	total_supply: number;
-	max_supply: number;
-	circulating_percentage: number;
-	locked_supply: number;
-	breakdown: Breakdown;
+  timestamp: string;
+  circulating_supply: number;
+  total_supply: number;
+  max_supply: number;
+  circulating_percentage: number;
+  locked_supply: number;
+  breakdown: Breakdown;
 }
