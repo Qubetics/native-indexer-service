@@ -40,8 +40,8 @@ class RedisService {
       });
       this.client.on("error", (err: Error) =>
         logger.error(
-          '\x1b[31m%s\x1b[0m',
-          'error while connecting redis server: ',
+          "\x1b[31m%s\x1b[0m",
+          "error while connecting redis server: ",
           err.message,
         ),
       );
@@ -50,10 +50,16 @@ class RedisService {
     }
   }
 
-  // set the string data to redis
-  public async setString<T>(key: string, data: T) {
+  // set the string data to redis with optional TTL (in seconds)
+  public async setString<T>(key: string, data: T, ttl?: number) {
     try {
-      await this.client.set(key, JSON.stringify(data));
+      if (ttl) {
+        await this.client.set(key, JSON.stringify(data), {
+          EX: ttl, // TTL in seconds
+        });
+      } else {
+        await this.client.set(key, JSON.stringify(data));
+      }
     } catch (err) {
       console.error("error while setting the data into redis: ", err);
     }
@@ -84,11 +90,11 @@ class RedisService {
         const valExistingData = existingData.find(
           (i: any) =>
             // const extData = JSON.parse(i);
-            i.validatorAddress === data.validatorAddress
+            i.validatorAddress === data.validatorAddress,
         );
-        console.log('data.validatorAddress : ', data.validatorAddress);
+        console.log("data.validatorAddress : ", data.validatorAddress);
         console.log(
-          'valExistingData?.validatorAddress : ',
+          "valExistingData?.validatorAddress : ",
           valExistingData?.validatorAddress,
         );
 
@@ -194,7 +200,7 @@ class RedisService {
     try {
       await this.client.hSet(redisKey, dataKey, JSON.stringify(dataValue));
       await this.client.expire(redisKey, environment.ttlTimeRewards * 60 * 60);
-      console.log('ttlTimeRewards :', environment.ttlTimeRewards);
+      console.log("ttlTimeRewards :", environment.ttlTimeRewards);
       return true;
     } catch (err) {
       logger.error("error while saving in redis: ", err);
@@ -218,7 +224,7 @@ class RedisService {
       await this.client.incrByFloat(key, value);
       return true;
     } catch (err) {
-      logger.error('Error while incrementing the data from redis: ', err);
+      logger.error("Error while incrementing the data from redis: ", err);
       return false;
     }
   }

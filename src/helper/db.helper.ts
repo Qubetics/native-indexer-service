@@ -2,6 +2,7 @@ import {
   cleanEscapedString,
   parseTics,
   fetchRequest as fetchChainRequest,
+  calculateCirculatingSupply,
 } from "../Utility/common";
 import {
   RES_MSG,
@@ -14,7 +15,7 @@ import {
   CURRENT_DEFAULT_COIN_PRICE,
   CURRENT_DEFAULT_CIRCULATING_SUPPLY,
   TRANSACTION_TYPE,
-} from '../constant';
+} from "../constant";
 import {
   IBlock,
   IContractLogs,
@@ -54,7 +55,7 @@ class ExlorerHelper {
       const error = JSON.parse(JSON.stringify(err));
       console.log("catch block db error : ", err);
 
-      if (error.code === 'P2002') {
+      if (error.code === "P2002") {
         return {
           error: false,
         };
@@ -274,72 +275,6 @@ class ExlorerHelper {
   /**
    * save token price by date
    */
-  saveTokenPriceByDate_1 = async () => {
-    try {
-      const { symbol, currency, coinMarketApi, coinMarketKey } = environment;
-
-      const params = {
-        symbol,
-        convert: currency,
-      };
-
-      const coinResult = (await fetchRequest(coinMarketApi, params, "get", {
-        accept: "application/json",
-        "X-CMC_PRO_API_KEY": coinMarketKey,
-      })) as {
-        price: number;
-        volume24h: number;
-        marketCap: number;
-        circulatingSupply: number;
-        volumeChange24h: number;
-        percentChange1h: number;
-        percentChange24h: number;
-        percentChange7d: number;
-        percentChange30d: number;
-      };
-
-      const coinMarketResult = {
-        price: coinResult.price.toString(),
-        volume24h: coinResult.volume24h.toString(),
-        volumeChange24h: coinResult.volumeChange24h.toString(),
-        percentChange1h: coinResult.percentChange1h.toString(),
-        percentChange24h: coinResult.percentChange24h.toString(),
-        percentChange7d: coinResult.percentChange7d.toString(),
-        percentChange30d: coinResult.percentChange30d.toString(),
-        symbol,
-        currency,
-      };
-
-      await prisma.coinmarketInfo.create({
-        data: coinMarketResult,
-      });
-
-      await RedisService.setString(
-        REDIS_KEY.MARKET_CAP,
-        JSON.stringify(coinResult.marketCap),
-      );
-      await RedisService.setString(
-        REDIS_KEY.CIRCULATING_SUPPLY,
-        JSON.stringify(coinResult.circulatingSupply),
-      );
-      await RedisService.setString(
-        REDIS_KEY.MARKET_CAP_PRICE,
-        JSON.stringify(coinMarketResult),
-      );
-      await RedisService.setString(
-        REDIS_KEY.TOKEN_PRICE,
-        JSON.stringify(coinResult.price),
-      );
-      return {
-        error: false,
-      };
-    } catch (err) {
-      logger.error("unable to save token price", err);
-      return {
-        error: true,
-      };
-    }
-  };
 
   getRedisValue = async (): Promise<
     | {
@@ -350,9 +285,8 @@ class ExlorerHelper {
     | false
   > => {
     try {
-      let supply;
-      supply = await RedisService.getString(REDIS_KEY.CIRCULATING_SUPPLY);
-      supply = supply || 0;
+      const circulating_supply = await calculateCirculatingSupply();
+      const supply = circulating_supply;
 
       let marketCap;
       marketCap = await RedisService.getString(REDIS_KEY.MARKET_CAP);
@@ -612,10 +546,10 @@ class ExlorerHelper {
         convert: currency.toLowerCase(),
       };
 
-      console.log('params', params);
-      const coinResult = (await fetchRequest(coinMarketApi, params, 'get', {
-        accept: 'application/json',
-        'X-CMC_PRO_API_KEY': coinMarketKey,
+      console.log("params", params);
+      const coinResult = (await fetchRequest(coinMarketApi, params, "get", {
+        accept: "application/json",
+        "X-CMC_PRO_API_KEY": coinMarketKey,
       })) as {
         price: number;
         volume24h: number;
@@ -629,18 +563,7 @@ class ExlorerHelper {
         self_reported_circulating_supply: number;
         self_reported_market_cap: number;
       };
-      console.log('coinResult', coinResult);
-
-      // For this example, let (C) = 10,000 USD / 1 BTC and let (S) = 17,000,000 BTC.
-
-      // D = C * S
-      // D = 10,000 USD / 1 BTC * 17,000,000 BTC = 170,000,000,000 USD
-
-      /**
-       * checks to get the market cap values
-       * if value is 0 for market cap from CMC : display self-reported market cap
-       * if self-reported market cap is 0 : D = C * S where C is the last known price in USD and the S is the current supply
-       */
+      console.log("coinResult", coinResult);
 
       const coinMarketResult = {
         price: coinResult.price.toString(),
@@ -654,45 +577,29 @@ class ExlorerHelper {
         currency,
       };
 
-      // const coinPrice = coinResult?.price ?? CURRENT_DEFAULT_COIN_PRICE;
-      // const circulating_supply =
-      //   coinResult?.circulatingSupply !== 0
-      //     ? coinResult?.circulatingSupply
-      //     : coinResult?.self_reported_circulating_supply;
-      // const marketCapital: number =
-      //   coinResult?.marketCap !== 0
-      //     ? coinResult?.marketCap
-      //     : (coinResult?.self_reported_market_cap ??
-      //       coinPrice * circulating_supply);
-
       const coinPrice = coinResult?.price ?? CURRENT_DEFAULT_COIN_PRICE;
-      const circulating_supply = CURRENT_DEFAULT_CIRCULATING_SUPPLY;
-      const marketCapital = coinPrice * circulating_supply;
-      /**
-       * Uncomment from here
-       */
-      // const circulating_supply =
-      // 	coinResult?.circulatingSupply !== 0
-      // 		? coinResult?.circulatingSupply
-      // 		: coinResult?.self_reported_circulating_supply;
-      // const marketCapital: number =
-      // 	coinResult?.marketCap !== 0
-      // 		? coinResult?.marketCap
-      // 		: coinResult?.self_reported_market_cap ??
-      // 			coinPrice * circulating_supply;
-      /**
-       * Uncomment till here
-       */
+
+      const circulating_supply = await calculateCirculatingSupply();
+      console.log(circulating_supply, "Calculated Circulation Supply-latest");
+      // if (
+      //   coinResult?.circulatingSupply === 0 ||
+      //   coinResult?.circulatingSupply === undefined
+      // ) {
+      //   circulating_supply = await calculateCirculatingSupply();
+      //   console.log("NATIVESUPPLY", circulating_supply);
+      // }
+
+      const marketCapital: number =
+        coinResult?.marketCap !== 0
+          ? coinResult?.marketCap
+          : coinPrice * circulating_supply;
 
       await prisma.coinmarketInfo.create({
         data: coinMarketResult,
       });
 
       await RedisService.setString(REDIS_KEY.MARKET_CAP, marketCapital);
-      await RedisService.setString(
-        REDIS_KEY.CIRCULATING_SUPPLY,
-        circulating_supply,
-      );
+
       await RedisService.setString(
         REDIS_KEY.MARKET_CAP_PRICE,
         coinMarketResult,
@@ -703,86 +610,10 @@ class ExlorerHelper {
 
       return true;
     } catch (err) {
-      logger.error('unable to save token price', err);
+      logger.error("unable to save token price", err);
       return false;
     }
   };
-
-  // checkNullTimeStamp = async () => {
-  //   try {
-  //     const getNullTimeStamp: any = await prisma.$queryRaw`
-  //         SELECT "blocknumber" FROM "Blocks" WHERE "timestamp" = null ORDER BY "createdAt" DESC LIMIT 100`;
-  //     if (getNullTimeStamp && getNullTimeStamp.length > 0) {
-  //       return getNullTimeStamp;
-  //       // return txRes;
-  //     }
-  //   } catch (err) {
-  //     console.log('error while saving saveLogs detail', (err as Error).message);
-  //     return null;
-  //   }
-  // };
-
-  // updateNullTimestamp = async (blockNumber: number): Promise<any> => {
-  //   try {
-  //     if (blockNumber) {
-  //       const url2 = `${environment.httpHost}/block?height=${blockNumber}`;
-  //       const fetchRes2: any = await generalAxiosCall(
-  //         url2,
-  //         FETCH_METHODS.GET,
-  //         HEADERS.DEFAULT,
-  //         null
-  //       );
-
-  //       const timestamp = fetchRes2?.data.result.block?.header?.time ?? "";
-  //       await prisma.blocks.update({
-  //         data: {
-  //           timestamp,
-  //         },
-  //         where: {
-  //           blocknumber: blockNumber,
-  //         },
-  //       });
-
-  //       await prisma.contractLogs.update({
-  //         where: {
-  //           blockNumber: blockNumber,
-  //         },
-  //         data: {
-  //           timestamp,
-  //         },
-  //       });
-
-  //       await prisma.contracts.update({
-  //         where: {
-  //           blockNumber: blockNumber,
-  //         },
-  //         data: {
-  //           timestamp,
-  //         },
-  //       });
-  //     }
-
-  //     return {
-  //       error: false,
-  //     };
-  //   } catch (err) {
-  //     const error = JSON.parse(JSON.stringify(err));
-  //     console.log(
-  //       "error.code === 'P2002' unique check fail : ",
-  //       error.code === "P2002"
-  //     );
-
-  //     if (error.code === "P2002") {
-  //       return {
-  //         error: false,
-  //       };
-  //     }
-  //     console.log("block db error : ", err);
-  //     return {
-  //       error: true,
-  //     };
-  //   }
-  // };
 
   getNodeEarning = async (blockNumber: any) => {
     try {

@@ -1,7 +1,17 @@
-import crypto from 'crypto';
-import axios from 'axios';
-import { CONST_NAME,TYPE_MAP } from '../constant';
-import { ITimeStamp } from '../interface';
+import crypto from "crypto";
+import axios from "axios";
+import {
+  CONST_NAME,
+  TYPE_MAP,
+  REDIS_KEY,
+  RES_MSG,
+  STATIC_BURNED_AMOUNT,
+} from "../constant";
+import { calculateSupplyDetails } from "../helper/common.helper";
+import { ITimeStamp } from "../interface";
+import { prisma } from "../lib/db";
+import { RedisService } from "../service";
+import redisHelper from "../service/redis.helper";
 
 /**
  * For making http requests
@@ -347,7 +357,7 @@ export async function calculateBurnedAmount() {
     const apiUrl = environment.evmHost;
 
     const getSupply: any = await axios.get(
-      `${apiUrl}/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`
+      `${apiUrl}/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`,
     );
 
     const { initialSupply } = environment;
@@ -357,7 +367,7 @@ export async function calculateBurnedAmount() {
     const returnValue = initialSupply - circulation_supply;
     return returnValue;
   } catch (error) {
-    console.log(error, 'error in calculateBurnedAmount');
+    console.log(error, "error in calculateBurnedAmount");
     return false;
   }
 }
@@ -366,12 +376,12 @@ export const getType = (type: string): string | undefined =>
   TYPE_MAP[type] ?? type;
 
 export function parseTx(base64Tx: string) {
-  const rawTx = Buffer.from(base64Tx, 'base64');
+  const rawTx = Buffer.from(base64Tx, "base64");
 
   const txHash = crypto
-    .createHash('sha256')
+    .createHash("sha256")
     .update(rawTx)
-    .digest('hex')
+    .digest("hex")
     .toUpperCase();
 
   // const decodedTx = decodeTxRaw(rawTx);
@@ -383,20 +393,24 @@ export function parseTx(base64Tx: string) {
 }
 
 export const parseTics = (val: string | number): string => {
-  if (!val) return '';
-  const raw = val.toString().replace(/"/g, '').trim();
-  const value = Number(raw.replace('tics', ''));
-  return value ? noExponent(value / 10 ** 18) : '';
+  if (!val) return "";
+  const raw = val.toString().replace(/"/g, "").trim();
+  const value = Number(raw.replace("tics", ""));
+  return value ? noExponent(value / 10 ** 18) : "";
 };
 
-export function getActionAndSender(events: any[]) {
-  // find the "message" type event
+export function isBase64(value: string): boolean {
+  return /^[A-Za-z0-9+/=]+$/.test(value);
+}
 
+export function getActionAndSender(events: any[]) {
+  // array case
   if (Array.isArray(events)) {
-    const messageEvent = events.find((e) => e.type === 'message');
+    const messageEvent = events.find((e) => e.type === "message");
     if (!messageEvent) return null;
 
     const attrs: Record<string, string> = {};
+
     messageEvent.attributes.forEach((attr: any) => {
       attrs[attr.key] = attr.value;
     });
@@ -407,13 +421,162 @@ export function getActionAndSender(events: any[]) {
       module: attrs.module || null,
     };
   }
+
+  // object case (flat event map)
   return {
-    action: events['message.action']?.[0] || null,
-    sender: events['message.sender']?.[0] || null,
-    module: events['message.module']?.[0] || null,
+    action: events["message.action"]?.[0] || null,
+    sender: events["message.sender"]?.[0] || null,
+    module: events["message.module"]?.[0] || null,
   };
 }
 
-export function isBase64(value: string): boolean {
-  return /^[A-Za-z0-9+/=]+$/.test(value);
+export async function getTotalSupply() {
+  try {
+    let totalSupply = await RedisService.getString(REDIS_KEY.TOTAL_SUPPLY);
+
+    if (!totalSupply) {
+      /** save burned fees */
+
+      let burnedAmount = await RedisService.getString(
+        REDIS_KEY.TOTAL_BURNED_AMOUNT,
+      );
+
+      if (!burnedAmount) {
+        burnedAmount = await getBurnedAmount();
+      }
+
+      const { initialSupply } = environment;
+      totalSupply = initialSupply - burnedAmount;
+      console.log("native-initialSupply", initialSupply, totalSupply);
+      await redisHelper.setString(REDIS_KEY.TOTAL_SUPPLY, totalSupply);
+    }
+
+    return {
+      error: false,
+      message: RES_MSG.FETCH_SUCCESS,
+      data: {
+        totalSupply,
+      },
+    };
+  } catch (err) {
+    console.error("dashboard-Error", err);
+    return { error: true, message: RES_MSG.NOT_FOUND };
+  }
+}
+
+export async function calculateCirculatingSupply_v2() {
+  try {
+    const apiUrl = `${environment.evmHost}/${environment.projectName}`;
+    // locked amount
+    const lockedSupply: any = await axios.get(
+      `${apiUrl}/validatorpool/locked_supply`,
+    );
+
+    // total supply
+
+    const totalSupply: any = await getTotalSupply();
+    const locked_supply: number =
+      Number(lockedSupply.data.locked_supply) / CONST_NAME.ETH_EXP;
+
+    const returnValue = totalSupply - locked_supply;
+
+    return returnValue;
+  } catch (error) {
+    console.log(error, "error in calculateCirculatingSupply");
+    return 0;
+  }
+}
+
+export async function getBurnedAmount() {
+  try {
+    const burnedAmount: any = await prisma.transactions.aggregate({
+      _sum: {
+        burnedFee: true,
+      },
+    });
+
+    if (burnedAmount) {
+      return (
+        Number(burnedAmount?._sum.burnedFee) + Number(STATIC_BURNED_AMOUNT)
+      );
+    }
+    return Number(STATIC_BURNED_AMOUNT);
+  } catch (error) {
+    console.log(error, "error in getBurnedAmount");
+    return STATIC_BURNED_AMOUNT;
+  }
+}
+
+export async function calculateCirculatingSupply() {
+  try {
+    const supplyDetails = calculateSupplyDetails();
+    const circulatingSupply = supplyDetails.circulating_supply;
+    return circulatingSupply;
+  } catch (err) {
+    console.error("calculateCirculatingSupply-Error", err);
+    return 0;
+  }
+}
+
+/**
+ * Utility Helper Functions
+ */
+
+/**
+ * Add calendar months to a date, handling month-end edge cases.
+ *
+ * @param date - The starting date
+ * @param months - Number of months to add
+ * @returns New date with months added
+ *
+ * @example
+ * addMonths(new Date('2025-01-31'), 1) // Returns 2025-02-28
+ * addMonths(new Date('2025-01-15'), 3) // Returns 2025-04-15
+ */
+export function addMonths(date: Date, months: number): Date {
+  const result = new Date(date);
+  const currentMonth = result.getMonth();
+  const currentDay = result.getDate();
+
+  result.setMonth(currentMonth + months);
+
+  // Handle edge case where day doesn't exist in target month (e.g., Jan 31 + 1 month)
+  if (result.getDate() !== currentDay) {
+    result.setDate(0); // Set to last day of previous month
+  }
+
+  return result;
+}
+
+/**
+ * Get current date normalized to 13:00 UTC.
+ * All token unlocks happen at 13:00 UTC daily.
+ *
+ * @returns Current date at 13:00:00.000 UTC
+ */
+export function getCurrentDateTime(): Date {
+  const now = new Date();
+  return new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      13,
+      0,
+      0,
+      0,
+    ),
+  );
+}
+
+/**
+ * Round a number to specified decimal places.
+ *
+ * @param value - Number to round
+ * @param decimals - Number of decimal places (default: 2)
+ * @returns Rounded number
+ */
+export function roundToDecimals(value: number, decimals: number = 2): number {
+  const multiplier = 10 ** decimals;
+  return Math.round(value * multiplier) / multiplier;
 }

@@ -187,9 +187,10 @@ export class CosmJsRpcMethods {
     }
   }
 
-    async getValoperFromBase64(proposerBase64: string): Promise<string> {
+  async getValoperFromBase64(proposerBase64: string): Promise<string> {
     const consHex = toHex(fromBase64(proposerBase64)).toUpperCase();
-    const thevalporAddress:any = await this.tendermintValAddressToValoperAddress(consHex);
+    const thevalporAddress: any =
+      await this.tendermintValAddressToValoperAddress(consHex);
     return thevalporAddress;
   }
 }

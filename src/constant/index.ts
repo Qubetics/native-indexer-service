@@ -1,4 +1,5 @@
 import moment from "moment";
+import type { Allocations } from "../interface/index";
 
 export const REGEX = {
   numbersOnly: /\d+(\.\d+)?/,
@@ -69,38 +70,39 @@ export const CONST_NAME = {
 };
 
 export const QUEUE_NAME = {
-  LATEST_TXS: 'NATIVE_LATEST_TXS',
-  MISSED_TXS: 'NATIVE_MISSED_TXS',
-  ERROR_BLOCK: 'NATIVE_ERROR_BLOCK',
-  MISSED_BLOCK: 'NATIVE_MISSED_BLOCK',
-  LATEST_BLOCKS: 'NATIVE_LATEST_BLOCKS',
-  DOWNTIME_BLOCK: 'NATIVE_DOWNTIME_BLOCK',
-  DOWNTIME_TXS: 'NATIVE_DOWNTIME_TXS',
-  LATEST_PROPOSALS: 'LATEST_PROPOSALS',
-  NULL_TIMESTAMP: 'NULL_TIMESTAMP',
+  LATEST_TXS: "NATIVE_LATEST_TXS",
+  MISSED_TXS: "NATIVE_MISSED_TXS",
+  ERROR_BLOCK: "NATIVE_ERROR_BLOCK",
+  MISSED_BLOCK: "NATIVE_MISSED_BLOCK",
+  LATEST_BLOCKS: "NATIVE_LATEST_BLOCKS",
+  DOWNTIME_BLOCK: "NATIVE_DOWNTIME_BLOCK",
+  DOWNTIME_TXS: "NATIVE_DOWNTIME_TXS",
+  LATEST_PROPOSALS: "LATEST_PROPOSALS",
+  NULL_TIMESTAMP: "NULL_TIMESTAMP",
 };
 
 export const REDIS_KEY = {
-  MARKET_CAP: 'MARKET_CAP',
-  MARKET_CAP_PRICE: 'MARKET_CAP_PRICE',
-  CIRCULATING_SUPPLY: 'CIRCULATING_SUPPLY',
-  TOKEN_PRICE: 'TOKEN_PRICE',
-  LATEST_BLOCK: 'LATEST_BLOCK',
-  INFLATION_APY: 'INFALTION_AND_APY',
-  VALIDATOR_DETAILS: 'VALIDATORS_DETAILS',
-  DELEGATORS_DETAILS: 'DELEGATORS_DETAILS',
-  VALIDATOR_ID_COUNTER: 'VALIDATOR_ID_COUNTER',
-  DELEGATOR_ID_COUNTER: 'DELEGATOR_ID_COUNTER',
-  ACCOUNT_GRAPH: 'ACCOUNT_GRAPH_PAYLOAD',
-  TPS_GRAPH: 'TPS_GRAPH_PAYLOAD',
-  CONTRACT_DEPLOY_GRAPH: 'CONTRACT_DEPLOY_GRAPH_PAYLOAD',
-  NATIVE_BLOCKS_COUNT: 'NATIVE_BLOCKS_COUNT',
-  NATIVE_TRANSACTIONS_COUNT: 'NATIVE_TRANSACTIONS_COUNT',
-  VALIDATOR_DATA: 'VALIDATOR_DATA',
-  COIN_PRICE: 'COIN_PRICE',
-  TOKEN_GRAPH: 'TOKEN_GRAPH_PAYLOAD',
-  TOTAL_BURNED_AMOUNT: 'TOTAL_BURNED_AMOUNT',
-  REWARDS: 'REWARDS',
+  MARKET_CAP: "MARKET_CAP",
+  MARKET_CAP_PRICE: "MARKET_CAP_PRICE",
+  CIRCULATING_SUPPLY: "CIRCULATING_SUPPLY",
+  TOKEN_PRICE: "TOKEN_PRICE",
+  LATEST_BLOCK: "LATEST_BLOCK",
+  INFLATION_APY: "INFALTION_AND_APY",
+  VALIDATOR_DETAILS: "VALIDATORS_DETAILS",
+  DELEGATORS_DETAILS: "DELEGATORS_DETAILS",
+  VALIDATOR_ID_COUNTER: "VALIDATOR_ID_COUNTER",
+  DELEGATOR_ID_COUNTER: "DELEGATOR_ID_COUNTER",
+  ACCOUNT_GRAPH: "ACCOUNT_GRAPH_PAYLOAD",
+  TPS_GRAPH: "TPS_GRAPH_PAYLOAD",
+  CONTRACT_DEPLOY_GRAPH: "CONTRACT_DEPLOY_GRAPH_PAYLOAD",
+  NATIVE_BLOCKS_COUNT: "NATIVE_BLOCKS_COUNT",
+  NATIVE_TRANSACTIONS_COUNT: "NATIVE_TRANSACTIONS_COUNT",
+  VALIDATOR_DATA: "VALIDATOR_DATA",
+  COIN_PRICE: "COIN_PRICE",
+  TOKEN_GRAPH: "TOKEN_GRAPH_PAYLOAD",
+  TOTAL_BURNED_AMOUNT: "TOTAL_BURNED_AMOUNT",
+  REWARDS: "REWARDS",
+  TOTAL_SUPPLY: "TOTAL_SUPPLY",
 };
 
 export const SOCKET_EVENT = {
@@ -163,27 +165,92 @@ export const FETCH_METHODS = {
 };
 
 export const COLORS = {
-  reset: '\x1b[0m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m',
-  white: '\x1b[37m',
+  reset: "\x1b[0m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  magenta: "\x1b[35m",
+  cyan: "\x1b[36m",
+  white: "\x1b[37m",
 };
 
 export const CURRENT_DEFAULT_COIN_PRICE = 0.337097;
 export const CURRENT_DEFAULT_CIRCULATING_SUPPLY = 340829898;
 export const STATIC_BURNED_AMOUNT = 52611;
 
+export const TOTAL_SUPPLY = 1_361_867_964;
+
+// Network launch date: June 30, 2025, 13:00 UTC
+// Note: JavaScript months are 0-indexed (0 = January, 5 = June)
+export const NETWORK_LAUNCH = new Date(Date.UTC(2025, 5, 30, 13, 0, 0));
+
+export const ALLOCATIONS: Allocations = {
+  public_sale: {
+    total: 517_146_186.0,
+    tge: 0,
+    cliff: 1,
+    vest: 3,
+    delay: null,
+  },
+  ecosystem: {
+    total: 305_421_864.1,
+    tge: 10,
+    cliff: 5,
+    vest: 6,
+    delay: null,
+  },
+  network_operation: {
+    total: 187_665_305.4,
+    tge: 0,
+    cliff: 4,
+    vest: 9,
+    delay: null,
+  },
+  reserve: {
+    total: 116_167_237.3,
+    tge: 0,
+    cliff: 4,
+    vest: 6,
+    delay: null,
+  },
+  foundation: {
+    total: 95_330_657.48,
+    tge: 0,
+    cliff: 4,
+    vest: 6,
+    delay: null,
+  },
+  community_incentives: {
+    total: 44_805_356.02,
+    tge: 0,
+    cliff: 4,
+    vest: 6,
+    delay: null,
+  },
+  team: {
+    total: 68_093_298.2,
+    tge: 0,
+    cliff: null,
+    vest: 6,
+    delay: new Date(Date.UTC(2027, 11, 31, 13, 0, 0)), // December 31, 2027
+  },
+  advisors: {
+    total: 27_237_259.28,
+    tge: 0,
+    cliff: null,
+    vest: 6,
+    delay: new Date(Date.UTC(2027, 11, 31, 13, 0, 0)), // December 31, 2027
+  },
+};
+
 export const TYPE_MAP: Record<string, string> = {
-  '/qubetics.plan.v3.MsgCreatePlanRequest': 'CREATE_PLAN',
-  '/qubetics.plan.v3.MsgUpdatePlanStatusRequest': 'UPDATE_PLAN_STATUS',
-  '/qubetics.lease.v1.MsgStartLeaseRequest': 'START_LEASE',
-  '/qubetics.node.v3.MsgUpdateNodeStatusRequest': 'UPDATE_NODE_STATUS',
-  '/qubetics.plan.v3.MsgLinkNodeRequest': 'LINK_NODE',
-  '/qubetics.plan.v3.MsgUnlinkNodeRequest': 'UNLINK_NODE',
-  '/qubetics.lease.v1.MsgEndLeaseRequest': 'End_Lease',
-  '/qubetics.session.v3.MsgUpdateSessionRequest': 'Session_Updated',
+  "/qubetics.plan.v3.MsgCreatePlanRequest": "CREATE_PLAN",
+  "/qubetics.plan.v3.MsgUpdatePlanStatusRequest": "UPDATE_PLAN_STATUS",
+  "/qubetics.lease.v1.MsgStartLeaseRequest": "START_LEASE",
+  "/qubetics.node.v3.MsgUpdateNodeStatusRequest": "UPDATE_NODE_STATUS",
+  "/qubetics.plan.v3.MsgLinkNodeRequest": "LINK_NODE",
+  "/qubetics.plan.v3.MsgUnlinkNodeRequest": "UNLINK_NODE",
+  "/qubetics.lease.v1.MsgEndLeaseRequest": "End_Lease",
+  "/qubetics.session.v3.MsgUpdateSessionRequest": "Session_Updated",
 };

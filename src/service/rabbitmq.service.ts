@@ -124,8 +124,8 @@ class RabbitMq {
       );
     } catch (error) {
       console.log(
-        'error while consuming all consumeLatestTransaction : ',
-        error
+        "error while consuming all consumeLatestTransaction : ",
+        error,
       );
     }
   }
@@ -152,8 +152,7 @@ class RabbitMq {
             }
           }
         },
-        { noAck: false }
-        
+        { noAck: false },
       );
     } catch (error) {
       console.log("error while consuming all consumeDownTransaction : ", error);
