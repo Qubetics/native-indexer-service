@@ -101,9 +101,11 @@ class ProcessHelper {
             message.result.data?.value?.block?.header?.proposer_address,
           );
 
-        const miner = await this.cosmjsInstace.getDelegatorAddress(
-          validatorOperatorAddress,
-        );
+        const miner = validatorOperatorAddress
+          ? await this.cosmjsInstace.getDelegatorAddress(
+              validatorOperatorAddress,
+            )
+          : '';
 
         const blockDetails = {
           miner,
@@ -969,7 +971,7 @@ class ProcessHelper {
           toAddress: '',
           fromAddress: '',
           value: '',
-          timestamp: '',
+          timestamp: new Date().toISOString(),
           contractAddress: '',
           burnedFee: Number(burnedFee),
         };
@@ -1075,6 +1077,11 @@ class ProcessHelper {
         null,
       );
 
+      if (!fetchRes2?.data?.result) {
+        console.log('fetchRes2?.data ', fetchRes2);
+        throw new Error('Failed to fetch block data - null result');
+      }
+
       const sessionData = await ExlorerHelper.getNodeEarning(blockNumber);
 
       if (sessionData) {
@@ -1087,10 +1094,6 @@ class ProcessHelper {
         await dbHelper.saveSessionTransactions(fullSessionData);
       }
 
-      if (!fetchRes2?.data?.result) {
-        console.log('fetchRes2?.data ', fetchRes2);
-      }
-
       const validatorOperatorAddress: string =
         <string>(
           await this.cosmjsInstace.tendermintValAddressToValoperAddress(
@@ -1098,10 +1101,13 @@ class ProcessHelper {
           )
         ) ?? '';
 
-      const miner =
-        <string>(
-          await this.cosmjsInstace.getDelegatorAddress(validatorOperatorAddress)
-        ) ?? '';
+      const miner = validatorOperatorAddress
+        ? <string>(
+            await this.cosmjsInstace.getDelegatorAddress(
+              validatorOperatorAddress,
+            )
+          ) ?? ''
+        : '';
 
       if (!fetchRes2.error) {
         const dataToSave: IBlock = {
