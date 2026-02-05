@@ -160,7 +160,7 @@ class ExlorerHelper {
       await prisma.dvpnTransaction.create({
         data: sessionData,
       });
-      console.log("DVPN Transaction saved!!!!");
+      console.log("DVPN Transaction saved!!!!",sessionData?.type);
       return {
         error: false,
       };
@@ -810,7 +810,7 @@ class ExlorerHelper {
 
           sessionData = {
             logs: "",
-            txhash: "",
+            txhash: null,
             subscriptionId: "",
             planId: "",
             sessionId: "",
