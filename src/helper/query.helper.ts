@@ -1,4 +1,4 @@
-import { prisma } from '../lib/db';
+import { prisma } from "../lib/db";
 
 export const getTxHourlyQuery = async (
   startDate: string,
@@ -128,7 +128,7 @@ export const getTokenHourlyPriceQuery = async (
       },
     },
     orderBy: {
-      createdAt: 'asc',
+      createdAt: "asc",
     },
     select: {
       createdAt: true,
@@ -181,7 +181,7 @@ export const getTokenPriceGraph = async (startDate: Date, endDate: Date) =>
       },
     },
     orderBy: {
-      createdAt: 'asc',
+      createdAt: "asc",
     },
     select: {
       createdAt: true,
@@ -195,7 +195,7 @@ export const getRowCount = async (tableName: string) => {
       await prisma.$queryRaw`SELECT n_live_tup::bigint AS row_count FROM pg_stat_all_tables WHERE relname = ${tableName}`;
 
     const rowCount = result[0].row_count;
-    return rowCount === '-1' ? 0 : Number(rowCount);
+    return rowCount === "-1" ? 0 : Number(rowCount);
   } catch (error) {
     return 0;
   } finally {
