@@ -1102,11 +1102,11 @@ class ProcessHelper {
         ) ?? '';
 
       const miner = validatorOperatorAddress
-        ? <string>(
+        ? (<string>(
             await this.cosmjsInstace.getDelegatorAddress(
               validatorOperatorAddress,
             )
-          ) ?? ''
+          ) ?? '')
         : '';
 
       if (!fetchRes2.error) {
