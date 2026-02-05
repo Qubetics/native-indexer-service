@@ -1,12 +1,12 @@
-import axios, { AxiosResponse, Method, AxiosInstance } from "axios";
+import axios, { AxiosResponse, Method, AxiosInstance } from 'axios';
 import {
   addMonths,
   getCurrentDateTime,
   roundToDecimals,
-} from "../Utility/common";
-import { ALLOCATIONS, TOTAL_SUPPLY, NETWORK_LAUNCH } from "../constant/index";
-import type { SupplyResult, Breakdown, Allocation } from "../interface/index";
-import logger from "../lib/logger";
+} from '../Utility/common';
+import { ALLOCATIONS, TOTAL_SUPPLY, NETWORK_LAUNCH } from '../constant/index';
+import type { SupplyResult, Breakdown, Allocation } from '../interface/index';
+import logger from '../lib/logger';
 
 const fetchRequest = async (
   url: string,
@@ -48,7 +48,7 @@ const fetchRequest = async (
         })
         .catch((err) => {
           logger.error(
-            "Error in catch of coin http : ",
+            'Error in catch of coin http : ',
             err.response.data.status.error_message,
           );
           //   console.error("Error in catch of coin http : ", err);
@@ -154,7 +154,7 @@ function getUnlocked(
   }
 
   // Special case: Ecosystem has TGE unlock at network launch
-  if (name === "ecosystem" && tgePct > 0) {
+  if (name === 'ecosystem' && tgePct > 0) {
     const tgeAmount = total * (tgePct / 100);
 
     if (currentDate < NETWORK_LAUNCH) {
