@@ -1,7 +1,7 @@
-import { existsSync, mkdirSync } from 'fs';
-import winston, { Logger } from 'winston';
+import { existsSync, mkdirSync } from "fs";
+import winston, { Logger } from "winston";
 
-const logDir = './logs';
+const logDir = "./logs";
 
 if (!existsSync(logDir)) {
   mkdirSync(logDir);
