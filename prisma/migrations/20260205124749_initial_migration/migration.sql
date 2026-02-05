@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "public"."Users" (
+CREATE TABLE "Users" (
     "id" SERIAL NOT NULL,
     "address" VARCHAR(255) NOT NULL,
     "balance" TEXT NOT NULL DEFAULT '0',
@@ -10,10 +10,10 @@ CREATE TABLE "public"."Users" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Blocks" (
+CREATE TABLE "Blocks" (
     "id" SERIAL NOT NULL,
     "blocknumber" BIGINT NOT NULL,
-    "blockhash" VARCHAR(255) NOT NULL,
+    "blockhash" VARCHAR(255) DEFAULT '',
     "timestamp" TIMESTAMP(3) NOT NULL,
     "transactionCount" BIGINT NOT NULL DEFAULT 0,
     "validatorOperatorAddress" TEXT NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE "public"."Blocks" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Transactions" (
+CREATE TABLE "Transactions" (
     "id" SERIAL NOT NULL,
     "type" TEXT NOT NULL DEFAULT '',
     "status" TEXT NOT NULL DEFAULT '',
@@ -39,7 +39,7 @@ CREATE TABLE "public"."Transactions" (
     "gasUsed" BIGINT NOT NULL DEFAULT 0,
     "txFee" TEXT NOT NULL DEFAULT '',
     "value" TEXT NOT NULL DEFAULT '0',
-    "burnedFee" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "burnedFee" DOUBLE PRECISION DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "nodeAddress" TEXT,
 
@@ -47,7 +47,7 @@ CREATE TABLE "public"."Transactions" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Contracts" (
+CREATE TABLE "Contracts" (
     "id" SERIAL NOT NULL,
     "creator" TEXT NOT NULL DEFAULT '',
     "address" TEXT NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE "public"."Contracts" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Tokens" (
+CREATE TABLE "Tokens" (
     "id" SERIAL NOT NULL,
     "creator" TEXT NOT NULL,
     "decimal" TEXT NOT NULL,
@@ -80,7 +80,7 @@ CREATE TABLE "public"."Tokens" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."CoinmarketInfo" (
+CREATE TABLE "CoinmarketInfo" (
     "id" SERIAL NOT NULL,
     "price" TEXT NOT NULL,
     "volume24h" TEXT NOT NULL,
@@ -98,7 +98,7 @@ CREATE TABLE "public"."CoinmarketInfo" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Validator" (
+CREATE TABLE "Validator" (
     "id" SERIAL NOT NULL,
     "operatorAddress" TEXT NOT NULL,
     "validatorAddress" TEXT NOT NULL,
@@ -132,7 +132,7 @@ CREATE TABLE "public"."Validator" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."ContractLogs" (
+CREATE TABLE "ContractLogs" (
     "id" SERIAL NOT NULL,
     "txHash" TEXT NOT NULL,
     "contractAddress" TEXT NOT NULL,
@@ -149,7 +149,7 @@ CREATE TABLE "public"."ContractLogs" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Delegator" (
+CREATE TABLE "Delegator" (
     "id" SERIAL NOT NULL,
     "totalStake" DECIMAL(65,30) NOT NULL,
     "address" TEXT NOT NULL,
@@ -159,7 +159,7 @@ CREATE TABLE "public"."Delegator" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."ValidatorStake" (
+CREATE TABLE "ValidatorStake" (
     "id" SERIAL NOT NULL,
     "stake" DECIMAL(65,30) NOT NULL,
     "validatorOperatorAddress" TEXT NOT NULL DEFAULT '',
@@ -172,7 +172,7 @@ CREATE TABLE "public"."ValidatorStake" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Holders" (
+CREATE TABLE "Holders" (
     "id" SERIAL NOT NULL,
     "address" TEXT NOT NULL,
     "contractAddress" TEXT NOT NULL,
@@ -182,14 +182,14 @@ CREATE TABLE "public"."Holders" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."ValidatedBlocksCount" (
+CREATE TABLE "ValidatedBlocksCount" (
     "operatorAddress" TEXT NOT NULL,
     "address" TEXT NOT NULL,
     "count" BIGINT NOT NULL DEFAULT 0
 );
 
 -- CreateTable
-CREATE TABLE "public"."Proposals" (
+CREATE TABLE "Proposals" (
     "id" SERIAL NOT NULL,
     "proposalId" TEXT NOT NULL,
     "status" TEXT NOT NULL,
@@ -207,7 +207,7 @@ CREATE TABLE "public"."Proposals" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Voters" (
+CREATE TABLE "Voters" (
     "id" SERIAL NOT NULL,
     "proposalId" TEXT NOT NULL,
     "txHash" TEXT NOT NULL,
@@ -219,7 +219,7 @@ CREATE TABLE "public"."Voters" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."DvpnTransaction" (
+CREATE TABLE "DvpnTransaction" (
     "id" SERIAL NOT NULL,
     "txhash" TEXT,
     "blocknumber" BIGINT NOT NULL,
@@ -249,7 +249,7 @@ CREATE TABLE "public"."DvpnTransaction" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Rewards" (
+CREATE TABLE "Rewards" (
     "id" SERIAL NOT NULL,
     "address" TEXT NOT NULL,
     "timeStamp" TIMESTAMP(3) NOT NULL,
@@ -259,94 +259,94 @@ CREATE TABLE "public"."Rewards" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Users_address_key" ON "public"."Users"("address");
+CREATE UNIQUE INDEX "Users_address_key" ON "Users"("address");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Blocks_blocknumber_key" ON "public"."Blocks"("blocknumber");
+CREATE UNIQUE INDEX "Blocks_blocknumber_key" ON "Blocks"("blocknumber");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Blocks_blockhash_key" ON "public"."Blocks"("blockhash");
+CREATE INDEX "Blocks_miner_blockhash_blocknumber_idx" ON "Blocks"("miner", "blockhash", "blocknumber");
 
 -- CreateIndex
-CREATE INDEX "Blocks_miner_blockhash_blocknumber_idx" ON "public"."Blocks"("miner", "blockhash", "blocknumber");
+CREATE UNIQUE INDEX "Blocks_blocknumber_blockhash_key" ON "Blocks"("blocknumber", "blockhash");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Blocks_blocknumber_blockhash_key" ON "public"."Blocks"("blocknumber", "blockhash");
+CREATE UNIQUE INDEX "Transactions_txhash_key" ON "Transactions"("txhash");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Transactions_txhash_key" ON "public"."Transactions"("txhash");
+CREATE INDEX "Transactions_blocknumber_txhash_idx" ON "Transactions"("blocknumber", "txhash");
 
 -- CreateIndex
-CREATE INDEX "Transactions_blocknumber_txhash_idx" ON "public"."Transactions"("blocknumber", "txhash");
+CREATE UNIQUE INDEX "Contracts_address_key" ON "Contracts"("address");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Contracts_address_key" ON "public"."Contracts"("address");
+CREATE UNIQUE INDEX "Tokens_contractAddress_key" ON "Tokens"("contractAddress");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Tokens_contractAddress_key" ON "public"."Tokens"("contractAddress");
+CREATE UNIQUE INDEX "Validator_operatorAddress_key" ON "Validator"("operatorAddress");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Validator_operatorAddress_key" ON "public"."Validator"("operatorAddress");
+CREATE UNIQUE INDEX "Validator_validatorAddress_key" ON "Validator"("validatorAddress");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Validator_validatorAddress_key" ON "public"."Validator"("validatorAddress");
+CREATE INDEX "Validator_selfStake_createdAt_updatedAt_validatorAddress_idx" ON "Validator"("selfStake", "createdAt", "updatedAt", "validatorAddress");
 
 -- CreateIndex
-CREATE INDEX "Validator_selfStake_createdAt_updatedAt_validatorAddress_idx" ON "public"."Validator"("selfStake", "createdAt", "updatedAt", "validatorAddress");
+CREATE UNIQUE INDEX "ContractLogs_txHash_key" ON "ContractLogs"("txHash");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ContractLogs_txHash_key" ON "public"."ContractLogs"("txHash");
+CREATE UNIQUE INDEX "Delegator_address_key" ON "Delegator"("address");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Delegator_address_key" ON "public"."Delegator"("address");
+CREATE INDEX "TotalStakeIndex" ON "Delegator"("totalStake");
 
 -- CreateIndex
-CREATE INDEX "TotalStakeIndex" ON "public"."Delegator"("totalStake");
+CREATE INDEX "validatorOperatorAddress" ON "ValidatorStake"("validatorOperatorAddress");
 
 -- CreateIndex
-CREATE INDEX "validatorOperatorAddress" ON "public"."ValidatorStake"("validatorOperatorAddress");
+CREATE UNIQUE INDEX "ValidatedBlocksCount_operatorAddress_key" ON "ValidatedBlocksCount"("operatorAddress");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ValidatedBlocksCount_operatorAddress_key" ON "public"."ValidatedBlocksCount"("operatorAddress");
+CREATE UNIQUE INDEX "ValidatedBlocksCount_address_key" ON "ValidatedBlocksCount"("address");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "ValidatedBlocksCount_address_key" ON "public"."ValidatedBlocksCount"("address");
+CREATE INDEX "ValidatedBlocksCount_operatorAddress_idx" ON "ValidatedBlocksCount"("operatorAddress");
 
 -- CreateIndex
-CREATE INDEX "ValidatedBlocksCount_operatorAddress_idx" ON "public"."ValidatedBlocksCount"("operatorAddress");
+CREATE UNIQUE INDEX "Proposals_proposalId_key" ON "Proposals"("proposalId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Proposals_proposalId_key" ON "public"."Proposals"("proposalId");
+CREATE INDEX "Proposals_proposalId_proposerType_status_idx" ON "Proposals"("proposalId", "proposerType", "status");
 
 -- CreateIndex
-CREATE INDEX "Proposals_proposalId_proposerType_status_idx" ON "public"."Proposals"("proposalId", "proposerType", "status");
+CREATE UNIQUE INDEX "Voters_txHash_key" ON "Voters"("txHash");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Voters_txHash_key" ON "public"."Voters"("txHash");
+CREATE INDEX "Voters_proposalId_answer_voter_idx" ON "Voters"("proposalId", "answer", "voter");
 
 -- CreateIndex
-CREATE INDEX "Voters_proposalId_answer_voter_idx" ON "public"."Voters"("proposalId", "answer", "voter");
+CREATE UNIQUE INDEX "Voters_proposalId_voter_key" ON "Voters"("proposalId", "voter");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Voters_proposalId_voter_key" ON "public"."Voters"("proposalId", "voter");
+CREATE INDEX "DvpnTransaction_blocknumber_txhash_planId_idx" ON "DvpnTransaction"("blocknumber", "txhash", "planId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Rewards_address_key" ON "public"."Rewards"("address");
+CREATE UNIQUE INDEX "Rewards_address_key" ON "Rewards"("address");
 
 -- CreateIndex
-CREATE INDEX "Rewards_address_timeStamp_idx" ON "public"."Rewards"("address", "timeStamp");
+CREATE INDEX "Rewards_address_timeStamp_idx" ON "Rewards"("address", "timeStamp");
 
 -- AddForeignKey
-ALTER TABLE "public"."Tokens" ADD CONSTRAINT "Tokens_contractAddress_fkey" FOREIGN KEY ("contractAddress") REFERENCES "public"."Contracts"("address") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Tokens" ADD CONSTRAINT "Tokens_contractAddress_fkey" FOREIGN KEY ("contractAddress") REFERENCES "Contracts"("address") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."ContractLogs" ADD CONSTRAINT "ContractLogs_contractAddress_fkey" FOREIGN KEY ("contractAddress") REFERENCES "public"."Contracts"("address") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ContractLogs" ADD CONSTRAINT "ContractLogs_contractAddress_fkey" FOREIGN KEY ("contractAddress") REFERENCES "Contracts"("address") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."ContractLogs" ADD CONSTRAINT "ContractLogs_txHash_fkey" FOREIGN KEY ("txHash") REFERENCES "public"."Transactions"("txhash") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ContractLogs" ADD CONSTRAINT "ContractLogs_txHash_fkey" FOREIGN KEY ("txHash") REFERENCES "Transactions"("txhash") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."ValidatorStake" ADD CONSTRAINT "ValidatorStake_delegatorAddress_fkey" FOREIGN KEY ("delegatorAddress") REFERENCES "public"."Delegator"("address") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ValidatorStake" ADD CONSTRAINT "ValidatorStake_delegatorAddress_fkey" FOREIGN KEY ("delegatorAddress") REFERENCES "Delegator"("address") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."Holders" ADD CONSTRAINT "Holders_contractAddress_fkey" FOREIGN KEY ("contractAddress") REFERENCES "public"."Contracts"("address") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Holders" ADD CONSTRAINT "Holders_contractAddress_fkey" FOREIGN KEY ("contractAddress") REFERENCES "Contracts"("address") ON DELETE RESTRICT ON UPDATE CASCADE;
