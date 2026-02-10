@@ -118,11 +118,6 @@ export function getCirculatingSupply(): number {
 /**
  * Calculate the unlocked amount for a specific allocation at current time.
  *
- * This function handles three types of vesting schedules:
- * 1. Standard vesting: cliff period → linear vesting
- * 2. TGE unlock (Ecosystem): 10% at launch → cliff → linear vesting
- * 3. Delayed start (Team/Advisors): delayed start date → linear vesting
- *
  * @param name - Name of the allocation (used for special case handling)
  * @param alloc - Allocation configuration object
  * @param currentDate - Date to calculate unlocked amount for
