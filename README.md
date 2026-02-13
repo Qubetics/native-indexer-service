@@ -1,4 +1,1 @@
-# qubetics-v2-sync-service
-
-
-
+# qubetics-native-indexer-service
