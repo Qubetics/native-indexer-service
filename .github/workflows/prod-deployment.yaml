@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy_qubetics_indexer:
-    uses: ./.github/workflows/native-indexer-service.yaml
+    uses: Qubetics/argocd-qubetics/.github/workflows/deployment.yaml@prod
     with:
       SWR_ORGANIZATION: prod-qubetics
       ARGOCD_BRANCH: prod
