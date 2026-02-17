@@ -550,7 +550,7 @@ async function getValidatorsInfo(api: AxiosInstance) {
             status = RES_MSG.ACTIVE;
           else if (validator.status === RES_MSG.BOND_STATUS_UNBONDED)
             status = RES_MSG.INACTIVE;
-          console.log("validatorReward--Indexer", validatorReward)
+          console.log("validatorReward--Indexer", validatorReward);
           const vData: IValidatorToSave = {
             status,
             jailed: validator.jailed,
@@ -560,7 +560,7 @@ async function getValidatorsInfo(api: AxiosInstance) {
             operatorAddress: valoper,
             tokens: noExponent(validator.tokens),
             totalStake: noExponent(validator.tokens),
-            votingPower: Number(validator.tokens) / 10 ** 18,
+            votingPower: Number(validator.tokens) / CONST_NAME.ETH_EXP,
             unbondingAmount: unbondAmount,
             name: validator.description?.moniker,
             website: validator.description?.website,
@@ -575,7 +575,7 @@ async function getValidatorsInfo(api: AxiosInstance) {
             commissionMaxChangeRate:
               validator.commission?.commission_rates?.max_change_rate,
             commissionUpdateTime: validator.commission?.update_time,
-            totalRewards: validatorReward,
+            totalRewards: validatorReward / CONST_NAME.ETH_EXP,
             updatedAt: new Date().toISOString(),
             createdAt: validator.commission?.update_time,
             unbondingIds: validator.unbonding_ids ?? [],
@@ -654,7 +654,11 @@ async function getValidatorTotalRewards(
     const res = await api.get(
       `/cosmos/distribution/v1beta1/validators/${valoper}/outstanding_rewards`,
     );
-    console.log("res.data?.rewards", res.data?.rewards, res.data?.rewards?.rewards?.[0]?.amount)
+    console.log(
+      "res.data?.rewards",
+      res.data?.rewards,
+      res.data?.rewards?.rewards?.[0]?.amount,
+    );
     return Number(res.data?.rewards?.rewards?.[0]?.amount || 0);
   } catch {
     return 0;
