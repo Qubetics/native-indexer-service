@@ -1,17 +1,17 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { bech32 } from 'bech32';
-import { noExponent } from '../Utility/common';
-import { RES_MSG, CONST_NAME, REDIS_KEY } from '../constant';
+import axios, { AxiosInstance, AxiosResponse } from "axios";
+import { bech32 } from "bech32";
+import { noExponent } from "../Utility/common";
+import { RES_MSG, CONST_NAME, REDIS_KEY } from "../constant";
 import {
   Params,
   // IValidator,
   ValidatorDelegations,
   IValidatorStake,
   IValidatorToSave,
-} from '../interface/index';
-import { RedisService } from '../service';
+} from "../interface/index";
+import { RedisService } from "../service";
 // import redisHelper from '../service/redis.helper';
-import dbHelper from './db.helper';
+import dbHelper from "./db.helper";
 
 async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
   try {
@@ -24,15 +24,15 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       total_Supply,
       annualProvision,
     ] = await Promise.all([
-      apiRes.get('/cosmos/staking/v1beta1/validators'),
+      apiRes.get("/cosmos/staking/v1beta1/validators"),
       apiRes.get(
         `/cosmos/bank/v1beta1/supply/by_denom?denom=${environment.symbol.toLowerCase()}`,
       ),
-      apiRes.get('/cosmos/mint/v1beta1/inflation'),
-      apiRes.get('/cosmos/staking/v1beta1/pool'),
-      apiRes.get('/cosmos/distribution/v1beta1/params'),
-      apiRes.get('/cosmos/bank/v1beta1/supply'),
-      apiRes.get('/cosmos/mint/v1beta1/annual_provisions'),
+      apiRes.get("/cosmos/mint/v1beta1/inflation"),
+      apiRes.get("/cosmos/staking/v1beta1/pool"),
+      apiRes.get("/cosmos/distribution/v1beta1/params"),
+      apiRes.get("/cosmos/bank/v1beta1/supply"),
+      apiRes.get("/cosmos/mint/v1beta1/annual_provisions"),
     ]);
 
     // Filter active validators
@@ -80,7 +80,7 @@ async function getParams(apiRes: AxiosInstance): Promise<Params | false> {
       totalSupply,
     };
   } catch (error) {
-    console.log('error occurred while calculating stake APR', error);
+    console.log("error occurred while calculating stake APR", error);
     return false;
   }
 }
@@ -103,7 +103,7 @@ async function getDelegatorReward(
     const resData = response?.data;
     return resData?.rewards[0]?.amount || 0;
   } catch (error) {
-    console.log('error getDelegatorReward', error);
+    console.log("error getDelegatorReward", error);
     return 0;
   }
 
@@ -140,8 +140,8 @@ const calculateData = async (): Promise<
     const apiRes = axios.create({
       baseURL: apiUrl,
       headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        Accept: 'application/json',
+        "Content-Type": "application/json; charset=utf-8",
+        Accept: "application/json",
       },
       timeout: 10000,
     });
@@ -241,7 +241,7 @@ async function getValidatorsInfo_old(apiRes: AxiosInstance) {
   // : Promise<IValidator[] | { error: boolean; message: string }>
   try {
     const response: AxiosResponse = await apiRes.get(
-      '/cosmos/staking/v1beta1/validators',
+      "/cosmos/staking/v1beta1/validators",
       { timeout: 10000 },
     );
     const validators: IValidatorToSave[] = [];
@@ -250,7 +250,7 @@ async function getValidatorsInfo_old(apiRes: AxiosInstance) {
 
     for (let i = 0; i < response?.data?.validators?.length; i++) {
       const validator = response.data.validators[i];
-      console.log('validator', validator);
+      console.log("validator", validator);
       const validatorOperatorAddress = validator.operator_address;
       const address = bech32.decode(validatorOperatorAddress);
       const validatorAddress = bech32.encode(
@@ -263,7 +263,7 @@ async function getValidatorsInfo_old(apiRes: AxiosInstance) {
         validator.operator_address,
       );
 
-      console.log(stakeDetails, 'STAKEDETAILS');
+      console.log(stakeDetails, "STAKEDETAILS");
 
       const rewardsRes = await validatortotalRewards(
         apiRes,
@@ -289,12 +289,12 @@ async function getValidatorsInfo_old(apiRes: AxiosInstance) {
           apiRes,
           validatorAddress,
         );
-        console.log('valIndexShow', valIndex, getDelegationDetail);
+        console.log("valIndexShow", valIndex, getDelegationDetail);
         selfStakeValue =
           getDelegationDetail?.delegation_responses[0]?.balance.amount;
         if (getDelegationDetail?.delegation_responses.length > 0) {
           stakeDetails.push(getDelegationDetail);
-          console.log('stakeDetails3', stakeDetails);
+          console.log("stakeDetails3", stakeDetails);
         }
       }
 
@@ -397,7 +397,7 @@ async function getValidatorsInfo_old(apiRes: AxiosInstance) {
         //  : 0,
       };
 
-      console.log(validatorData, 'validatorDataToStake');
+      console.log(validatorData, "validatorDataToStake");
 
       validators.push(validatorData);
     }
@@ -408,10 +408,10 @@ async function getValidatorsInfo_old(apiRes: AxiosInstance) {
     return validators;
   } catch (err) {
     if (err instanceof Error) {
-      console.log('Error occurred while saving validator details', err);
+      console.log("Error occurred while saving validator details", err);
       return { error: true, message: err.message };
     }
-    console.log('Error occurred while saving validator details ::: ', err);
+    console.log("Error occurred while saving validator details ::: ", err);
 
     return {
       error: true,
@@ -441,8 +441,8 @@ async function getValidatorsInfo_old(apiRes: AxiosInstance) {
         `/cosmos/staking/v1beta1/validators/${operatorAddress}/delegations`,
         {
           params: {
-            'pagination.key': nextKey,
-            'pagination.limit': 100, // you can set limit
+            "pagination.key": nextKey,
+            "pagination.limit": 100, // you can set limit
           },
         },
       );
@@ -471,12 +471,14 @@ async function getValidatorsInfo_old(apiRes: AxiosInstance) {
  */
 async function getValidatorsInfo(api: AxiosInstance) {
   try {
-    const { data } = await api.get('/cosmos/staking/v1beta1/validators', {
+    const { data } = await api.get("/cosmos/staking/v1beta1/validators", {
       timeout: 30000,
     });
 
     const rawValidators = data.validators ?? [];
-    console.log(`[getValidatorsInfo_2] Found ${rawValidators.length} validators.`);
+    console.log(
+      `[getValidatorsInfo_2] Found ${rawValidators.length} validators.`,
+    );
 
     const validators: IValidatorToSave[] = [];
     const delegators: IValidatorStake[] = [];
@@ -486,13 +488,16 @@ async function getValidatorsInfo(api: AxiosInstance) {
       rawValidators.map(async (validator: any) => {
         try {
           const valoper = validator.operator_address;
-          console.log(`Processing validator: ${validator.description?.moniker} (${valoper})`);
+          console.log(
+            `Processing validator: ${validator.description?.moniker} (${valoper})`,
+          );
 
-          const [stakeDetails, validatorReward, unbondAmount] = await Promise.all([
-            getValidatorDelegations(api, valoper),
-            getValidatorTotalRewards(api, valoper),
-            validatorUnbondAmount(api, valoper),
-          ]);
+          const [stakeDetails, validatorReward, unbondAmount] =
+            await Promise.all([
+              getValidatorDelegations(api, valoper),
+              getValidatorTotalRewards(api, valoper),
+              validatorUnbondAmount(api, valoper),
+            ]);
 
           const decoded = bech32.decode(valoper);
           const validatorAddress = bech32.encode(
@@ -501,14 +506,13 @@ async function getValidatorsInfo(api: AxiosInstance) {
           );
 
           const selfDelegation = stakeDetails.delegation_responses.find(
-            (d: any) =>
-              d.delegation.delegator_address === validatorAddress,
+            (d: any) => d.delegation.delegator_address === validatorAddress,
           );
 
-          console.log("selfDelegation", selfDelegation)
+          console.log("selfDelegation", selfDelegation);
           const selfStake = selfDelegation
             ? noExponent(selfDelegation.balance.amount)
-            : '0';
+            : "0";
 
           await runInBatches(
             stakeDetails.delegation_responses,
@@ -518,7 +522,11 @@ async function getValidatorsInfo(api: AxiosInstance) {
               const balanceAmount = Number(d.balance.amount || 0);
 
               if (delegator && balanceAmount > 0) {
-                const rewards = await getDelegatorRewardSafe(api, delegator, valoper);
+                const rewards = await getDelegatorRewardSafe(
+                  api,
+                  delegator,
+                  valoper,
+                );
 
                 delegators.push({
                   validatorOperatorAddress: valoper,
@@ -538,9 +546,11 @@ async function getValidatorsInfo(api: AxiosInstance) {
           );
 
           let status = RES_MSG.DEACTIVATING;
-          if (validator.status === RES_MSG.BOND_STATUS_BONDED) status = RES_MSG.ACTIVE;
-          else if (validator.status === RES_MSG.BOND_STATUS_UNBONDED) status = RES_MSG.INACTIVE;
-
+          if (validator.status === RES_MSG.BOND_STATUS_BONDED)
+            status = RES_MSG.ACTIVE;
+          else if (validator.status === RES_MSG.BOND_STATUS_UNBONDED)
+            status = RES_MSG.INACTIVE;
+          console.log("validatorReward--Indexer", validatorReward)
           const vData: IValidatorToSave = {
             status,
             jailed: validator.jailed,
@@ -562,7 +572,8 @@ async function getValidatorsInfo(api: AxiosInstance) {
             minSelfDelegation: validator.min_self_delegation,
             commissionRate: validator.commission?.commission_rates?.rate,
             commissionMaxRate: validator.commission?.commission_rates?.max_rate,
-            commissionMaxChangeRate: validator.commission?.commission_rates?.max_change_rate,
+            commissionMaxChangeRate:
+              validator.commission?.commission_rates?.max_change_rate,
             commissionUpdateTime: validator.commission?.update_time,
             totalRewards: validatorReward,
             updatedAt: new Date().toISOString(),
@@ -573,7 +584,6 @@ async function getValidatorsInfo(api: AxiosInstance) {
 
           validators.push(vData);
           await dbHelper.saveValidators([vData]);
-
         } catch (err) {
           console.error(
             `Failed to process validator ${validator.operator_address}:`,
@@ -583,15 +593,14 @@ async function getValidatorsInfo(api: AxiosInstance) {
       }),
     );
 
-
     if (delegators.length > 0) {
       await dbHelper.saveDelegatorStakeData(delegators);
     }
 
     return validators;
   } catch (err) {
-    console.error('Validator indexing failed in getValidatorsInfo_2', err);
-    return { error: true, message: 'VALIDATOR_FETCH_FAILED' };
+    console.error("Validator indexing failed in getValidatorsInfo_2", err);
+    return { error: true, message: "VALIDATOR_FETCH_FAILED" };
   }
 }
 
@@ -605,8 +614,8 @@ async function getValidatorDelegations(api: AxiosInstance, valoper: string) {
       `/cosmos/staking/v1beta1/validators/${valoper}/delegations`,
       {
         params: {
-          'pagination.key': nextKey,
-          'pagination.limit': 100,
+          "pagination.key": nextKey,
+          "pagination.limit": 100,
         },
       },
     );
@@ -630,9 +639,9 @@ async function getDelegatorRewardSafe(
 
     return Number(res.data?.rewards?.[0]?.amount || 0);
   } catch (err: any) {
-    const msg = err?.response?.data?.message || err?.message || '';
-    if (msg.includes('delegation does not exist')) return 0;
-    console.error('Reward fetch failed', { delegator, validator, err });
+    const msg = err?.response?.data?.message || err?.message || "";
+    if (msg.includes("delegation does not exist")) return 0;
+    console.error("Reward fetch failed", { delegator, validator, err });
     return 0;
   }
 }
@@ -645,7 +654,8 @@ async function getValidatorTotalRewards(
     const res = await api.get(
       `/cosmos/distribution/v1beta1/validators/${valoper}/outstanding_rewards`,
     );
-    return Number(res.data?.rewards?.[0]?.amount || 0);
+    console.log("res.data?.rewards", res.data?.rewards, res.data?.rewards?.rewards?.[0]?.amount)
+    return Number(res.data?.rewards?.rewards?.[0]?.amount || 0);
   } catch {
     return 0;
   }
@@ -661,7 +671,5 @@ async function runInBatches<T>(
     await Promise.all(batch.map(fn));
   }
 }
-
-
 
 export { calculateData, getValidatorsInfo };
