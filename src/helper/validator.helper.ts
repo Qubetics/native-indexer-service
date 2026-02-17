@@ -125,14 +125,14 @@ function calculateAPY(
 
 const calculateData = async (): Promise<
   | {
-      validator: number;
-      totalValidator: number;
-      bondedRate: number;
-      apy: number;
-      inflation: number;
-      totalSupply: number;
-      circulating_supply: number;
-    }
+    validator: number;
+    totalValidator: number;
+    bondedRate: number;
+    apy: number;
+    inflation: number;
+    totalSupply: number;
+    circulating_supply: number;
+  }
   | { error: boolean; message: string }
 > => {
   try {
@@ -482,106 +482,106 @@ async function getValidatorsInfo(api: AxiosInstance) {
     const delegators: IValidatorStake[] = [];
 
     // Process each validator
-await Promise.all(
-  rawValidators.map(async (validator:any) => {
-    try {
-      const valoper = validator.operator_address;
-      console.log(`Processing validator: ${validator.description?.moniker} (${valoper})`);
+    await Promise.all(
+      rawValidators.map(async (validator: any) => {
+        try {
+          const valoper = validator.operator_address;
+          console.log(`Processing validator: ${validator.description?.moniker} (${valoper})`);
 
-      const [stakeDetails, validatorReward, unbondAmount] = await Promise.all([
-        getValidatorDelegations(api, valoper),
-        getValidatorTotalRewards(api, valoper),
-        validatorUnbondAmount(api, valoper),
-      ]);
+          const [stakeDetails, validatorReward, unbondAmount] = await Promise.all([
+            getValidatorDelegations(api, valoper),
+            getValidatorTotalRewards(api, valoper),
+            validatorUnbondAmount(api, valoper),
+          ]);
 
-      const decoded = bech32.decode(valoper);
-      const validatorAddress = bech32.encode(
-        environment.address_prefix || 'qubetics',
-        decoded.words,
-      );
+          const decoded = bech32.decode(valoper);
+          const validatorAddress = bech32.encode(
+            environment.address_prefix,
+            decoded.words,
+          );
 
-      const selfDelegation = stakeDetails.delegation_responses.find(
-        (d: any) =>
-          d.delegation.delegator_address === validatorAddress ||
-          d.delegation.delegator_address.startsWith(environment.address_prefix),
-      );
+          const selfDelegation = stakeDetails.delegation_responses.find(
+            (d: any) =>
+              d.delegation.delegator_address === validatorAddress,
+          );
 
-      const selfStake = selfDelegation
-        ? noExponent(selfDelegation.balance.amount)
-        : '0';
+          console.log("selfDelegation", selfDelegation)
+          const selfStake = selfDelegation
+            ? noExponent(selfDelegation.balance.amount)
+            : '0';
 
-      await runInBatches(
-        stakeDetails.delegation_responses,
-        10,
-        async (d: any) => {
-          const delegator = d.delegation.delegator_address;
-          const balanceAmount = Number(d.balance.amount || 0);
+          await runInBatches(
+            stakeDetails.delegation_responses,
+            10,
+            async (d: any) => {
+              const delegator = d.delegation.delegator_address;
+              const balanceAmount = Number(d.balance.amount || 0);
 
-          if (delegator && balanceAmount > 0) {
-            const rewards = await getDelegatorRewardSafe(api, delegator, valoper);
+              if (delegator && balanceAmount > 0) {
+                const rewards = await getDelegatorRewardSafe(api, delegator, valoper);
 
-            delegators.push({
-              validatorOperatorAddress: valoper,
-              delegatorAddress: delegator,
-              denom: d.balance.denom,
-              stake: Number(d.delegation.shares),
-              balanceAmount,
-              delegatorRewards: rewards,
-            });
+                delegators.push({
+                  validatorOperatorAddress: valoper,
+                  delegatorAddress: delegator,
+                  denom: d.balance.denom,
+                  stake: Number(d.delegation.shares),
+                  balanceAmount,
+                  delegatorRewards: rewards,
+                });
 
-            await dbHelper.saveDelegator({
-              address: delegator,
-              totalStake: 0,
-            });
-          }
-        },
-      );
+                await dbHelper.saveDelegator({
+                  address: delegator,
+                  totalStake: 0,
+                });
+              }
+            },
+          );
 
-      let status = RES_MSG.DEACTIVATING;
-      if (validator.status === RES_MSG.BOND_STATUS_BONDED) status = RES_MSG.ACTIVE;
-      else if (validator.status === RES_MSG.BOND_STATUS_UNBONDED) status = RES_MSG.INACTIVE;
+          let status = RES_MSG.DEACTIVATING;
+          if (validator.status === RES_MSG.BOND_STATUS_BONDED) status = RES_MSG.ACTIVE;
+          else if (validator.status === RES_MSG.BOND_STATUS_UNBONDED) status = RES_MSG.INACTIVE;
 
-      const vData: IValidatorToSave = {
-        status,
-        jailed: validator.jailed,
-        selfStake,
-        delegatorCount: stakeDetails.delegation_responses.length,
-        validatorAddress,
-        operatorAddress: valoper,
-        tokens: noExponent(validator.tokens),
-        totalStake: noExponent(validator.tokens),
-        votingPower: Number(validator.tokens) / 10 ** 18,
-        unbondingAmount: unbondAmount,
-        name: validator.description?.moniker,
-        website: validator.description?.website,
-        details: validator.description?.details,
-        identity: validator.description?.identity,
-        SecurityContact: validator.description?.security_contact,
-        unbondingHeight: validator.unbonding_height,
-        unbondingTime: validator.unbonding_time,
-        minSelfDelegation: validator.min_self_delegation,
-        commissionRate: validator.commission?.commission_rates?.rate,
-        commissionMaxRate: validator.commission?.commission_rates?.max_rate,
-        commissionMaxChangeRate: validator.commission?.commission_rates?.max_change_rate,
-        commissionUpdateTime: validator.commission?.update_time,
-        totalRewards: validatorReward,
-        updatedAt: new Date().toISOString(),
-        createdAt: validator.commission?.update_time,
-        unbondingIds: validator.unbonding_ids ?? [],
-        unbondingOnHoldRefCount: validator.unbonding_on_hold_ref_count,
-      };
+          const vData: IValidatorToSave = {
+            status,
+            jailed: validator.jailed,
+            selfStake,
+            delegatorCount: stakeDetails.delegation_responses.length,
+            validatorAddress,
+            operatorAddress: valoper,
+            tokens: noExponent(validator.tokens),
+            totalStake: noExponent(validator.tokens),
+            votingPower: Number(validator.tokens) / 10 ** 18,
+            unbondingAmount: unbondAmount,
+            name: validator.description?.moniker,
+            website: validator.description?.website,
+            details: validator.description?.details,
+            identity: validator.description?.identity,
+            SecurityContact: validator.description?.security_contact,
+            unbondingHeight: validator.unbonding_height,
+            unbondingTime: validator.unbonding_time,
+            minSelfDelegation: validator.min_self_delegation,
+            commissionRate: validator.commission?.commission_rates?.rate,
+            commissionMaxRate: validator.commission?.commission_rates?.max_rate,
+            commissionMaxChangeRate: validator.commission?.commission_rates?.max_change_rate,
+            commissionUpdateTime: validator.commission?.update_time,
+            totalRewards: validatorReward,
+            updatedAt: new Date().toISOString(),
+            createdAt: validator.commission?.update_time,
+            unbondingIds: validator.unbonding_ids ?? [],
+            unbondingOnHoldRefCount: validator.unbonding_on_hold_ref_count,
+          };
 
-      validators.push(vData);
-      await dbHelper.saveValidators([vData]);
+          validators.push(vData);
+          await dbHelper.saveValidators([vData]);
 
-    } catch (err) {
-      console.error(
-        `Failed to process validator ${validator.operator_address}:`,
-        err,
-      );
-    }
-  }),
-);
+        } catch (err) {
+          console.error(
+            `Failed to process validator ${validator.operator_address}:`,
+            err,
+          );
+        }
+      }),
+    );
 
 
     if (delegators.length > 0) {
