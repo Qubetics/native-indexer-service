@@ -1379,8 +1379,6 @@ class ProcessHelper {
           const payEvent = events.find((e: any) => e.type === "qubetics.subscription.v3.EventPay");
           const createEvent = events.find((e: any) => e.type === "qubetics.subscription.v3.EventCreate");
 
-          console.log('[DEBUG] Testing Log createEvent?.attributes===========================>', createEvent?.attributes);
-
           val = payEvent?.attributes?.find((a: any) => a.key === "payment")?.value ?? 0;
           stackingRewardValue = payEvent?.attributes?.find((a: any) => a.key === "staking_reward")?.value ?? "";
           provAddress = createEvent?.attributes?.find((a: any) => a.key === "prov_address")?.value ?? "";
