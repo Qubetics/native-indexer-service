@@ -667,7 +667,7 @@ class ProcessHelper {
               0;
             provAddress =
               events[
-                "qubetics.subscription.v3.EventCreate.prov_address"
+              "qubetics.subscription.v3.EventCreate.prov_address"
               ]?.[0] ?? "";
             accAddress =
               events["qubetics.subscription.v3.EventCreate.acc_address"]?.[0] ??
@@ -685,15 +685,15 @@ class ProcessHelper {
 
             nodeAddress =
               events[
-                "qubetics.subscription.v3.EventCreateSession.node_address"
+              "qubetics.subscription.v3.EventCreateSession.node_address"
               ]?.[0] ?? "";
             accAddress =
               events[
-                "qubetics.subscription.v3.EventCreateSession.acc_address"
+              "qubetics.subscription.v3.EventCreateSession.acc_address"
               ]?.[0] ?? "";
             subscriptionId =
               events[
-                "qubetics.subscription.v3.EventCreateSession.subscription_id"
+              "qubetics.subscription.v3.EventCreateSession.subscription_id"
               ]?.[0] ?? "";
             sessionId =
               events["qubetics.subscription.v3.EventCreateSession.id"]?.[0] ??
@@ -706,11 +706,11 @@ class ProcessHelper {
             type = TRANSACTION_TYPE.END_REQUEST;
             provAddress =
               events[
-                "qubetics.session.v3.EventUpdateStatus.prov_address"
+              "qubetics.session.v3.EventUpdateStatus.prov_address"
               ]?.[0] ?? "";
             nodeAddress =
               events[
-                "qubetics.session.v3.EventUpdateStatus.node_address"
+              "qubetics.session.v3.EventUpdateStatus.node_address"
               ]?.[0] ?? "";
             sessionId =
               events["qubetics.session.v3.EventUpdateStatus.id"]?.[0] ?? "";
@@ -997,8 +997,9 @@ class ProcessHelper {
           txData.type === TRANSACTION_TYPE.END_REQUEST ||
           txData.type === TRANSACTION_TYPE.END_SUBSCRIPTION
         ) {
+          const parsedLogs = (() => { try { return logs ? JSON.parse(logs) : null; } catch { return null; } })();
           const sessionData = {
-            logs: logs || "",
+            logs: parsedLogs,
             txhash: `0x${hash ?? ""}`,
             subscriptionId,
             planId: planId.toString() ?? "",
@@ -1106,7 +1107,7 @@ class ProcessHelper {
             account,
           );
         }
-      } 
+      }
 
       return true;
     } catch (error) {
@@ -1122,8 +1123,19 @@ class ProcessHelper {
    */
   public async processMissedTxs(txHash: string) {
     try {
-      const url = `${environment.httpHost}/tx?hash=0x${txHash}`;
-      console.log(txHash,"processMissedTxs")
+      let accAddress = "";
+      let provAddress = "";
+      let nodeAddress = "";
+      let subscriptionId = "";
+      let sessionId = "";
+      let planId = "";
+      let dvpnStatus = "";
+      let stackingRewardValue = "";
+      let stackingReward = "";
+
+      // Strip any accidental leading 0x — the URL already prepends 0x
+      const rawHash = txHash.replace(/^0x/i, "");
+      const url = `${environment.httpHost}/tx?hash=0x${rawHash}`;
       const fetchRes = await fetchRequest(
         url,
         FETCH_METHODS.GET,
@@ -1131,258 +1143,364 @@ class ProcessHelper {
         null,
       );
 
-        const result = fetchRes?.data?.result;
-        const events = result?.tx_result?.events;
-        const code = result?.tx_result?.code;
-        const status = !code
-          ? TRANSACTION_STATUS.SUCCESS
-          : TRANSACTION_STATUS.FAILED;
-        const burnedFee = (
-          Number(fetchRes.data.result?.tx_result?.gas_used) * 0.2
-        ).toFixed(11);
+      // Guard: RPC returned no result (network error, hash not found, etc.)
+      if (!fetchRes?.data?.result) {
+        return false;
+      }
 
-        const txData: ITransaction = {
-          status,
-          txhash: `0x${txHash}`,
-          txString: fetchRes.data?.result?.tx ?? "",
-          blocknumber: Number(fetchRes.data?.result?.height ?? 0),
-          txFee: fetchRes.data.result?.tx_result?.gas_used ?? "",
-          gasWanted: fetchRes.data.result?.tx_result?.gas_wanted ?? "",
-          gasUsed: fetchRes.data.result?.tx_result?.gas_used ?? "",
-          type: "",
-          toAddress: "",
-          fromAddress: "",
-          value: "",
-          timestamp: "",
-          contractAddress: "",
-        };
+      const result = fetchRes.data.result;
+      const logs: string = result?.tx_result?.log;
+      const events: any[] = result?.tx_result?.events ?? [];
+      const code = result?.tx_result?.code;
+      const status = !code
+        ? TRANSACTION_STATUS.SUCCESS
+        : TRANSACTION_STATUS.FAILED;
+      const burnedFee = (
+        Number(result?.tx_result?.gas_used) * 0.2
+      ).toFixed(11);
 
-        const url2 = `${environment.httpHost}/block?height=${txData.blocknumber}`;
-        const fetchRes2 = await fetchRequest(
-          url2,
-          FETCH_METHODS.GET,
-          HEADERS.DEFAULT,
-          null,
-        );
+      const txData: ITransaction = {
+        status,
+        txhash: `0x${rawHash}`,
+        txString: result?.tx ?? "",
+        blocknumber: Number(result?.height ?? 0),
+        txFee: result?.tx_result?.gas_used ?? "",
+        gasWanted: result?.tx_result?.gas_wanted ?? "",
+        gasUsed: result?.tx_result?.gas_used ?? "",
+        type: "",
+        toAddress: "",
+        fromAddress: "",
+        value: "",
+        timestamp: "",
+        contractAddress: "",
+      };
 
-        console.log("fetchRes2: ", fetchRes2?.error);
+      const url2 = `${environment.httpHost}/block?height=${txData.blocknumber}`;
+      const fetchRes2 = await fetchRequest(
+        url2,
+        FETCH_METHODS.GET,
+        HEADERS.DEFAULT,
+        null,
+      );
 
-        if (!fetchRes2.error) {
-          console.log(
-            "timeStamp fro RPC: ",
-            fetchRes2?.data.result.block?.header?.time,
+      if (!fetchRes2.error) {
+        txData.timestamp = fetchRes2?.data.result.block?.header?.time ?? "";
+      }
+
+      let val = 0;
+
+      // Default values
+      const transferEvent = events.find((i: any) => i.type === "transfer");
+
+      transferEvent?.attributes?.forEach((i: any) => {
+        switch (i.key) {
+          case "recipient":
+            txData.toAddress = i?.value || "";
+            break;
+
+          case "sender":
+            txData.fromAddress = i?.value || "";
+            break;
+
+          case "amount": {
+            val = i?.value ?? 0;
+            break;
+          }
+
+          default:
+            break;
+        }
+      });
+
+      const filteredEvents = events.filter(
+        (event: any) =>
+          event.type === "message" &&
+          event?.attributes.some((attr: any) => attr.key === "action"),
+      );
+
+      const eventObj = filteredEvents[0]?.attributes.find(
+        (i: any) => i.key === "action",
+      );
+      // const fromObj = filteredEvents[0]?.attributes.find(
+      //   (i: any) => i.key === 'sender'
+      // );
+
+      const txEvent = eventObj?.value || "";
+
+      switch (txEvent) {
+        case "/cosmos.bank.v1beta1.MsgSend":
+          txData.type = TRANSACTION_TYPE.COIN_TRANSFER;
+          break;
+
+        case "/cosmos.staking.v1beta1.MsgDelegate": {
+          txData.type = TRANSACTION_TYPE.BOND_MORE;
+          txData.toAddress = "/cosmos.staking.v1beta1.MsgDelegate";
+
+          const delegateEvent = events.find(
+            (e: any) => e.type === "delegate",
+          );
+          const amountAttr = delegateEvent?.attributes.find(
+            (e: any) => e.key === "amount",
+          );
+          val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
+
+          const withdrawRewardEvent = events.find((e: any) => e.type === "withdraw_rewards");
+          const withdrawAmount = withdrawRewardEvent?.attributes?.find((a: any) => a.key === "amount")?.value;
+          if (withdrawAmount) {
+            this.processDelegatorRewards(
+              txData.fromAddress,
+              [withdrawAmount],
+              txData.timestamp,
+            );
+          }
+          break;
+        }
+
+        case "/cosmos.staking.v1beta1.MsgBeginRedelegate": {
+          txData.type = TRANSACTION_TYPE.BEGIN_REDELEGATE;
+          txData.toAddress = "/cosmos.staking.v1beta1.MsgBeginRedelegate";
+
+          const filtered = events.filter((e: any) => e.type === "redelegate");
+
+          const valArr = filtered[0]?.attributes.filter(
+            (e: any) => e.key === "amount",
+          );
+          val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
+
+          const filterForReward = events.filter(
+            (e: any) => e.type === "withdraw_rewards",
+          );
+          const valArrReward = filterForReward[0]?.attributes.filter(
+            (e: any) => e.key === "amount",
           );
 
-          txData.timestamp = fetchRes2?.data.result.block?.header?.time ?? "";
+          const rewardValArr = valArrReward.map((item: any) => item.value);
+
+          this.processDelegatorRewards(
+            txData.fromAddress,
+            rewardValArr,
+            txData.timestamp,
+          );
+          break;
         }
 
-        let val = 0;
+        case "/cosmos.staking.v1beta1.MsgUndelegate": {
+          txData.type = TRANSACTION_TYPE.UNBOND_FUNDS;
+          txData.toAddress = "/cosmos.staking.v1beta1.MsgUndelegate";
 
-        // Default values
-        const transferEvent = events.find((i: any) => i.type === "transfer");
-
-        transferEvent?.attributes?.forEach((i: any) => {
-          switch (i.key) {
-            case "recipient":
-              txData.toAddress = i?.value || "";
-              break;
-
-            case "sender":
-              console.log("\n From value from transafer ::: ", i?.value);
-              txData.fromAddress = i?.value || "";
-              break;
-
-            case "amount": {
-              val = i?.value ?? 0;
-              break;
-            }
-
-            default:
-              break;
-          }
-        });
-
-        const filteredEvents = events.filter(
-          (event: any) =>
-            event.type === "message" &&
-            event?.attributes.some((attr: any) => attr.key === "action"),
-        );
-
-        const eventObj = filteredEvents[0]?.attributes.find(
-          (i: any) => i.key === "action",
-        );
-        // const fromObj = filteredEvents[0]?.attributes.find(
-        //   (i: any) => i.key === 'sender'
-        // );
-
-        const txEvent = eventObj?.value || "";
-        console.log("Missed txEvent: ", txEvent);
-
-        console.log("\n\ntxEvent :::: ", txEvent);
-
-        switch (txEvent) {
-          case "/cosmos.bank.v1beta1.MsgSend":
-            txData.type = TRANSACTION_TYPE.COIN_TRANSFER;
-            break;
-
-          case "/cosmos.staking.v1beta1.MsgDelegate": {
-            txData.type = TRANSACTION_TYPE.BOND_MORE;
-            txData.toAddress = "/cosmos.staking.v1beta1.MsgDelegate";
-
-            const delegateEvent = events.find(
-              (e: any) => e.type === "delegate",
-            );
-            const amountAttr = delegateEvent?.attributes.find(
-              (e: any) => e.key === "amount",
-            );
-            val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
-
-            if (events["withdraw_rewards.amount"]) {
-              this.processDelegatorRewards(
-                txData.fromAddress,
-                events["withdraw_rewards.amount"],
-                txData.timestamp,
-              );
-            }
-            break;
-          }
-
-          case "/cosmos.staking.v1beta1.MsgBeginRedelegate": {
-            txData.type = TRANSACTION_TYPE.BEGIN_REDELEGATE;
-            txData.toAddress = "/cosmos.staking.v1beta1.MsgBeginRedelegate";
-
-            const filtered = events.filter((e: any) => e.type === "redelegate");
-
-            const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
-            );
-            val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
-
-            const filterForReward = events.filter(
-              (e: any) => e.type === "withdraw_rewards",
-            );
-            const valArrReward = filterForReward[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
-            );
-
-            const rewardValArr = valArrReward.map((item: any) => item.value);
-
-            this.processDelegatorRewards(
-              txData.fromAddress,
-              rewardValArr,
-              txData.timestamp,
-            );
-            break;
-          }
-
-          case "/cosmos.staking.v1beta1.MsgUndelegate": {
-            txData.type = TRANSACTION_TYPE.UNBOND_FUNDS;
-            txData.toAddress = "/cosmos.staking.v1beta1.MsgUndelegate";
-
-            const unbondEvent = events.find((e: any) => e.type === "unbond");
-            const amountAttr = unbondEvent?.attributes.find(
-              (e: any) => e.key === "amount",
-            );
-            val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
-            break;
-          }
-
-          case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward": {
-            txData.type = TRANSACTION_TYPE.DELEGATOR_REWARD;
-            txData.toAddress =
-              "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward";
-
-            const rewardEvent = events.find(
-              (e: any) => e.type === "withdraw_rewards",
-            );
-            const amountAttr = rewardEvent?.attributes.find(
-              (e: any) => e.key === "amount",
-            );
-            val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
-
-            this.processDelegatorRewards(
-              txData.fromAddress,
-              [val.toString()],
-              txData.timestamp,
-            );
-            break;
-          }
-
-          case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission": {
-            txData.type = TRANSACTION_TYPE.VALIDATOR_COMMISSION;
-            txData.toAddress =
-              "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission";
-
-            const commissionEvent = events.find(
-              (e: any) => e.type === "withdraw_commission",
-            );
-            const amountAttr = commissionEvent?.attributes.find(
-              (e: any) => e.key === "amount",
-            );
-            val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
-            break;
-          }
-
-          // ✅ Other events same as before
-          case "/cosmos.gov.v1beta1.MsgSubmitProposal":
-            txData.type = TRANSACTION_TYPE.SUBMIT_PROPOSAL;
-            txData.toAddress = "/cosmos.gov.v1.MsgSubmitProposal";
-            break;
-
-          case "/cosmos.gov.v1beta1.MsgVote":
-            txData.type = TRANSACTION_TYPE.VOTING;
-            txData.toAddress = "/cosmos.gov.v1.MsgVote";
-            break;
-
-          case "/cosmos.staking.v1beta1.MsgCreateValidator":
-            txData.type = TRANSACTION_TYPE.CREATE_VALIDATOR;
-            txData.toAddress = "/cosmos.staking.v1beta1.MsgCreateValidator";
-            break;
-
-          case "/cosmos.staking.v1beta1.MsgEditValidator":
-            txData.type = TRANSACTION_TYPE.EDIT_VALIDATOR;
-            txData.toAddress = "/cosmos.staking.v1beta1.MsgEditValidator";
-            break;
-
-          case "/cosmos.slashing.v1beta1.MsgUnjail":
-            txData.type = TRANSACTION_TYPE.UNJAIL;
-            txData.toAddress = "/cosmos.slashing.v1beta1.MsgUnjail";
-            break;
-
-          case "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation": {
-            txData.type = TRANSACTION_TYPE.CANCEL_UNBONDING_DELEGATION;
-            txData.toAddress =
-              "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation";
-
-            const filtered = events.filter(
-              (e: any) => e.type === "cancel_unbonding_delegation",
-            );
-            const valArr = filtered[0]?.attributes.filter(
-              (e: any) => e.key === "amount",
-            );
-            val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
-            break;
-          }
-          default:
-            txData.type = "UNKNOWN";
-            break;
+          const unbondEvent = events.find((e: any) => e.type === "unbond");
+          const amountAttr = unbondEvent?.attributes.find(
+            (e: any) => e.key === "amount",
+          );
+          val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
+          break;
         }
 
-        let amount;
+        case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward": {
+          txData.type = TRANSACTION_TYPE.DELEGATOR_REWARD;
+          txData.toAddress =
+            "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward";
 
-        if (val) {
-          if (txData.type === TRANSACTION_TYPE.IBC_TRANSFER_RECEIVE) {
-            amount = noExponent(Number(retriveNumbers(val)) / 10 ** 6);
-          } else {
-            amount = noExponent(Number(retriveNumbers(val)) / 10 ** 18);
-          }
+          const rewardEvent = events.find(
+            (e: any) => e.type === "withdraw_rewards",
+          );
+          const amountAttr = rewardEvent?.attributes.find(
+            (e: any) => e.key === "amount",
+          );
+          val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
+
+          this.processDelegatorRewards(
+            txData.fromAddress,
+            [val.toString()],
+            txData.timestamp,
+          );
+          break;
         }
-        txData.value = amount || "0";
 
-        console.log("txData built", txData);
-        const saveRes = await dbHelper.saveTransactions(txData);
-        return !saveRes.error;
-      
+        case "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission": {
+          txData.type = TRANSACTION_TYPE.VALIDATOR_COMMISSION;
+          txData.toAddress =
+            "/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission";
+
+          const commissionEvent = events.find(
+            (e: any) => e.type === "withdraw_commission",
+          );
+          const amountAttr = commissionEvent?.attributes.find(
+            (e: any) => e.key === "amount",
+          );
+          val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
+          break;
+        }
+
+        case "/cosmos.gov.v1beta1.MsgSubmitProposal":
+          txData.type = TRANSACTION_TYPE.SUBMIT_PROPOSAL;
+          txData.toAddress = "/cosmos.gov.v1.MsgSubmitProposal";
+          break;
+
+        case "/cosmos.gov.v1beta1.MsgVote":
+          txData.type = TRANSACTION_TYPE.VOTING;
+          txData.toAddress = "/cosmos.gov.v1.MsgVote";
+          break;
+
+        case "/cosmos.staking.v1beta1.MsgCreateValidator":
+          txData.type = TRANSACTION_TYPE.CREATE_VALIDATOR;
+          txData.toAddress = "/cosmos.staking.v1beta1.MsgCreateValidator";
+          break;
+
+        case "/cosmos.staking.v1beta1.MsgEditValidator":
+          txData.type = TRANSACTION_TYPE.EDIT_VALIDATOR;
+          txData.toAddress = "/cosmos.staking.v1beta1.MsgEditValidator";
+          break;
+
+        case "/cosmos.slashing.v1beta1.MsgUnjail":
+          txData.type = TRANSACTION_TYPE.UNJAIL;
+          txData.toAddress = "/cosmos.slashing.v1beta1.MsgUnjail";
+          break;
+
+        case "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation": {
+          txData.type = TRANSACTION_TYPE.CANCEL_UNBONDING_DELEGATION;
+          txData.toAddress =
+            "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation";
+
+          const filtered = events.filter(
+            (e: any) => e.type === "cancel_unbonding_delegation",
+          );
+          const valArr = filtered[0]?.attributes.filter(
+            (e: any) => e.key === "amount",
+          );
+          val = (valArr[0].value || "0").replace(/[^\d.]/g, "");
+          break;
+        }
+
+
+        case "/qubetics.subscription.v3.MsgStartSubscriptionRequest": {
+          txData.type = TRANSACTION_TYPE.START_SUBSCRIPTION;
+
+          const payEvent = events.find((e: any) => e.type === "qubetics.subscription.v3.EventPay");
+          const createEvent = events.find((e: any) => e.type === "qubetics.subscription.v3.EventCreate");
+
+          val = payEvent?.attributes?.find((a: any) => a.key === "payment")?.value ?? 0;
+          stackingRewardValue = payEvent?.attributes?.find((a: any) => a.key === "staking_reward")?.value ?? "";
+          provAddress = createEvent?.attributes?.find((a: any) => a.key === "prov_address")?.value ?? "";
+          accAddress = createEvent?.attributes?.find((a: any) => a.key === "acc_address")?.value ?? "";
+          subscriptionId = createEvent?.attributes?.find((a: any) => a.key === "id")?.value ?? "";
+          planId = createEvent?.attributes?.find((a: any) => a.key === "plan_id")?.value ?? "";
+
+          break;
+        }
+
+        case "/qubetics.subscription.v3.MsgStartSessionRequest": {
+          txData.type = TRANSACTION_TYPE.START_REQUEST;
+
+          const createSessionEvent = events.find((e: any) => e.type === "qubetics.subscription.v3.EventCreateSession");
+
+          nodeAddress = createSessionEvent?.attributes?.find((a: any) => a.key === "node_address")?.value ?? "";
+          accAddress = createSessionEvent?.attributes?.find((a: any) => a.key === "acc_address")?.value ?? "";
+          subscriptionId = createSessionEvent?.attributes?.find((a: any) => a.key === "subscription_id")?.value ?? "";
+          sessionId = createSessionEvent?.attributes?.find((a: any) => a.key === "id")?.value ?? "";
+
+          break;
+        }
+
+        case "/qubetics.session.v3.MsgCancelSessionRequest": {
+          txData.type = TRANSACTION_TYPE.END_REQUEST;
+
+          const updateStatusEvent = events.find((e: any) => e.type === "qubetics.session.v3.EventUpdateStatus");
+
+          provAddress = updateStatusEvent?.attributes?.find((a: any) => a.key === "prov_address")?.value ?? "";
+          nodeAddress = updateStatusEvent?.attributes?.find((a: any) => a.key === "node_address")?.value ?? "";
+          sessionId = updateStatusEvent?.attributes?.find((a: any) => a.key === "id")?.value ?? "";
+          dvpnStatus = updateStatusEvent?.attributes?.find((a: any) => a.key === "status")?.value ?? "";
+
+          break;
+        }
+
+        case "/qubetics.subscription.v3.MsgCancelSubscriptionRequest": {
+          txData.type = TRANSACTION_TYPE.END_SUBSCRIPTION;
+
+          const updateEvent = events.find((e: any) => e.type === "qubetics.subscription.v3.EventUpdate");
+
+          accAddress = updateEvent?.attributes?.find((a: any) => a.key === "acc_address")?.value ?? "";
+          subscriptionId = updateEvent?.attributes?.find((a: any) => a.key === "id")?.value ?? "";
+          planId = updateEvent?.attributes?.find((a: any) => a.key === "plan_id")?.value ?? "";
+          dvpnStatus = updateEvent?.attributes?.find((a: any) => a.key === "status")?.value ?? "";
+
+          break;
+        }
+
+        default:
+          txData.type = getType(txEvent) || txEvent || "UNKNOWN";
+          break;
+      }
+
+      let amount;
+      let inactiveAt = null;
+
+      if (txData.type === TRANSACTION_TYPE.START_SUBSCRIPTION) {
+        amount = parseTics(val);
+        stackingReward = parseTics(stackingRewardValue);
+      } else if (val) {
+        if (txData.type === TRANSACTION_TYPE.IBC_TRANSFER_RECEIVE) {
+          amount = noExponent(Number(retriveNumbers(val)) / 10 ** 6);
+        } else {
+          amount = noExponent(Number(retriveNumbers(val)) / 10 ** 18);
+        }
+      }
+      txData.value = amount ? amount.toString() : "0";
+
+      if (planId) {
+        const numericPlanId = Number(String(planId).replace(/"/g, ""));
+
+        try {
+          const planDetailsUrl = `${environment.evmHost}/qubetics/plan/v3/plans/${numericPlanId}`;
+
+          const planResponse = await fetchRequest(
+            planDetailsUrl,
+            FETCH_METHODS.GET,
+            HEADERS.DEFAULT,
+            null
+          );
+
+          if (!planResponse.error) {
+            inactiveAt = addHours(txData.timestamp, planResponse?.data?.plan?.hours);
+          }
+
+        } catch (err) {
+          console.log(err, "error");
+        }
+      }
+
+      if (
+        txData.type === TRANSACTION_TYPE.START_SUBSCRIPTION ||
+        txData.type === TRANSACTION_TYPE.START_REQUEST ||
+        txData.type === TRANSACTION_TYPE.END_REQUEST ||
+        txData.type === TRANSACTION_TYPE.END_SUBSCRIPTION
+      ) {
+        const parsedLogs = (() => { try { return logs ? JSON.parse(logs) : null; } catch { return null; } })();
+        const sessionData = {
+          logs: parsedLogs,
+          txhash: `0x${txHash ?? ""}`,
+          subscriptionId,
+          planId: planId.toString() ?? "",
+          sessionId,
+          status: dvpnStatus ?? "",
+          type: txEvent,
+          provAddress: cleanEscapedString(provAddress),
+          accAddress: cleanEscapedString(accAddress),
+          nodeAddress: cleanEscapedString(nodeAddress),
+          price: amount ? amount?.toString() : "",
+          stackingReward: stackingReward ? stackingReward?.toString() : "",
+          blocknumber: txData.blocknumber,
+          startAt: txData.timestamp || null,
+          inactiveAt: inactiveAt || null,
+        };
+
+        await dbHelper.saveSessionTransactions(sessionData);
+      }
+
+      const saveRes = await dbHelper.saveTransactions(txData);
+      return !saveRes.error;
+
     } catch (error) {
       console.log("error while processing missed txs : ", error);
       return false;
@@ -1441,7 +1559,7 @@ class ProcessHelper {
 
         for (
           let i = 0;
-          i < fetchRes?.data?.result?.block?.data?.txs.length || 0;
+          i < (fetchRes?.data?.result?.block?.data?.txs?.length ?? 0);
           i++
         ) {
           const element = fetchRes?.data?.result?.block?.data?.txs[i];
@@ -1520,21 +1638,21 @@ class ProcessHelper {
             // saving missed block to downtime block Queue
           }
         } else console.log("socket service is upto date.");
-          console.log(`Enqueued ${diff - 1} downtime blocks.`);
+        console.log(`Enqueued ${diff - 1} downtime blocks.`);
 
       }
-    
 
-    // Update Redis after processing
-    // await RedisService.setString(
-    //   REDIS_KEY.LATEST_BLOCK,
-    //   current.toString()
-    // );
 
-  } catch (error) {
-    console.error('Error while getting downtime blocks:', error);
+      // Update Redis after processing
+      // await RedisService.setString(
+      //   REDIS_KEY.LATEST_BLOCK,
+      //   current.toString()
+      // );
+
+    } catch (error) {
+      console.error('Error while getting downtime blocks:', error);
+    }
   }
-}
 
   public async processNullTimestamp(blockData: IBlock) {
     try {
