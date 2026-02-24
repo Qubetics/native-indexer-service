@@ -1,0 +1,22 @@
+name: '[dvpn-release] Deploy native-indexer-dvpn-release'
+
+on: 
+  push:
+    branches: 
+      - dvpn_release
+
+jobs:
+  native-indexer-dvpn-release:
+    uses: Qubetics/argocd-qubetics/.github/workflows/deployment.yaml@prod
+    with:
+      SWR_ORGANIZATION: prod-qubetics
+      ARGOCD_BRANCH: prod
+      HUAWEI_REGION: 'ap-southeast-1'
+      ARGOCD_REPOSITORY: Qubetics/argocd-qubetics
+      DEPLOYMENT_PATH: native-indexer-dvpn-release/deployment.yaml
+      HUAWEI_IMAGE: native-indexer-dvpn-release
+      DOCKER_USERNAME: ap-southeast-1@HPUAJWWFSLCMD312AZSR
+      ENV: ${{ vars.NATIVE_INDEXER_DVPN_RELEASE }}
+    secrets:
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD_NEW }}
+      GIT_SSH_KEY: ${{ secrets.ARGOCD_SSH_KEY_NEW }} 
