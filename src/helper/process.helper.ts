@@ -100,7 +100,6 @@ class ProcessHelper {
     try {
       /* ===================== VALIDATION ===================== */
       const value = message?.result?.data?.value;
-      console.log("🚀 ~ ProcessHelper ~ processLatestBlock ~ value:", value)
       const block = value?.block;
       if (!block?.header) {
         console.warn('Invalid WS block payload', {
