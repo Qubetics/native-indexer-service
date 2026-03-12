@@ -365,23 +365,44 @@ class ProcessHelper {
         let toAddress = "";
         let method = "";
         let timeStamp = "";
+        const blocknumber = Number(
+          message.result.data?.value?.TxResult?.height,
+        );
 
-        const url = `${environment.evmHost}/cosmos/tx/v1beta1/txs/${hash}`;
-
+        const url = `${environment.httpHost}/block?height=${blocknumber}`;
         const fetchRes = await fetchRequest(
           url,
           FETCH_METHODS.GET,
           HEADERS.DEFAULT,
           null,
         );
-        console.log(fetchRes, "Tx-Message-swagger");
-
         if (!fetchRes.error) {
-          console.log("timestamp  : ", fetchRes?.data?.tx_response?.timestamp);
-          timeStamp = fetchRes?.data?.tx_response?.timestamp.toString() || null;
-
-          // timeStamp = fetchRes?.data.result.block?.header?.time ?? "";
+          console.log(
+            "timestamp fromRPC : ",
+            fetchRes?.data.result.block?.header?.time,
+          );
+          timeStamp = fetchRes?.data.result.block?.header?.time ?? "";
         }
+
+        console.log("txEvent : ", txEvent);
+
+        // const url = `${environment.evmHost}/cosmos/tx/v1beta1/txs/${hash}`;
+
+        // const fetchRes = await fetchRequest(
+        //   url,
+        //   FETCH_METHODS.GET,
+        //   HEADERS.DEFAULT,
+        //   null,
+        // );
+
+        // console.log(fetchRes, "Tx-Message-swagger");
+
+        // if (!fetchRes.error) {
+        //   console.log("timestamp  : ", fetchRes?.data?.tx_response?.timestamp);
+        //   timeStamp = fetchRes?.data?.tx_response?.timestamp.toString() || null;
+
+        //   // timeStamp = fetchRes?.data.result.block?.header?.time ?? "";
+        // }
 
         // switch (txEvent) {
         //   case "/cosmos.bank.v1beta1.MsgSend":
