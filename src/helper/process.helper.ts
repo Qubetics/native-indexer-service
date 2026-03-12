@@ -194,7 +194,6 @@ class ProcessHelper {
         ...blockDetails,
          blockhash: blockHash,
       };
-      console.log("🚀 ~ ProcessHelper ~ processLatestBlock ~ blockDataToSave:", blockDataToSave)
 
       SocketEventEmitter.emitMessage(
         SOCKET_EVENT.NATIVE_LATEST_BLOCK,
