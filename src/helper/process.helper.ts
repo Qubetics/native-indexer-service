@@ -100,6 +100,7 @@ class ProcessHelper {
     try {
       /* ===================== VALIDATION ===================== */
       const value = message?.result?.data?.value;
+      console.log("🚀 ~ ProcessHelper ~ processLatestBlock ~ value:", value)
       const block = value?.block;
       if (!block?.header) {
         console.warn('Invalid WS block payload', {
@@ -134,7 +135,15 @@ class ProcessHelper {
         transactionCount,
       };
 
-      // const blockHash = `0x${blockId.hash}`;
+      const url2 = `${environment.httpHost}/block?height=${blockDetails.blocknumber}`;
+      const fetchRes = await fetchRequest(
+        url2,
+        FETCH_METHODS.GET,
+        HEADERS.DEFAULT,
+        null,
+      );
+
+      const blockHash = `0x${fetchRes?.data?.result?.block_id?.hash ?? ""}`;
 
       /* ===================== PARALLEL READ OPS ===================== */
       // const [analyticsRes, sessionRes] = await Promise.allSettled([
@@ -183,8 +192,9 @@ class ProcessHelper {
       /* ===================== BLOCK SAVE ===================== */
       const blockDataToSave: IBlock = {
         ...blockDetails,
-        // blockhash: blockHash,
+         blockhash: blockHash,
       };
+      console.log("🚀 ~ ProcessHelper ~ processLatestBlock ~ blockDataToSave:", blockDataToSave)
 
       SocketEventEmitter.emitMessage(
         SOCKET_EVENT.NATIVE_LATEST_BLOCK,
