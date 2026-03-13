@@ -82,7 +82,7 @@ class RabbitMq {
    */
   public inQueueData(queue: string, data: string) {
     try {
-      if(queue=="NATIVE_LATEST_TXS"){
+      if(queue=="NATIVE_LATEST_TXS_V2"){
       console.log('pushing the data in the sendToQueue')
       }
       this.channel?.sendToQueue(queue, Buffer.from(data));
