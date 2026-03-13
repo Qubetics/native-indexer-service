@@ -82,6 +82,9 @@ class RabbitMq {
    */
   public inQueueData(queue: string, data: string) {
     try {
+      if(queue=="NATIVE_LATEST_TXS"){
+      console.log('pushing the data in the sendToQueue')
+      }
       this.channel?.sendToQueue(queue, Buffer.from(data));
       return true;
     } catch (error) {
@@ -98,9 +101,10 @@ class RabbitMq {
       this.channel?.consume(
         QUEUE_NAME.LATEST_TXS,
         async (message: amqp.Message | null) => {
+          console.log("🚀 ~ RabbitMq ~ consumeLatestTransaction ~ message:", message)
+        
           if (message) {
             try {
-              console.log("🚀 ~ RabbitMq ~ consumeLatestTransaction ~ message:", message)
               const txData = JSON.parse(message.content.toString());
               console.log("🚀 ~ RabbitMq ~ consumeLatestTransaction ~ txData:", txData)
               const txRes = await processHelper.processTxs(txData);
