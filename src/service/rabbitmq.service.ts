@@ -100,8 +100,11 @@ class RabbitMq {
         async (message: amqp.Message | null) => {
           if (message) {
             try {
+              console.log("🚀 ~ RabbitMq ~ consumeLatestTransaction ~ message:", message)
               const txData = JSON.parse(message.content.toString());
+              console.log("🚀 ~ RabbitMq ~ consumeLatestTransaction ~ txData:", txData)
               const txRes = await processHelper.processTxs(txData);
+              console.log("🚀 ~ RabbitMq ~ consumeLatestTransaction ~ txRes:", txRes)
               // await new Promise((res) => setTimeout(res, 6 * 60 * 1000));
               if (!txRes) {
                 if (txData?.result?.events) {
