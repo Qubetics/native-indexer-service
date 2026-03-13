@@ -51,6 +51,9 @@ export class CustomWebSocket {
 
   onMessage(event: any) {
     const message = JSON.parse(event);
+    if (this.queueName !== "NATIVE_LATEST_BLOCKS") {
+      console.log(this.queueName, "this.queue", "message ", message)
+    }
     if (this.queueName) {
       RabbitMqService.inQueueData(this.queueName, JSON.stringify(message));
     }
