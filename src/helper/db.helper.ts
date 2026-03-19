@@ -161,7 +161,7 @@ class ExlorerHelper {
       await prisma.dvpnTransaction.create({
         data: sessionData,
       });
-      console.log("DVPN Transaction saved!!!!", sessionData?.type);
+      console.log("DVPN Transaction saved!!!!",sessionData?.type);
       return {
         error: false,
       };

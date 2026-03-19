@@ -46,9 +46,9 @@ app
   .init()
   .then(async () => {
     await RedisService.startRedis();
-    cachingHelper.initializeCount();
-    cronService.checkValidators();
-    cronService.saveTokenPrice();
+    // cachingHelper.initializeCount();
+    // cronService.checkValidators();
+    // cronService.saveTokenPrice();
     processHelper.downTimeBlocks();
     processHelper.subscribeLatestBlocks();
     processHelper.subscribeLatestTxs();
