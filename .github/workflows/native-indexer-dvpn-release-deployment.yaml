@@ -15,8 +15,8 @@ jobs:
       ARGOCD_REPOSITORY: Qubetics/argocd-qubetics
       DEPLOYMENT_PATH: native-indexer-dvpn-release/deployment.yaml
       HUAWEI_IMAGE: native-indexer-dvpn-release
-      DOCKER_USERNAME: ap-southeast-1@HPUAJWWFSLCMD312AZSR
+      DOCKER_USERNAME: ap-southeast-1@${{vars.DOCKER_USERNAME_V2}}
       ENV: ${{ vars.NATIVE_INDEXER_DVPN_RELEASE }}
     secrets:
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD_NEW }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD_V2 }}
       GIT_SSH_KEY: ${{ secrets.ARGOCD_SSH_KEY_NEW }} 
