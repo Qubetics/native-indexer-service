@@ -54,7 +54,10 @@ class ExlorerHelper {
       }
       await RedisService.setString(redisKey, Number(count || 0) + increment);
     } catch (err) {
-      logger.error(`error while incrementing redis count for ${redisKey}:`, err);
+      logger.error(
+        `error while incrementing redis count for ${redisKey}:`,
+        err,
+      );
     }
   };
 
@@ -359,7 +362,9 @@ class ExlorerHelper {
         obj.validatorData = data?.validatorData;
       }
 
-      let userCount = await RedisService.getString(REDIS_KEY.NATIVE_USERS_COUNT);
+      let userCount = await RedisService.getString(
+        REDIS_KEY.NATIVE_USERS_COUNT,
+      );
       if (!userCount) {
         userCount = await prisma.users.count();
         await RedisService.setString(REDIS_KEY.NATIVE_USERS_COUNT, userCount);

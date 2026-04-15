@@ -125,14 +125,14 @@ function calculateAPY(
 
 const calculateData = async (): Promise<
   | {
-    validator: number;
-    totalValidator: number;
-    bondedRate: number;
-    apy: number;
-    inflation: number;
-    totalSupply: number;
-    circulating_supply: number;
-  }
+      validator: number;
+      totalValidator: number;
+      bondedRate: number;
+      apy: number;
+      inflation: number;
+      totalSupply: number;
+      circulating_supply: number;
+    }
   | { error: boolean; message: string }
 > => {
   try {

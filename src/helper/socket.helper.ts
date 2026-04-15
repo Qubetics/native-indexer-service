@@ -28,6 +28,7 @@ import {
 
 class SocketHelper {
   private lastEmitTime: Record<string, number> = {};
+
   private emitCooldown = 2000; // 2 seconds cooldown to reduce DB load
 
   async emitSocket(key: string) {
