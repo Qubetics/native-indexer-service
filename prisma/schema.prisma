@@ -14,6 +14,9 @@ model Users {
   balance   String   @default("0")
   txn       BigInt   @default(0)
   createdAt DateTime @default(now())
+
+    @@index([createdAt])
+  @@index([address])
 }
 
 model Blocks {
@@ -45,13 +48,16 @@ model Transactions {
   gasUsed         BigInt        @default(0)
   txFee           String        @default("")
   value           String        @default("0")
-  burnedFee       Float?         @default(0)
+  burnedFee       Float         @default(0)
 
   createdAt       DateTime      @default(now())
   nodeAddress     String?
   ContractLogs    ContractLogs?
 
   @@index([blocknumber, txhash])
+    @@index([createdAt])
+  @@index([type])
+  @@index([fromAddress, toAddress])
 }
 
 model Contracts {
@@ -219,7 +225,7 @@ model Voters {
 
 model DvpnTransaction {
   id             Int      @id @default(autoincrement())
-  txhash         String?   
+  txhash         String?    @unique
   blocknumber    BigInt
   planId         String?
   sessionId      String?

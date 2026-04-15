@@ -35,13 +35,13 @@ import {
 } from "../interface";
 import { prisma } from "../lib/db";
 import { RabbitMqService, RedisService, SocketEventEmitter } from "../service";
+import rabbitmqService from "../service/rabbitmq.service";
 import redisHelper from "../service/redis.helper";
 import socketEventsHelper from "../service/socketEvents.helper";
 import { CosmJsRpcMethods } from "./cosmsClient.helper";
 import dbHelper from "./db.helper";
 import ExlorerHelper from "./db.helper";
 import { CustomWebSocket } from "./ws.helper";
-import rabbitmqService from "../service/rabbitmq.service";
 
 class ProcessHelper {
   cosmjsInstace: CosmJsRpcMethods;
@@ -105,8 +105,8 @@ class ProcessHelper {
 
         const miner = validatorOperatorAddress
           ? await this.cosmjsInstace.getDelegatorAddress(
-            validatorOperatorAddress,
-          )
+              validatorOperatorAddress,
+            )
           : "";
 
         const blockDetails = {
@@ -453,7 +453,7 @@ class ProcessHelper {
               0;
             provAddress =
               events[
-              "qubetics.subscription.v3.EventCreate.prov_address"
+                "qubetics.subscription.v3.EventCreate.prov_address"
               ]?.[0] ?? "";
             accAddress =
               events["qubetics.subscription.v3.EventCreate.acc_address"]?.[0] ??
@@ -471,15 +471,15 @@ class ProcessHelper {
 
             nodeAddress =
               events[
-              "qubetics.subscription.v3.EventCreateSession.node_address"
+                "qubetics.subscription.v3.EventCreateSession.node_address"
               ]?.[0] ?? "";
             accAddress =
               events[
-              "qubetics.subscription.v3.EventCreateSession.acc_address"
+                "qubetics.subscription.v3.EventCreateSession.acc_address"
               ]?.[0] ?? "";
             subscriptionId =
               events[
-              "qubetics.subscription.v3.EventCreateSession.subscription_id"
+                "qubetics.subscription.v3.EventCreateSession.subscription_id"
               ]?.[0] ?? "";
             sessionId =
               events["qubetics.subscription.v3.EventCreateSession.id"]?.[0] ??
@@ -492,11 +492,11 @@ class ProcessHelper {
             type = TRANSACTION_TYPE.END_REQUEST;
             provAddress =
               events[
-              "qubetics.session.v3.EventUpdateStatus.prov_address"
+                "qubetics.session.v3.EventUpdateStatus.prov_address"
               ]?.[0] ?? "";
             nodeAddress =
               events[
-              "qubetics.session.v3.EventUpdateStatus.node_address"
+                "qubetics.session.v3.EventUpdateStatus.node_address"
               ]?.[0] ?? "";
             sessionId =
               events["qubetics.session.v3.EventUpdateStatus.id"]?.[0] ?? "";
@@ -738,7 +738,13 @@ class ProcessHelper {
           txData.type === TRANSACTION_TYPE.END_REQUEST ||
           txData.type === TRANSACTION_TYPE.END_SUBSCRIPTION
         ) {
-          const parsedLogs = (() => { try { return logs ? JSON.parse(logs) : null; } catch { return null; } })();
+          const parsedLogs = (() => {
+            try {
+              return logs ? JSON.parse(logs) : null;
+            } catch {
+              return null;
+            }
+          })();
           const sessionData = {
             logs: parsedLogs,
             txhash: `0x${hash ?? ""}`,
@@ -906,7 +912,7 @@ class ProcessHelper {
 
           const setBurnedAmount =
             Number(burnedAmount?._sum.burnedFee) +
-            Number(STATIC_BURNED_AMOUNT) || Number(STATIC_BURNED_AMOUNT);
+              Number(STATIC_BURNED_AMOUNT) || Number(STATIC_BURNED_AMOUNT);
 
           await RedisService.setString(
             REDIS_KEY.TOTAL_BURNED_AMOUNT,
@@ -958,16 +964,14 @@ class ProcessHelper {
         return false;
       }
 
-      const result = fetchRes.data.result;
+      const { result } = fetchRes.data;
       const logs: string = result?.tx_result?.log;
       const events: any[] = result?.tx_result?.events ?? [];
       const code = result?.tx_result?.code;
       const status = !code
         ? TRANSACTION_STATUS.SUCCESS
         : TRANSACTION_STATUS.FAILED;
-      const burnedFee = (
-        Number(result?.tx_result?.gas_used) * 0.2
-      ).toFixed(11);
+      const burnedFee = (Number(result?.tx_result?.gas_used) * 0.2).toFixed(11);
 
       const txData: ITransaction = {
         status,
@@ -1046,16 +1050,18 @@ class ProcessHelper {
           txData.type = TRANSACTION_TYPE.BOND_MORE;
           txData.toAddress = "/cosmos.staking.v1beta1.MsgDelegate";
 
-          const delegateEvent = events.find(
-            (e: any) => e.type === "delegate",
-          );
+          const delegateEvent = events.find((e: any) => e.type === "delegate");
           const amountAttr = delegateEvent?.attributes.find(
             (e: any) => e.key === "amount",
           );
           val = (amountAttr?.value || "0").replace(/[^\d.]/g, "");
 
-          const withdrawRewardEvent = events.find((e: any) => e.type === "withdraw_rewards");
-          const withdrawAmount = withdrawRewardEvent?.attributes?.find((a: any) => a.key === "amount")?.value;
+          const withdrawRewardEvent = events.find(
+            (e: any) => e.type === "withdraw_rewards",
+          );
+          const withdrawAmount = withdrawRewardEvent?.attributes?.find(
+            (a: any) => a.key === "amount",
+          )?.value;
           if (withdrawAmount) {
             this.processDelegatorRewards(
               txData.fromAddress,
@@ -1182,19 +1188,34 @@ class ProcessHelper {
           break;
         }
 
-
         case "/qubetics.subscription.v3.MsgStartSubscriptionRequest": {
           txData.type = TRANSACTION_TYPE.START_SUBSCRIPTION;
 
-          const payEvent = events.find((e: any) => e.type === "qubetics.subscription.v3.EventPay");
-          const createEvent = events.find((e: any) => e.type === "qubetics.subscription.v3.EventCreate");
+          const payEvent = events.find(
+            (e: any) => e.type === "qubetics.subscription.v3.EventPay",
+          );
+          const createEvent = events.find(
+            (e: any) => e.type === "qubetics.subscription.v3.EventCreate",
+          );
 
-          val = payEvent?.attributes?.find((a: any) => a.key === "payment")?.value ?? 0;
-          stackingRewardValue = payEvent?.attributes?.find((a: any) => a.key === "staking_reward")?.value ?? "";
-          provAddress = createEvent?.attributes?.find((a: any) => a.key === "prov_address")?.value ?? "";
-          accAddress = createEvent?.attributes?.find((a: any) => a.key === "acc_address")?.value ?? "";
-          subscriptionId = createEvent?.attributes?.find((a: any) => a.key === "id")?.value ?? "";
-          planId = createEvent?.attributes?.find((a: any) => a.key === "plan_id")?.value ?? "";
+          val =
+            payEvent?.attributes?.find((a: any) => a.key === "payment")
+              ?.value ?? 0;
+          stackingRewardValue =
+            payEvent?.attributes?.find((a: any) => a.key === "staking_reward")
+              ?.value ?? "";
+          provAddress =
+            createEvent?.attributes?.find((a: any) => a.key === "prov_address")
+              ?.value ?? "";
+          accAddress =
+            createEvent?.attributes?.find((a: any) => a.key === "acc_address")
+              ?.value ?? "";
+          subscriptionId =
+            createEvent?.attributes?.find((a: any) => a.key === "id")?.value ??
+            "";
+          planId =
+            createEvent?.attributes?.find((a: any) => a.key === "plan_id")
+              ?.value ?? "";
 
           break;
         }
@@ -1202,12 +1223,26 @@ class ProcessHelper {
         case "/qubetics.subscription.v3.MsgStartSessionRequest": {
           txData.type = TRANSACTION_TYPE.START_REQUEST;
 
-          const createSessionEvent = events.find((e: any) => e.type === "qubetics.subscription.v3.EventCreateSession");
+          const createSessionEvent = events.find(
+            (e: any) =>
+              e.type === "qubetics.subscription.v3.EventCreateSession",
+          );
 
-          nodeAddress = createSessionEvent?.attributes?.find((a: any) => a.key === "node_address")?.value ?? "";
-          accAddress = createSessionEvent?.attributes?.find((a: any) => a.key === "acc_address")?.value ?? "";
-          subscriptionId = createSessionEvent?.attributes?.find((a: any) => a.key === "subscription_id")?.value ?? "";
-          sessionId = createSessionEvent?.attributes?.find((a: any) => a.key === "id")?.value ?? "";
+          nodeAddress =
+            createSessionEvent?.attributes?.find(
+              (a: any) => a.key === "node_address",
+            )?.value ?? "";
+          accAddress =
+            createSessionEvent?.attributes?.find(
+              (a: any) => a.key === "acc_address",
+            )?.value ?? "";
+          subscriptionId =
+            createSessionEvent?.attributes?.find(
+              (a: any) => a.key === "subscription_id",
+            )?.value ?? "";
+          sessionId =
+            createSessionEvent?.attributes?.find((a: any) => a.key === "id")
+              ?.value ?? "";
 
           break;
         }
@@ -1215,12 +1250,24 @@ class ProcessHelper {
         case "/qubetics.session.v3.MsgCancelSessionRequest": {
           txData.type = TRANSACTION_TYPE.END_REQUEST;
 
-          const updateStatusEvent = events.find((e: any) => e.type === "qubetics.session.v3.EventUpdateStatus");
+          const updateStatusEvent = events.find(
+            (e: any) => e.type === "qubetics.session.v3.EventUpdateStatus",
+          );
 
-          provAddress = updateStatusEvent?.attributes?.find((a: any) => a.key === "prov_address")?.value ?? "";
-          nodeAddress = updateStatusEvent?.attributes?.find((a: any) => a.key === "node_address")?.value ?? "";
-          sessionId = updateStatusEvent?.attributes?.find((a: any) => a.key === "id")?.value ?? "";
-          dvpnStatus = updateStatusEvent?.attributes?.find((a: any) => a.key === "status")?.value ?? "";
+          provAddress =
+            updateStatusEvent?.attributes?.find(
+              (a: any) => a.key === "prov_address",
+            )?.value ?? "";
+          nodeAddress =
+            updateStatusEvent?.attributes?.find(
+              (a: any) => a.key === "node_address",
+            )?.value ?? "";
+          sessionId =
+            updateStatusEvent?.attributes?.find((a: any) => a.key === "id")
+              ?.value ?? "";
+          dvpnStatus =
+            updateStatusEvent?.attributes?.find((a: any) => a.key === "status")
+              ?.value ?? "";
 
           break;
         }
@@ -1228,12 +1275,22 @@ class ProcessHelper {
         case "/qubetics.subscription.v3.MsgCancelSubscriptionRequest": {
           txData.type = TRANSACTION_TYPE.END_SUBSCRIPTION;
 
-          const updateEvent = events.find((e: any) => e.type === "qubetics.subscription.v3.EventUpdate");
+          const updateEvent = events.find(
+            (e: any) => e.type === "qubetics.subscription.v3.EventUpdate",
+          );
 
-          accAddress = updateEvent?.attributes?.find((a: any) => a.key === "acc_address")?.value ?? "";
-          subscriptionId = updateEvent?.attributes?.find((a: any) => a.key === "id")?.value ?? "";
-          planId = updateEvent?.attributes?.find((a: any) => a.key === "plan_id")?.value ?? "";
-          dvpnStatus = updateEvent?.attributes?.find((a: any) => a.key === "status")?.value ?? "";
+          accAddress =
+            updateEvent?.attributes?.find((a: any) => a.key === "acc_address")
+              ?.value ?? "";
+          subscriptionId =
+            updateEvent?.attributes?.find((a: any) => a.key === "id")?.value ??
+            "";
+          planId =
+            updateEvent?.attributes?.find((a: any) => a.key === "plan_id")
+              ?.value ?? "";
+          dvpnStatus =
+            updateEvent?.attributes?.find((a: any) => a.key === "status")
+              ?.value ?? "";
 
           break;
         }
@@ -1268,13 +1325,15 @@ class ProcessHelper {
             planDetailsUrl,
             FETCH_METHODS.GET,
             HEADERS.DEFAULT,
-            null
+            null,
           );
 
           if (!planResponse.error) {
-            inactiveAt = addHours(txData.timestamp, planResponse?.data?.plan?.hours);
+            inactiveAt = addHours(
+              txData.timestamp,
+              planResponse?.data?.plan?.hours,
+            );
           }
-
         } catch (err) {
           console.log(err, "error");
         }
@@ -1286,7 +1345,13 @@ class ProcessHelper {
         txData.type === TRANSACTION_TYPE.END_REQUEST ||
         txData.type === TRANSACTION_TYPE.END_SUBSCRIPTION
       ) {
-        const parsedLogs = (() => { try { return logs ? JSON.parse(logs) : null; } catch { return null; } })();
+        const parsedLogs = (() => {
+          try {
+            return logs ? JSON.parse(logs) : null;
+          } catch {
+            return null;
+          }
+        })();
         const sessionData = {
           logs: parsedLogs,
           txhash: `0x${txHash ?? ""}`,
@@ -1310,13 +1375,11 @@ class ProcessHelper {
 
       const saveRes = await dbHelper.saveTransactions(txData);
       return !saveRes.error;
-
     } catch (error) {
       console.log("error while processing missed txs : ", error);
       return false;
     }
   }
-
 
   /**
    * Process and save error Blocks
@@ -1360,10 +1423,10 @@ class ProcessHelper {
 
       const miner = validatorOperatorAddress
         ? (<string>(
-          await this.cosmjsInstace.getDelegatorAddress(
-            validatorOperatorAddress,
-          )
-        ) ?? "")
+            await this.cosmjsInstace.getDelegatorAddress(
+              validatorOperatorAddress,
+            )
+          ) ?? "")
         : "";
 
       if (!fetchRes.error) {
@@ -1373,8 +1436,7 @@ class ProcessHelper {
           blocknumber: Number(blockNumber),
           blockhash: `0x${fetchRes?.data?.result?.block_id?.hash ?? ""}`,
           timestamp: fetchRes?.data.result.block?.header?.time ?? "",
-          transactionCount:
-            fetchRes?.data.result.block?.data?.txs?.length ?? 0,
+          transactionCount: fetchRes?.data.result.block?.data?.txs?.length ?? 0,
         };
 
         for (
