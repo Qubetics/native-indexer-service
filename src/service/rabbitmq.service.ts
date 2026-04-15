@@ -304,26 +304,11 @@ class RabbitMq {
               const block = message.content.toString();
               const isSuccess = await processHelper.processErrorBlock(block);
               if (isSuccess) {
-                // Retrieve the block count from Redis or the database
-                let blockCount = await RedisService.getString(
+                // Retrieve the block count from Redis
+                const blockCount = await RedisService.getString(
                   REDIS_KEY.NATIVE_BLOCKS_COUNT,
                 );
-
-                if (!blockCount) {
-                  // First time, get the count from the database
-                  blockCount = await prisma.blocks.count();
-                  await RedisService.setString(
-                    REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                    blockCount,
-                  );
-                } else {
-                  // Increment the block count
-                  blockCount = Number(blockCount) + 1;
-                  await RedisService.setString(
-                    REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                    blockCount,
-                  );
-                }
+                console.log("blockCount", blockCount);
 
                 await RedisService.setString(
                   REDIS_KEY.LATEST_BLOCK,

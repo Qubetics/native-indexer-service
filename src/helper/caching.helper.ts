@@ -12,6 +12,14 @@ class ProcessHelper {
     if (txCount) {
       RedisService.setString(REDIS_KEY.NATIVE_TRANSACTIONS_COUNT, txCount);
     }
+    const userCount = await prisma.users.count();
+    if (userCount) {
+      RedisService.setString(REDIS_KEY.NATIVE_USERS_COUNT, userCount);
+    }
+    const contractCount = await prisma.contracts.count();
+    if (contractCount) {
+      RedisService.setString(REDIS_KEY.NATIVE_CONTRACTS_COUNT, contractCount);
+    }
   }
 }
 export default new ProcessHelper();

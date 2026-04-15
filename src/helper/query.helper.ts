@@ -198,7 +198,5 @@ export const getRowCount = async (tableName: string) => {
     return rowCount === "-1" ? 0 : Number(rowCount);
   } catch (error) {
     return 0;
-  } finally {
-    await prisma.$disconnect();
   }
 };

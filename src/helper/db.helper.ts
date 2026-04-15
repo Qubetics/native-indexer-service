@@ -38,8 +38,28 @@ import { fetchRequest } from "./common.helper";
 import SocketHelper from "./socket.helper";
 
 class ExlorerHelper {
+  incrementRedisCount = async (redisKey: string, increment: number = 1) => {
+    try {
+      let count = await RedisService.getString(redisKey);
+      if (!count) {
+        if (redisKey === REDIS_KEY.NATIVE_BLOCKS_COUNT) {
+          count = await prisma.blocks.count();
+        } else if (redisKey === REDIS_KEY.NATIVE_TRANSACTIONS_COUNT) {
+          count = await prisma.transactions.count();
+        } else if (redisKey === REDIS_KEY.NATIVE_USERS_COUNT) {
+          count = await prisma.users.count();
+        } else if (redisKey === REDIS_KEY.NATIVE_CONTRACTS_COUNT) {
+          count = await prisma.contracts.count();
+        }
+      }
+      await RedisService.setString(redisKey, Number(count || 0) + increment);
+    } catch (err) {
+      logger.error(`error while incrementing redis count for ${redisKey}:`, err);
+    }
+  };
+
   /**
-   * save blocks data into db
+   * save block data into db
    * @param blockData
    * @returns
    */
@@ -48,6 +68,7 @@ class ExlorerHelper {
       await prisma.blocks.create({
         data: blockData,
       });
+      await this.incrementRedisCount(REDIS_KEY.NATIVE_BLOCKS_COUNT);
       return {
         error: false,
       };
@@ -123,6 +144,8 @@ class ExlorerHelper {
         data: txData,
       });
 
+      await this.incrementRedisCount(REDIS_KEY.NATIVE_TRANSACTIONS_COUNT);
+
       // Call userSave method with relevant data
       const userData = [
         {
@@ -194,6 +217,7 @@ class ExlorerHelper {
               txn: CONST_NAME.ONE,
             },
           });
+          await this.incrementRedisCount(REDIS_KEY.NATIVE_USERS_COUNT);
         }
       }
 
@@ -335,7 +359,12 @@ class ExlorerHelper {
         obj.validatorData = data?.validatorData;
       }
 
-      obj.count = await prisma.users.count();
+      let userCount = await RedisService.getString(REDIS_KEY.NATIVE_USERS_COUNT);
+      if (!userCount) {
+        userCount = await prisma.users.count();
+        await RedisService.setString(REDIS_KEY.NATIVE_USERS_COUNT, userCount);
+      }
+      obj.count = Number(userCount || 0);
       return obj;
     } catch (error) {
       logger.error("error occured in getAnalytics: ", error);
@@ -356,13 +385,18 @@ class ExlorerHelper {
   // }
 
   saveContractDeployTx = async (
-    contactData: IContracts,
+    contactData: IContracts | IContracts[],
   ): Promise<IESResponse> => {
     try {
+      const data = Array.isArray(contactData) ? contactData : [contactData];
       await prisma.contracts.createMany({
-        data: contactData,
+        data,
         skipDuplicates: true,
       });
+      await this.incrementRedisCount(
+        REDIS_KEY.NATIVE_CONTRACTS_COUNT,
+        data.length,
+      );
       await SocketHelper.emitSocket(REDIS_KEY.CONTRACT_DEPLOY_GRAPH);
 
       return {

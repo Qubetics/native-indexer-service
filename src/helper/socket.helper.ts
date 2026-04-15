@@ -11,6 +11,7 @@ import {
 import { REDIS_KEY, SOCKET_EVENT } from "../constant";
 import { prisma } from "../lib/db";
 import logger from "../lib/logger";
+import { RedisService } from "../service";
 import SocketEventEmitter from "../service/socketEvents.helper";
 import {
   getAccountDailyQuery,
@@ -26,7 +27,19 @@ import {
 } from "./query.helper";
 
 class SocketHelper {
+  private lastEmitTime: Record<string, number> = {};
+  private emitCooldown = 2000; // 2 seconds cooldown to reduce DB load
+
   async emitSocket(key: string) {
+    const now = Date.now();
+    if (
+      this.lastEmitTime[key] &&
+      now - this.lastEmitTime[key] < this.emitCooldown
+    ) {
+      return;
+    }
+    this.lastEmitTime[key] = now;
+
     // if (key === REDIS_KEY.CONTRACT_DEPLOY_GRAPH) {
     //   await this.handleContractDeployGraphData(
     //     SOCKET_EVENT.CONTRACT_DEPLOYED_TX,
@@ -114,7 +127,10 @@ class SocketHelper {
       // const counter = await ExlorerHelper.getTxCount();
       const obj = {
         finalData: allGraphData,
-        count: await prisma.transactions.count(),
+        count: Number(
+          (await RedisService.getString(REDIS_KEY.NATIVE_TRANSACTIONS_COUNT)) ||
+            0,
+        ),
       };
 
       SocketEventEmitter.emitMessage(socketEvent, obj);
@@ -200,7 +216,9 @@ class SocketHelper {
       const obj = {
         finalData: allGraphData,
         // count: counter.data.count,
-        count: await prisma.users.count(),
+        count: Number(
+          (await RedisService.getString(REDIS_KEY.NATIVE_USERS_COUNT)) || 0,
+        ),
       };
 
       SocketEventEmitter.emitMessage(socketEvent, obj);
@@ -318,7 +336,9 @@ class SocketHelper {
 
       const obj = {
         finalData: allGraphData,
-        count: await prisma.contracts.count(),
+        count: Number(
+          (await RedisService.getString(REDIS_KEY.NATIVE_CONTRACTS_COUNT)) || 0,
+        ),
       };
 
       SocketEventEmitter.emitMessage(socketEvent, obj);

@@ -11,7 +11,7 @@ import { COLORS } from "./constant";
 import cronService from "./cron/index";
 import { log } from "./Utility/common";
 import { RedisService } from "./service";
-import { connectToDatabase } from "./lib/db";
+import { connectToDatabase, prisma } from "./lib/db";
 import processHelper from "./helper/process.helper";
 import SocketHelper from "./service/socket.heper";
 import cachingHelper from "./helper/caching.helper";
@@ -87,3 +87,17 @@ process.on("unhandledRejection", (reason: Error) => {
   logger.error("Unhandled Promise Rejection: reason:", reason.message);
   logger.error("reason.stack : ", reason.stack);
 });
+
+async function gracefulShutdown(signal: string) {
+  logger.info(`Received ${signal}, starting graceful shutdown...`);
+  try {
+    await prisma.$disconnect();
+    logger.info("Database connections closed.");
+  } catch (err) {
+    logger.error("Error during database disconnect:", err);
+  }
+  process.exit(0);
+}
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));

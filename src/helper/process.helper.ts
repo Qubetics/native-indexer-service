@@ -129,9 +129,19 @@ class ProcessHelper {
         const analytics = await dbHelper.getAnalytics();
 
         /* emit the transactions per block count */
+        let totalTx = await RedisService.getString(
+          REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
+        );
+        if (!totalTx) {
+          totalTx = await prisma.transactions.count();
+          await RedisService.setString(
+            REDIS_KEY.NATIVE_TRANSACTIONS_COUNT,
+            totalTx,
+          );
+        }
         SocketEventEmitter.emitMessage(SOCKET_EVENT.TX_SUMMARY, {
           tpb: blockDetails?.transactionCount,
-          totalTx: await prisma.transactions.count(),
+          totalTx: Number(totalTx || 0),
         });
 
         /* emit  analytics */
@@ -172,27 +182,11 @@ class ProcessHelper {
           const saveRes = await dbHelper.saveBlockData(blockDataToSave);
 
           if (saveRes) {
-            // Retrieve the block count from Redis or the database
-            let blockCount = await RedisService.getString(
+            // Retrieve the block count from Redis
+            const blockCount = await RedisService.getString(
               REDIS_KEY.NATIVE_BLOCKS_COUNT,
             );
-
-            if (!blockCount) {
-              // First time, get the count from the database
-              blockCount = await prisma.blocks.count();
-              await RedisService.setString(
-                REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                blockCount,
-              );
-            } else {
-              // Increment the block count
-              blockCount = Number(blockCount) + 1;
-              await RedisService.setString(
-                REDIS_KEY.NATIVE_BLOCKS_COUNT,
-                blockCount,
-              );
-              console.log("blockCount", blockCount);
-            }
+            console.log("blockCount", blockCount);
           }
 
           await dbHelper.upsertValidatorsCount(
