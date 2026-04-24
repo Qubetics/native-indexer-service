@@ -105,8 +105,8 @@ class ProcessHelper {
 
         const miner = validatorOperatorAddress
           ? await this.cosmjsInstace.getDelegatorAddress(
-              validatorOperatorAddress,
-            )
+            validatorOperatorAddress,
+          )
           : "";
 
         const blockDetails = {
@@ -453,7 +453,7 @@ class ProcessHelper {
               0;
             provAddress =
               events[
-                "qubetics.subscription.v3.EventCreate.prov_address"
+              "qubetics.subscription.v3.EventCreate.prov_address"
               ]?.[0] ?? "";
             accAddress =
               events["qubetics.subscription.v3.EventCreate.acc_address"]?.[0] ??
@@ -471,15 +471,15 @@ class ProcessHelper {
 
             nodeAddress =
               events[
-                "qubetics.subscription.v3.EventCreateSession.node_address"
+              "qubetics.subscription.v3.EventCreateSession.node_address"
               ]?.[0] ?? "";
             accAddress =
               events[
-                "qubetics.subscription.v3.EventCreateSession.acc_address"
+              "qubetics.subscription.v3.EventCreateSession.acc_address"
               ]?.[0] ?? "";
             subscriptionId =
               events[
-                "qubetics.subscription.v3.EventCreateSession.subscription_id"
+              "qubetics.subscription.v3.EventCreateSession.subscription_id"
               ]?.[0] ?? "";
             sessionId =
               events["qubetics.subscription.v3.EventCreateSession.id"]?.[0] ??
@@ -492,11 +492,11 @@ class ProcessHelper {
             type = TRANSACTION_TYPE.END_REQUEST;
             provAddress =
               events[
-                "qubetics.session.v3.EventUpdateStatus.prov_address"
+              "qubetics.session.v3.EventUpdateStatus.prov_address"
               ]?.[0] ?? "";
             nodeAddress =
               events[
-                "qubetics.session.v3.EventUpdateStatus.node_address"
+              "qubetics.session.v3.EventUpdateStatus.node_address"
               ]?.[0] ?? "";
             sessionId =
               events["qubetics.session.v3.EventUpdateStatus.id"]?.[0] ?? "";
@@ -912,7 +912,7 @@ class ProcessHelper {
 
           const setBurnedAmount =
             Number(burnedAmount?._sum.burnedFee) +
-              Number(STATIC_BURNED_AMOUNT) || Number(STATIC_BURNED_AMOUNT);
+            Number(STATIC_BURNED_AMOUNT) || Number(STATIC_BURNED_AMOUNT);
 
           await RedisService.setString(
             REDIS_KEY.TOTAL_BURNED_AMOUNT,
@@ -973,7 +973,7 @@ class ProcessHelper {
         : TRANSACTION_STATUS.FAILED;
       const burnedFee = (Number(result?.tx_result?.gas_used) * 0.2).toFixed(11);
 
-      const txData: ITransaction = {
+      const txData = {
         status,
         txhash: `0x${rawHash}`,
         txString: result?.tx ?? "",
@@ -987,6 +987,7 @@ class ProcessHelper {
         value: "",
         timestamp: "",
         contractAddress: "",
+        nodeAddress: "",
       };
 
       const url2 = `${environment.httpHost}/block?height=${txData.blocknumber}`;
@@ -1228,10 +1229,11 @@ class ProcessHelper {
               e.type === "qubetics.subscription.v3.EventCreateSession",
           );
 
-          nodeAddress =
-            createSessionEvent?.attributes?.find(
+
+          txData.nodeAddress =
+            cleanEscapedString(createSessionEvent?.attributes?.find(
               (a: any) => a.key === "node_address",
-            )?.value ?? "";
+            )?.value) ?? "";
           accAddress =
             createSessionEvent?.attributes?.find(
               (a: any) => a.key === "acc_address",
@@ -1258,10 +1260,10 @@ class ProcessHelper {
             updateStatusEvent?.attributes?.find(
               (a: any) => a.key === "prov_address",
             )?.value ?? "";
-          nodeAddress =
-            updateStatusEvent?.attributes?.find(
+          txData.nodeAddress =
+            cleanEscapedString(updateStatusEvent?.attributes?.find(
               (a: any) => a.key === "node_address",
-            )?.value ?? "";
+            )?.value) ?? "";
           sessionId =
             updateStatusEvent?.attributes?.find((a: any) => a.key === "id")
               ?.value ?? "";
@@ -1338,6 +1340,7 @@ class ProcessHelper {
           console.log(err, "error");
         }
       }
+
 
       if (
         txData.type === TRANSACTION_TYPE.START_SUBSCRIPTION ||
@@ -1423,10 +1426,10 @@ class ProcessHelper {
 
       const miner = validatorOperatorAddress
         ? (<string>(
-            await this.cosmjsInstace.getDelegatorAddress(
-              validatorOperatorAddress,
-            )
-          ) ?? "")
+          await this.cosmjsInstace.getDelegatorAddress(
+            validatorOperatorAddress,
+          )
+        ) ?? "")
         : "";
 
       if (!fetchRes.error) {
