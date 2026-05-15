@@ -46,6 +46,8 @@ class Environment implements IEnvironment {
 
   public initialSupply: number;
 
+  public redisPassword: string;
+
   /**
    *
    * @param NODE_ENV
@@ -72,6 +74,7 @@ class Environment implements IEnvironment {
     this.initialSupply = Number(process.env.INITIAL_SUPPLY);
     this.projectName = <string>process.env.PROJECT_NAME || "qubetics";
     this.ttlTimeRewards = <number>Number(process.env.TTL_TIME_FOR_REWARDS || 1);
+    this.redisPassword=<string>process.env.REDIS_PASS
   }
 
   /**
