@@ -187,7 +187,7 @@ class ExlorerHelper {
       await prisma.dvpnTransaction.create({
         data: sessionData,
       });
-      console.log("DVPN Transaction saved!!!!", sessionData?.type);
+      console.log("DVPN Transaction saved!!!!", sessionData?.type, sessionData.txhash);
       return {
         error: false,
       };
@@ -307,10 +307,10 @@ class ExlorerHelper {
 
   getRedisValue = async (): Promise<
     | {
-        supply: number;
-        marketCap: number;
-        validatorData: ValidatorData;
-      }
+      supply: number;
+      marketCap: number;
+      validatorData: ValidatorData;
+    }
     | false
   > => {
     try {

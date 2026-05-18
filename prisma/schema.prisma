@@ -156,7 +156,7 @@ model ContractLogs {
 }
 
 model Delegator {
-  id              Int              @id @default(autoincrement())
+  id              BigInt           @id @default(autoincrement())
   totalStake      Decimal
   address         String           @unique
   createdAt       DateTime         @default(now())
@@ -166,7 +166,7 @@ model Delegator {
 }
 
 model ValidatorStake {
-  id                       Int       @id @default(autoincrement())
+  id                       BigInt    @id @default(autoincrement())
   stake                    Decimal
   validatorOperatorAddress String    @default("")
   delegatorAddress         String
