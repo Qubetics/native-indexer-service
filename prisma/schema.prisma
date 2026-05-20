@@ -31,6 +31,7 @@ model Blocks {
 
   @@unique([blocknumber, blockhash], name: "BlockNumberAndHashUnique")
   @@index([miner, blockhash, blocknumber])
+  @@index([miner, createdAt(sort: Desc)]) 
 }
 
 model Transactions {
@@ -55,9 +56,10 @@ model Transactions {
   ContractLogs    ContractLogs?
 
   @@index([blocknumber, txhash])
-    @@index([createdAt])
-  @@index([type])
-  @@index([fromAddress, toAddress])
+  @@index([type, createdAt(sort: Desc)], map: "Transactions_type_createdAt_idx")
+  @@index([fromAddress, createdAt(sort: Desc)], map: "Transactions_fromAddress_createdAt_idx")
+  @@index([toAddress, createdAt(sort: Desc)], map: "Transactions_toAddress_createdAt_idx")
+  @@index([createdAt(sort: Desc)], map: "Transactions_createdAt_desc_idx")
 }
 
 model Contracts {
@@ -136,7 +138,7 @@ model Validator {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
-  @@index([selfStake, createdAt, updatedAt, validatorAddress])
+  @@index([status, votingPower(sort: Desc)], map: "Validator_status_votingPower_idx")
 }
 
 model ContractLogs {
@@ -153,10 +155,12 @@ model ContractLogs {
   updatedAt       DateTime     @updatedAt
   contract        Contracts    @relation(fields: [contractAddress], references: [address])
   transactions    Transactions @relation(fields: [txHash], references: [txhash])
+
+  @@index([contractAddress, createdAt(sort: Desc)], map: "ContractLogs_contractAddress_createdAt_idx")
 }
 
 model Delegator {
-  id              BigInt           @id @default(autoincrement())
+  id              BigInt              @id @default(autoincrement())
   totalStake      Decimal
   address         String           @unique
   createdAt       DateTime         @default(now())
@@ -166,7 +170,7 @@ model Delegator {
 }
 
 model ValidatorStake {
-  id                       BigInt    @id @default(autoincrement())
+  id                       BigInt       @id @default(autoincrement())
   stake                    Decimal
   validatorOperatorAddress String    @default("")
   delegatorAddress         String
@@ -184,6 +188,8 @@ model Holders {
   contractAddress String
   tokenBalance    String
   contract        Contracts @relation(fields: [contractAddress], references: [address])
+
+  @@index([contractAddress], map: "Holders_contractAddress_idx")
 }
 
 model ValidatedBlocksCount {
