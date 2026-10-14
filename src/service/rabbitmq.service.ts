@@ -1,12 +1,12 @@
-import * as amqp from 'amqplib/callback_api';
-import { log } from '../Utility/common';
-import { COLORS, QUEUE_NAME, REDIS_KEY } from '../constant';
-import dbHelper from '../helper/db.helper';
-import processHelper from '../helper/process.helper';
-import { IValidator } from '../interface';
-import { prisma } from '../lib/db';
-import logger from '../lib/logger';
-import { RedisService } from '.';
+import * as amqp from "amqplib/callback_api";
+import { log } from "../Utility/common";
+import { COLORS, QUEUE_NAME, REDIS_KEY } from "../constant";
+import dbHelper from "../helper/db.helper";
+import processHelper from "../helper/process.helper";
+import { IValidator } from "../interface";
+import { prisma } from "../lib/db";
+import logger from "../lib/logger";
+import { RedisService } from ".";
 
 class RabbitMq {
   public channel: amqp.Channel;
@@ -37,7 +37,7 @@ class RabbitMq {
 
       return true;
     } catch (error) {
-      logger.error('Error while connecting to RabbitMQ: ', error);
+      logger.error("Error while connecting to RabbitMQ: ", error);
       return false;
     }
   }
@@ -48,23 +48,23 @@ class RabbitMq {
       const attemptConnection = () => {
         amqp.connect(environment.rabbitMq, (err, connection) => {
           if (err) {
-            logger.error('Error connecting to RabbitMQ:', err);
+            logger.error("Error connecting to RabbitMQ:", err);
             reject(err);
             return;
           }
 
-          connection.on('error', (error) => {
-            logger.error('RabbitMQ connection error:', error.message);
+          connection.on("error", (error) => {
+            logger.error("RabbitMQ connection error:", error.message);
             setTimeout(attemptConnection, RECONNECT_DELAY);
           });
 
           connection.createChannel((error: Error, channel) => {
             if (error) {
-              logger.error('Error creating channel:', error);
+              logger.error("Error creating channel:", error);
               reject(error);
               return;
             }
-            log('RabbitMQ Conneted ', COLORS.yellow, 'true', COLORS.green);
+            log("RabbitMQ Conneted ", COLORS.yellow, "true", COLORS.green);
             resolve(channel);
           });
         });
@@ -82,13 +82,13 @@ class RabbitMq {
    */
   public inQueueData(queue: string, data: string) {
     try {
-      if(queue==='NATIVE_LATEST_TXS'){
-      console.log('pushing the data in the sendToQueue');
+      if (queue === "NATIVE_LATEST_TXS") {
+        console.log("pushing the data in the sendToQueue");
       }
       this.channel?.sendToQueue(queue, Buffer.from(data));
       return true;
     } catch (error) {
-      console.log('error inside inQueueData : ', error);
+      console.log("error inside inQueueData : ", error);
       return false;
     }
   }
@@ -101,14 +101,23 @@ class RabbitMq {
       this.channel?.consume(
         QUEUE_NAME.LATEST_TXS,
         async (message: amqp.Message | null) => {
-          console.log('🚀 ~ RabbitMq ~ consumeLatestTransaction ~ message:', message);
-        
+          console.log(
+            "🚀 ~ RabbitMq ~ consumeLatestTransaction ~ message:",
+            message,
+          );
+
           if (message) {
             try {
               const txData = JSON.parse(message.content.toString());
-              console.log('🚀 ~ RabbitMq ~ consumeLatestTransaction ~ txData:', txData);
+              console.log(
+                "🚀 ~ RabbitMq ~ consumeLatestTransaction ~ txData:",
+                txData,
+              );
               const txRes = await processHelper.processTxs(txData);
-              console.log('🚀 ~ RabbitMq ~ consumeLatestTransaction ~ txRes:', txRes);
+              console.log(
+                "🚀 ~ RabbitMq ~ consumeLatestTransaction ~ txRes:",
+                txRes,
+              );
               // await new Promise((res) => setTimeout(res, 6 * 60 * 1000));
               if (!txRes) {
                 if (txData?.result?.events) {
@@ -122,7 +131,7 @@ class RabbitMq {
               }
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** consumeLatestTransaction Error', error);
+              console.log("*** consumeLatestTransaction Error", error);
               this.channel?.ack(message);
             }
           }
@@ -131,8 +140,8 @@ class RabbitMq {
       );
     } catch (error) {
       console.log(
-        'error while consuming all consumeLatestTransaction : ',
-        error
+        "error while consuming all consumeLatestTransaction : ",
+        error,
       );
     }
   }
@@ -154,16 +163,15 @@ class RabbitMq {
               }
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** consumeLatestTransaction Error', error);
+              console.log("*** consumeLatestTransaction Error", error);
               this.channel?.ack(message);
             }
           }
         },
-        { noAck: false }
-        
+        { noAck: false },
       );
     } catch (error) {
-      console.log('error while consuming all consumeDownTransaction : ', error);
+      console.log("error while consuming all consumeDownTransaction : ", error);
     }
   }
 
@@ -195,7 +203,7 @@ class RabbitMq {
               }
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** #error consumeLatestBlocks', error);
+              console.log("*** #error consumeLatestBlocks", error);
               this.channel?.ack(message);
             }
           }
@@ -203,7 +211,7 @@ class RabbitMq {
         { noAck: false },
       );
     } catch (error) {
-      console.log('### Error consumeLatestBlocks ', error);
+      console.log("### Error consumeLatestBlocks ", error);
     }
   }
 
@@ -225,7 +233,7 @@ class RabbitMq {
               }
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** Error consumeMissedTxs', error);
+              console.log("*** Error consumeMissedTxs", error);
               this.channel?.ack(message);
             }
           }
@@ -233,7 +241,7 @@ class RabbitMq {
         { noAck: false },
       );
     } catch (error) {
-      console.log('### Error consumeMissedTxs', error);
+      console.log("### Error consumeMissedTxs", error);
     }
   }
 
@@ -251,7 +259,7 @@ class RabbitMq {
               await processHelper.processErrorBlock(blockNo);
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** error consumeErrorBlocks', error);
+              console.log("*** error consumeErrorBlocks", error);
               this.channel?.ack(message);
             }
           }
@@ -259,7 +267,7 @@ class RabbitMq {
         { noAck: false },
       );
     } catch (error) {
-      console.log('### error consumeErrorBlocks', error);
+      console.log("### error consumeErrorBlocks", error);
     }
   }
 
@@ -288,14 +296,14 @@ class RabbitMq {
               }
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** #consumeMissedBlocks: ', error);
+              console.log("*** #consumeMissedBlocks: ", error);
             }
           }
         },
         { noAck: false },
       );
     } catch (error) {
-      console.log('Error consumeMissedBlocks', error);
+      console.log("Error consumeMissedBlocks", error);
     }
   }
 
@@ -350,14 +358,14 @@ class RabbitMq {
               }
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** Error consumeDownTimeBlocks', error);
+              console.log("*** Error consumeDownTimeBlocks", error);
             }
           }
         },
         { noAck: false },
       );
     } catch (error) {
-      console.log('### Error consumeDownTimeBlocks', error);
+      console.log("### Error consumeDownTimeBlocks", error);
     }
   }
 
@@ -372,7 +380,7 @@ class RabbitMq {
               await processHelper.processLatestBlock(blockData);
               this.channel?.ack(message);
             } catch (error) {
-              console.log('*** consumeNullTimestamp', error);
+              console.log("*** consumeNullTimestamp", error);
               this.channel?.ack(message);
             }
           }
@@ -380,7 +388,7 @@ class RabbitMq {
         { noAck: false },
       );
     } catch (error) {
-      console.log('### error consumeNullTimestamp', error);
+      console.log("### error consumeNullTimestamp", error);
     }
   }
 }
