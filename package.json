@@ -31,7 +31,7 @@
     "db:studio": "prisma studio"
   },
   "author": "qubetics",
-  "license": "",
+  "license": "MIT",
   "dependencies": {
     "@cosmjs/cosmwasm": "^0.25.6",
     "@cosmjss/cosmwasm-stargate": "^0.0.4",
