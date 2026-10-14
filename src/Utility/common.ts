@@ -62,22 +62,22 @@ export const noExponent = function (num: number | string) {
   try {
     const data = String(num).split(/[eE]/);
     if (data.length === 1) return data[0];
-    let z = "";
-    const sign = Number(num) < 0 ? "-" : "";
-    const str = data[0].replace(".", "");
+    let z = '';
+    const sign = Number(num) < 0 ? '-' : '';
+    const str = data[0].replace('.', '');
     let mag = Number(data[1]) + 1;
     if (mag < 0) {
       z = `${sign}0.`;
-      while (mag++) z += "0";
-      return z + str.replace(/^\-/, "");
+      while (mag++) z += '0';
+      return z + str.replace(/^\-/, '');
     }
     mag -= str.length;
-    while (mag--) z += "0";
+    while (mag--) z += '0';
 
     return str + z;
   } catch (error) {
-    console.log("Exponent error", error);
-    return "0";
+    console.log('Exponent error', error);
+    return '0';
   }
 };
 
@@ -87,7 +87,7 @@ export const noExponent = function (num: number | string) {
  * @returns boolean
  */
 export function isExponentialNumber(str: string) {
-  return str.includes("e");
+  return str.includes('e');
 }
 
 /**
@@ -116,10 +116,10 @@ export function retriveNumbers(num: number | string) {
 
 export function formatDateByMin(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const hours = String(date.getUTCHours()).padStart(2, "0");
-  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
   // const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
   return `${year}-${month}-${day}T${hours}:${minutes}:00.000Z`;
@@ -167,9 +167,9 @@ export async function fillMissingMinutes(
 
 export function formatDate(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const hours = String(date.getUTCHours()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hours = String(date.getUTCHours()).padStart(2, '0');
   // const minutes = String(date.getUTCMinutes()).padStart(2, '0');
   // const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
@@ -213,11 +213,11 @@ export async function fillMissingDatesWithZeroByhr(
 
 export function formatDateBySec(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const hours = String(date.getUTCHours()).padStart(2, "0");
-  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
-  const seconds = String(date.getUTCSeconds()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.000Z`;
 }
@@ -255,8 +255,8 @@ export async function fillMissingSeconds(
 
 export function formatDateForDay(date: Date): string {
   const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
   // const hours = String(date.getUTCHours()).padStart(2, '0');
   // const minutes = String(date.getUTCMinutes()).padStart(2, '0');
   // const seconds = String(date.getUTCSeconds()).padStart(2, '0');
@@ -295,22 +295,22 @@ export async function fillMissingDatesWithZeroByDay(
 export function exp(val: string): string {
   const data = String(val).split(/[eE]/);
   if (data.length === 1) return data[0];
-  let z = "";
-  const sign = +val < 0 ? "-" : "";
-  const str = data[0].replace(".", "");
+  let z = '';
+  const sign = +val < 0 ? '-' : '';
+  const str = data[0].replace('.', '');
   let value = Number(data[1]) + 1;
   if (value < 0) {
     z = `${sign}0.`;
     while (value < 0) {
-      z += "0";
+      z += '0';
       value += 1;
     }
 
-    return z + str.replace("-", "");
+    return z + str.replace('-', '');
   }
   value -= str.length;
   while (value < 0) {
-    z += "0";
+    z += '0';
     value += 1;
   }
   return str + z;
@@ -318,7 +318,7 @@ export function exp(val: string): string {
 
 export const cleanEscapedString = (input: any) => {
   if (
-    typeof input === "string" &&
+    typeof input === 'string' &&
     input.startsWith('"') &&
     input.endsWith('"')
   ) {
